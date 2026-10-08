@@ -37,7 +37,14 @@ export async function runSummons(
   summons: Summons,
   run: Run,
   app: PairedApp,
-  o: { config: Config; paths: Paths; deps: RunDeps; onStart: (s: Started) => void },
+  o: {
+    config: Config;
+    paths: Paths;
+    deps: RunDeps;
+    onStart: (s: Started) => void;
+    /** Each step of the run, for the listener's log. */
+    onEvent?: (line: string) => void;
+  },
 ): Promise<Outcome> {
   const sessionId = o.deps.newId();
   let cwd: string;
@@ -76,6 +83,7 @@ export async function runSummons(
     defaultBranch,
     extraAllowedTools: o.config.extraAllowedTools,
     timeoutMs: o.config.runTimeoutMinutes * 60_000,
+    ...(o.onEvent ? { onEvent: o.onEvent } : {}),
   });
   return result.ok
     ? { id: summons.id, outcome: "done" }

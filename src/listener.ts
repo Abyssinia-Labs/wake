@@ -57,6 +57,7 @@ export async function listen(): Promise<void> {
           config,
           paths: p,
           deps,
+          onEvent: (line) => note(`${summons.target.ref}: ${line}`),
           onStart: ({ sessionId, cwd }) => {
             note(`Started ${summons.target.ref} as session ${sessionId} in ${cwd}.`);
             runs.set(summons.id, {

@@ -19,6 +19,16 @@ describe("claudeArgs", () => {
     expect(args.join(" ")).not.toContain("bypassPermissions");
     expect(args).not.toContain(base.prompt);
     expect(args).toContain(base.sessionId);
+    expect(args.join(" ")).toContain("--output-format stream-json --verbose");
+  });
+
+  test("asks for a comment before anything else, naming the session", () => {
+    const args = claudeArgs(base);
+    const rules = args[args.indexOf("--append-system-prompt") + 1] ?? "";
+    expect(rules).toContain(
+      "Before anything else, comment where you were asked that you are on it",
+    );
+    expect(rules).toContain(base.sessionId);
   });
 
   test("a repository run gets code tools and fences on the default branch", () => {
@@ -40,22 +50,48 @@ describe("claudeArgs", () => {
 });
 
 describe("results", () => {
-  test("reads Claude Code's JSON", () => {
-    expect(readResult(0, JSON.stringify({ is_error: false, result: "ok" }))).toEqual({ ok: true });
+  test("reads the stream's final result event", () => {
+    expect(readResult(0, { type: "result", is_error: false, result: "ok" })).toEqual({ ok: true });
     expect(
-      readResult(1, JSON.stringify({ is_error: true, result: "Credit balance too low" })),
+      readResult(1, { type: "result", is_error: true, result: "Credit balance too low" }),
     ).toEqual({
       ok: false,
       reason: "Credit balance too low",
     });
-    expect(readResult(2, "not json")).toEqual({ ok: false, reason: "claude exited 2." });
+    expect(readResult(2, null)).toEqual({ ok: false, reason: "claude exited 2." });
+  });
+
+  test("streams: each step is reported as it comes, and the last result decides", async () => {
+    const seen: string[] = [];
+    const spawn: Spawn = async (_args, o) => {
+      o.onLine(JSON.stringify({ type: "system", subtype: "init", model: "claude-opus-5-5" }));
+      o.onLine(
+        JSON.stringify({
+          type: "assistant",
+          message: {
+            content: [
+              { type: "tool_use", name: "mcp__gatherd__addcomment", input: { key: "GAT-37" } },
+            ],
+          },
+        }),
+      );
+      o.onLine(JSON.stringify({ type: "result", is_error: false, result: "Done.", num_turns: 4 }));
+      return { code: 0, timedOut: false };
+    };
+    const result = await runClaude({ ...base, onEvent: (line) => seen.push(line) }, spawn);
+    expect(result).toEqual({ ok: true });
+    expect(seen).toEqual([
+      "began (claude-opus-5-5)",
+      "addcomment: GAT-37",
+      "finished after 4 turns",
+    ]);
   });
 
   test("the prompt goes on stdin, and a timeout is a failure", async () => {
     let stdin = "";
     const spawn: Spawn = async (_args, o) => {
       stdin = o.stdin;
-      return { code: 143, stdout: "", timedOut: true };
+      return { code: 143, timedOut: true };
     };
     const result = await runClaude({ ...base, timeoutMs: 120 * 60_000 }, spawn);
     expect(stdin).toBe(base.prompt);

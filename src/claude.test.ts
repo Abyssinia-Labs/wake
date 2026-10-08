@@ -32,6 +32,11 @@ describe("claudeArgs", () => {
       "Before anything else, comment where you were asked that you are on it",
     );
     expect(rules).toContain(base.sessionId);
+    // A question is answered, not acted on (GAT-20, 2026-10-08).
+    expect(rules).toContain(
+      "a question is answered in a comment, and code changes only when the ask is for a change",
+    );
+    expect(rules).not.toContain("Then do the work");
   });
 
   test("a repository run gets code tools and fences on the default branch", () => {

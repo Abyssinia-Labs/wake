@@ -7,6 +7,7 @@ import type { Config, PairedApp, Paths, RunMode } from "./config";
 import type { Outcome, Run, Summons } from "./contract";
 import type { Exec } from "./exec";
 import { herdrRunning, runInHerdr } from "./herdr";
+import { installDependencies } from "./install";
 import { rememberWorktree } from "./made";
 import { findClone } from "./repos";
 import { prepareWorktree } from "./worktree";
@@ -71,6 +72,7 @@ export async function runSummons(
     const prepared = await prepareWorktree(o.deps.exec, { clone, branch: summons.branch });
     cwd = prepared.cwd;
     await rememberWorktree(o.paths.made, cwd);
+    await installDependencies(o.deps.exec, cwd, (line) => o.onEvent?.(line));
     defaultBranch = prepared.defaultBranch;
   } else {
     // No repository: an empty folder per app, with the app's tools only.

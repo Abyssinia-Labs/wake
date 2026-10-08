@@ -154,3 +154,18 @@ describe("a question before the agent is ready", () => {
     expect(said.some((line) => line.startsWith("waiting for you in herdr"))).toBe(true);
   });
 });
+
+describe("a turn that ended", () => {
+  test("idle is finished too: herdr calls a watched turn idle, not done", async () => {
+    const exec: Exec = async (cmd) => {
+      const out =
+        cmd[1] === "workspace"
+          ? { result: { workspaces: [{ workspace_id: "w2", label: "Wake" }] } }
+          : cmd[1] === "tab"
+            ? { result: { root_pane: { pane_id: "w2:p9" } } }
+            : { result: { agent: { status: "idle" } } };
+      return { code: 0, stdout: JSON.stringify(out), stderr: "" };
+    };
+    expect(await runInHerdr({ ...base, tool: "codex", ref: "GAT-31" }, exec)).toEqual({ ok: true });
+  });
+});

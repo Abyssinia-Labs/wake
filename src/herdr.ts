@@ -147,16 +147,6 @@ export function startBlocked(error: unknown): boolean {
   return error instanceof Error && error.message.includes("agent_not_ready");
 }
 
-/** Whether `agent prompt --wait` settled on idle rather than done. */
-export function settledIdle(stdout: string): boolean {
-  try {
-    const status = findString(JSON.parse(stdout), ["status", "agent_status", "state"]);
-    return status === "idle";
-  } catch {
-    return false;
-  }
-}
-
 export type HerdrRun = ClaudeRun & { ref: string };
 
 export async function runInHerdr(o: HerdrRun, run: Exec): Promise<ClaudeResult> {
@@ -234,8 +224,10 @@ export async function runInHerdr(o: HerdrRun, run: Exec): Promise<ClaudeResult> 
     name,
     openingPrompt(o),
     "--wait",
-    // Done, or idle: a person who stops the session leaves it idle, not done,
-    // and waiting on done alone held the run for its whole timeout (GAT-20).
+    // Done or idle: either is the turn ended. herdr calls a finished turn
+    // done only until someone has seen it, so one the person watched to the
+    // end is idle (GAT-31), and so is one they stopped (GAT-20). Waiting on
+    // done alone held a stopped run for its whole timeout.
     "--until",
     "done",
     "--until",
@@ -244,11 +236,9 @@ export async function runInHerdr(o: HerdrRun, run: Exec): Promise<ClaudeResult> 
     String(o.timeoutMs),
   ]);
   if (answer.code === 0) {
-    if (settledIdle(answer.stdout)) {
-      o.onEvent?.("stopped in herdr before it was done");
-      return { ok: false, reason: "Stopped in herdr before it was done; its tab is still open." };
-    }
-    o.onEvent?.("done in herdr; the session stays open in its tab");
+    // Finished and stopped look alike from here, so neither is called a
+    // failure: the person was watching, and the agent's comment says which.
+    o.onEvent?.("its turn ended in herdr; the session stays open in its tab");
     return { ok: true };
   }
   const why = (answer.stderr || answer.stdout).trim().split("\n").at(-1) ?? "";

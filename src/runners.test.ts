@@ -142,13 +142,6 @@ describe("no tool, no run", () => {
     expect(toolOf(agent("nightly-script"))).toBeNull();
   });
 
-  test("herdr settling on idle is a stop, not done", async () => {
-    const { settledIdle } = await import("./herdr");
-    expect(settledIdle(JSON.stringify({ result: { agent: { status: "idle" } } }))).toBe(true);
-    expect(settledIdle(JSON.stringify({ result: { agent: { status: "done" } } }))).toBe(false);
-    expect(settledIdle("not json")).toBe(false);
-  });
-
   test("forget finds a pairing by its agent's name, and leaves the others", async () => {
     const { pairingsOf } = await import("./commands/pair");
     const { defaults } = await import("./config");

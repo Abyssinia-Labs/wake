@@ -1,6 +1,7 @@
 // What a running listener tells `wakectl status`: written by the listener,
 // read by the command, never by the apps.
 import { writeJson } from "./config";
+import type { AgentTool } from "./contract";
 
 export type RunState = {
   app: string;
@@ -8,13 +9,25 @@ export type RunState = {
   sessionId: string;
   cwd: string;
   startedAt: number;
+  /** Which tool runs it, for the resume line; Claude Code in an older state file. */
+  tool?: AgentTool;
 };
 
 export type ListenerState = {
   pid: number;
   startedAt: number;
   updatedAt: number;
-  apps: Record<string, { agent: string; connected: boolean; unpaired: boolean }>;
+  /** Keyed like the config's apps: by domain, or domain and agent (pair.ts). */
+  apps: Record<
+    string,
+    {
+      agent: string;
+      connected: boolean;
+      unpaired: boolean;
+      /** The tool's program, when it is not installed and nothing is claimed for it. */
+      missing?: string;
+    }
+  >;
   runs: RunState[];
 };
 

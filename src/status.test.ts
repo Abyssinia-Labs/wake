@@ -41,7 +41,7 @@ test("running: the listener, each app's connection, the runs and how they are se
   }).join("\n");
   expect(lines).toContain("● listening · pid 7 · up 30 min");
   expect(lines).toContain("paused");
-  expect(lines).toMatch(/● gatherd\.dev\s+Claude\s+listening/);
+  expect(lines).toMatch(/● gatherd\.dev\s+Claude\s+Claude Code\s+listening/);
   expect(lines).toMatch(/GAT-20\s+20 min/);
   expect(lines).toContain("claude --resume s-1");
   expect(lines).toMatch(/permissions\s+acceptEdits/);

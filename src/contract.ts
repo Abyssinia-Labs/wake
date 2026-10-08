@@ -7,7 +7,10 @@ import { makeFunctionReference } from "convex/server";
 export const CONTRACT = "wake/v1";
 
 export type Discovery = { version: typeof CONTRACT; convexUrl: string; httpBase: string };
-export type Agent = { id: string; name: string };
+/** The agent tools Wake can start; the pairing names which one paired (GAT-68). */
+export const AGENT_TOOLS = ["claude", "codex", "cursor"] as const;
+export type AgentTool = (typeof AGENT_TOOLS)[number];
+export type Agent = { id: string; name: string; tool?: AgentTool };
 export type Paired = { placeKey: string; app: string; agent: Agent };
 export type Target = { kind: string; ref: string; url: string };
 /** A summons carries no text (the pattern's second principle). */
@@ -86,9 +89,15 @@ export function asDiscovery(v: unknown): Discovery {
 
 export function asPaired(v: unknown): Paired {
   if (isRecord(v) && isText(v.placeKey) && isText(v.app) && isRecord(v.agent)) {
-    const { id, name } = v.agent;
-    if (isText(id) && isText(name))
-      return { placeKey: v.placeKey, app: v.app, agent: { id, name } };
+    const { id, name, tool } = v.agent;
+    const known = AGENT_TOOLS.find((one) => one === tool);
+    if (isText(id) && isText(name)) {
+      return {
+        placeKey: v.placeKey,
+        app: v.app,
+        agent: { id, name, ...(known ? { tool: known } : {}) },
+      };
+    }
   }
   throw new ContractError("pairing");
 }

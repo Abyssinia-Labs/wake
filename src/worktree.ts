@@ -27,21 +27,25 @@ export function worktreePath(clone: string, branch: string): string {
 }
 
 /**
- * Keeps the worktrees out of `git status` in the clone, through the clone's
- * own .git/info/exclude: local, never committed, so no repository changes.
+ * Keeps a path out of `git status` in the clone, through the clone's own
+ * .git/info/exclude: local, never committed, so no repository changes. It
+ * only ever hides untracked files; a tracked one is unaffected.
  */
-export async function excludeWorktrees(run: Exec, clone: string): Promise<void> {
-  const relative = await git(run, ["rev-parse", "--git-path", "info/exclude"], clone);
-  const file = relative.startsWith("/") ? relative : join(clone, relative);
+export async function excludeFromGit(run: Exec, repo: string, line: string): Promise<void> {
+  const relative = await git(run, ["rev-parse", "--git-path", "info/exclude"], repo);
+  const file = relative.startsWith("/") ? relative : join(repo, relative);
   let text = "";
   try {
     text = await readFile(file, "utf8");
   } catch {
     // No exclude file yet: appending makes one.
   }
-  const line = "/.claude/worktrees/";
   if (text.split("\n").some((one) => one.trim() === line)) return;
   await appendFile(file, `${text === "" || text.endsWith("\n") ? "" : "\n"}${line}\n`);
+}
+
+export async function excludeWorktrees(run: Exec, clone: string): Promise<void> {
+  await excludeFromGit(run, clone, "/.claude/worktrees/");
 }
 
 async function defaultBranchOf(run: Exec, clone: string): Promise<string> {

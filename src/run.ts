@@ -4,19 +4,26 @@ import { mkdir } from "node:fs/promises";
 import { join } from "node:path";
 import { type ClaudeResult, type ClaudeRun, runClaude } from "./claude";
 import type { Config, PairedApp, Paths, RunMode } from "./config";
-import type { Outcome, Run, Summons } from "./contract";
+import type { AgentTool, Outcome, Run, Summons } from "./contract";
 import type { Exec } from "./exec";
 import { herdrRunning, runInHerdr } from "./herdr";
 import { installDependencies } from "./install";
 import { rememberWorktree } from "./made";
 import { findClone } from "./repos";
+import { runCodex } from "./runners/codex";
+import { runCursor } from "./runners/cursor";
+import { toolOf } from "./tools";
 import { prepareWorktree } from "./worktree";
 
-export type Started = { sessionId: string; cwd: string };
+/** A run under way; `sessionId` is empty until a tool that picks its own has said it. */
+export type Started = { sessionId: string; cwd: string; tool: AgentTool };
 
 export type RunDeps = {
   exec: Exec;
-  claude: (run: ClaudeRun, how: { mode: RunMode; ref: string }) => Promise<ClaudeResult>;
+  claude: (
+    run: ClaudeRun,
+    how: { mode: RunMode; ref: string; tool: AgentTool },
+  ) => Promise<ClaudeResult>;
   newId: () => string;
 };
 
@@ -27,18 +34,21 @@ export const realDeps = (exec: Exec): RunDeps => ({
       if (await herdrRunning(exec)) return await runInHerdr({ ...run, ref: how.ref }, exec);
       run.onEvent?.("herdr is not running, so this run is headless");
     }
+    // The tool that paired the agent runs it (GAT-68): Claude Code, Codex or Cursor.
+    if (how.tool === "codex") return await runCodex(run);
+    if (how.tool === "cursor") return await runCursor(run, exec);
     return await runClaude(run);
   },
   newId: () => crypto.randomUUID(),
 });
 
 /** The app's own prompt, with the facts Wake adds at its foot. */
-export function composePrompt(run: Run, summons: Summons, sessionId: string): string {
+export function composePrompt(run: Run, summons: Summons, sessionId: string | null): string {
   return [
     run.prompt.trim(),
     "",
     `Summons ${summons.id}: ${summons.kind}, ${summons.target.ref} (${summons.target.url}).`,
-    `Session ${sessionId}.`,
+    ...(sessionId ? [`Session ${sessionId}.`] : []),
   ].join("\n");
 }
 
@@ -80,12 +90,17 @@ export async function runSummons(
     await mkdir(cwd, { recursive: true });
   }
 
-  o.onStart({ sessionId, cwd });
+  const tool = toolOf(app);
+  // Claude Code takes Wake's session id; Codex and Cursor pick their own and say it.
+  const ours = tool === "claude";
+  o.onStart({ sessionId: ours ? sessionId : "", cwd, tool });
   const result = await o.deps.claude(
     {
       cwd,
       sessionId,
-      prompt: composePrompt(run, summons, sessionId),
+      tool,
+      onSession: (id) => o.onStart({ sessionId: id, cwd, tool }),
+      prompt: composePrompt(run, summons, ours ? sessionId : null),
       mcpServer: app.mcpServer ?? app.app,
       defaultBranch,
       extraAllowedTools: o.config.extraAllowedTools,
@@ -94,7 +109,7 @@ export async function runSummons(
       permissionMode: o.config.permissionMode,
       ...(o.onEvent ? { onEvent: o.onEvent } : {}),
     },
-    { mode: o.config.run, ref: summons.target.ref },
+    { mode: o.config.run, ref: summons.target.ref, tool },
   );
   return result.ok
     ? { id: summons.id, outcome: "done" }

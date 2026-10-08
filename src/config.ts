@@ -3,7 +3,7 @@
 import { mkdir, rename } from "node:fs/promises";
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
-import type { Agent } from "./contract";
+import type { Agent, AgentTool } from "./contract";
 
 export type PairedApp = {
   /** As the person typed it to `wakectl pair`, and the Keychain's name for its key. */
@@ -13,8 +13,10 @@ export type PairedApp = {
   convexUrl: string;
   httpBase: string;
   pairedAt: number;
-  /** The name of the app's MCP server in Claude Code, when it is not the app's own. */
+  /** The name of the app's MCP server in the agent tool, when it is not the app's own. */
   mcpServer?: string;
+  /** Which tool runs this agent (GAT-68); Claude Code when the app did not say. */
+  tool?: AgentTool;
 };
 
 export type Config = {

@@ -5,6 +5,7 @@ import { existsSync } from "node:fs";
 import { type Config, loadConfig, paths } from "../config";
 import { say } from "../log";
 import { isAlive, type ListenerState, readState } from "../state";
+import { resumeLine, TOOL_NAMES, toolOf } from "../tools";
 import { bold, cyan, dim, mark, pad, red, tildify, yellow } from "../ui";
 
 function ago(at: number, now: number): string {
@@ -36,22 +37,27 @@ export function statusLines({ config, state, paused, now }: StatusInput): string
   }
 
   lines.push("", bold("Paired"));
-  const apps = Object.values(config.apps);
+  const apps = Object.entries(config.apps);
   if (apps.length === 0) {
     lines.push(
       `  ${dim("nothing yet: ask your agent to pair Wake, or")} ${cyan("wakectl pair <domain> <code>")}`,
     );
   }
-  for (const app of apps) {
-    const live = state?.apps[app.domain];
+  for (const [key, app] of apps) {
+    const live = state?.apps[key];
     const [dot, words] = !live
       ? [mark.off(), dim("not connected")]
-      : live.unpaired
-        ? [mark.fail(), red("refused, pair it again")]
-        : live.connected
-          ? [mark.on(), "listening"]
-          : [mark.half(), yellow("connecting")];
-    lines.push(`  ${dot} ${pad(bold(app.domain), 18)}${pad(app.agent.name, 22)}${words}`);
+      : live.missing
+        ? [mark.warn(), yellow(`${live.missing} isn't installed`)]
+        : live.unpaired
+          ? [mark.fail(), red("refused, pair it again")]
+          : live.connected
+            ? [mark.on(), "listening"]
+            : [mark.half(), yellow("connecting")];
+    const tool = dim(TOOL_NAMES[toolOf(app)]);
+    lines.push(
+      `  ${dot} ${pad(bold(app.domain), 18)}${pad(app.agent.name, 18)}${pad(tool, 14)}${words}`,
+    );
   }
 
   const runs = state?.runs ?? [];
@@ -61,7 +67,11 @@ export function statusLines({ config, state, paused, now }: StatusInput): string
       lines.push(
         `  ${mark.half()} ${pad(bold(run.ref), 10)}${pad(ago(run.startedAt, now), 10)}${dim(tildify(run.cwd))}`,
       );
-      lines.push(`    ${dim("resume:")} ${cyan(`claude --resume ${run.sessionId}`)}`);
+      lines.push(
+        run.sessionId
+          ? `    ${dim("resume:")} ${cyan(resumeLine(run.tool ?? "claude", run.sessionId))}`
+          : `    ${dim("starting…")}`,
+      );
     }
   }
 

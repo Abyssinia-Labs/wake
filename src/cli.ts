@@ -26,6 +26,7 @@ async function main(argv: string[]): Promise<void> {
     options: {
       follow: { type: "boolean", short: "f", default: false },
       remove: { type: "boolean", default: false },
+      tool: { type: "string" },
       days: { type: "string", default: "14" },
       help: { type: "boolean", short: "h", default: false },
       version: { type: "boolean", short: "v", default: false },
@@ -38,8 +39,8 @@ async function main(argv: string[]): Promise<void> {
   switch (command) {
     case "pair": {
       const [domain, code] = rest;
-      if (!domain || !code) throw new Usage("pair <domain> <code>");
-      return pair(domain, code);
+      if (!domain || !code) throw new Usage("pair <domain> <code> [--tool claude|codex|cursor]");
+      return pair(domain, code, values.tool);
     }
     case "forget": {
       const [domain] = rest;

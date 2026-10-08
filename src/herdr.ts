@@ -13,6 +13,7 @@ import { homedir } from "node:os";
 import { join } from "node:path";
 import { allowedTools, type ClaudeResult, type ClaudeRun, disallowedTools, rules } from "./claude";
 import type { Exec } from "./exec";
+import { writeCursorPermissions } from "./runners/cursor";
 
 const WORKSPACE = "Wake";
 /** No spaces in it, unlike Application Support, so a path is one plain argument. */
@@ -60,6 +61,26 @@ export function claudeSettings(o: ClaudeRun): Record<string, unknown> {
 /** What is submitted into the session: the rules, then the app's prompt. */
 export function openingPrompt(o: ClaudeRun): string {
   return `${rules({ ...o, live: true })}\n\n---\n\n${o.prompt}`;
+}
+
+/**
+ * The agent's own arguments, per tool (GAT-68). Plain values only: a session
+ * id, a sanitised name, a path, fixed flags. Claude Code gets its settings
+ * file; Codex its sandbox with network on; Cursor reads the permissions file
+ * Wake has written into the worktree.
+ */
+export function nativeArgs(o: ClaudeRun, settings: string): string[] {
+  switch (o.tool ?? "claude") {
+    case "codex":
+      return ["--sandbox", "workspace-write", "-c", "sandbox_workspace_write.network_access=true"];
+    case "cursor":
+      return ["--approve-mcps"];
+    default: {
+      const args = ["--session-id", o.sessionId, "--settings", settings];
+      if (o.name) args.push("--name", o.name.replace(/[^A-Za-z0-9·_-]/g, ""));
+      return args;
+    }
+  }
 }
 
 async function herdr(run: Exec, args: string[]): Promise<unknown> {
@@ -143,9 +164,19 @@ export async function runInHerdr(o: HerdrRun, run: Exec): Promise<ClaudeResult> 
   if (!pane) throw new Error("herdr made a tab but did not say its pane.");
 
   const name = agentName(o.ref, o.sessionId);
-  const native = ["--session-id", o.sessionId, "--settings", settings];
-  if (o.name) native.push("--name", o.name.replace(/[^A-Za-z0-9·_-]/g, ""));
-  await herdr(run, ["agent", "start", name, "--kind", "claude", "--pane", pane, "--", ...native]);
+  const tool = o.tool ?? "claude";
+  if (tool === "cursor") await writeCursorPermissions(run, o);
+  await herdr(run, [
+    "agent",
+    "start",
+    name,
+    "--kind",
+    tool,
+    "--pane",
+    pane,
+    "--",
+    ...nativeArgs(o, settings),
+  ]);
   o.onEvent?.(`in herdr: workspace ${WORKSPACE}, tab ${o.ref}, agent ${name}`);
 
   // Submitted, then waited on until herdr says it is done; blocked keeps it

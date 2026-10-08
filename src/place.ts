@@ -38,7 +38,13 @@ export function isUnpairedError(error: unknown): boolean {
   return error instanceof Error && error.message.includes(UNPAIRED);
 }
 
-export function connectPlace(app: PairedApp, key: string, events: PlaceEvents): LivePlace {
+/** `id` is the pairing's key in the config: the domain, or the domain and its agent. */
+export function connectPlace(
+  app: PairedApp,
+  key: string,
+  events: PlaceEvents,
+  id: string = app.domain,
+): LivePlace {
   const client = new ConvexClient(app.convexUrl);
   let unpaired = false;
 
@@ -46,13 +52,13 @@ export function connectPlace(app: PairedApp, key: string, events: PlaceEvents): 
     if (!isUnpairedError(error)) return false;
     if (!unpaired) {
       unpaired = true;
-      events.onUnpaired(app.domain);
+      events.onUnpaired(id);
     }
     return true;
   };
 
   const place: Place = {
-    domain: app.domain,
+    domain: id,
     claim: async (id) => {
       try {
         return asClaim(await client.mutation(claimRef, { key, id }));

@@ -11,6 +11,7 @@ import { realDeps, runSummons } from "./run";
 import { Scheduler } from "./scheduler";
 import { keychain } from "./secrets";
 import { type ListenerState, type RunState, writeState } from "./state";
+import { programOf, TOOL_NAMES, toolInstalled, toolOf } from "./tools";
 
 const RECONCILE_MS = 30_000;
 
@@ -23,6 +24,9 @@ export async function listen(): Promise<void> {
   // changes it, which is how a refused or re-keyed place gets another try.
   const unpaired = new Map<string, number>();
   const pairings = new Map<string, number>();
+  // Pairings whose tool is not installed here, by key, with the program: not
+  // connected, so nothing is claimed that this machine cannot run.
+  const missing = new Map<string, string>();
   const runs = new Map<string, RunState>();
   let config: Config = await loadConfig();
 
@@ -33,6 +37,7 @@ export async function listen(): Promise<void> {
         agent: app.agent.name,
         connected: live.get(domain)?.connected() ?? false,
         unpaired: unpaired.has(domain),
+        ...(missing.has(domain) ? { missing: missing.get(domain) } : {}),
       };
     }
     const state: ListenerState = {
@@ -58,14 +63,20 @@ export async function listen(): Promise<void> {
           paths: p,
           deps,
           onEvent: (line) => note(`${summons.target.ref}: ${line}`),
-          onStart: ({ sessionId, cwd }) => {
-            note(`Started ${summons.target.ref} as session ${sessionId} in ${cwd}.`);
+          onStart: ({ sessionId, cwd, tool }) => {
+            const known = runs.get(summons.id);
+            note(
+              known
+                ? `${summons.target.ref}: ${TOOL_NAMES[tool]} session ${sessionId}`
+                : `Started ${summons.target.ref} in ${TOOL_NAMES[tool]}${sessionId ? ` as session ${sessionId}` : ""} in ${cwd}.`,
+            );
             runs.set(summons.id, {
               app: app.app,
               ref: summons.target.ref,
               sessionId,
               cwd,
-              startedAt: Date.now(),
+              tool,
+              startedAt: known?.startedAt ?? Date.now(),
             });
             void save();
           },
@@ -100,6 +111,17 @@ export async function listen(): Promise<void> {
     }
     for (const [domain, app] of Object.entries(config.apps)) {
       if (live.has(domain) || unpaired.has(domain)) continue;
+      const tool = toolOf(app);
+      if (!(await toolInstalled(exec, tool))) {
+        if (!missing.has(domain)) {
+          note(
+            `${TOOL_NAMES[tool]} (${programOf(tool)}) isn't installed, so ${domain} for ${app.agent.name} is not listened to.`,
+          );
+        }
+        missing.set(domain, programOf(tool));
+        continue;
+      }
+      missing.delete(domain);
       const key = await keychain.get(domain);
       if (!key) {
         note(`No key for ${domain} in the Keychain; pair it again.`);
@@ -109,18 +131,23 @@ export async function listen(): Promise<void> {
       pairings.set(domain, app.pairedAt);
       live.set(
         domain,
-        connectPlace(app, key, {
-          onList: (place, summonses) => scheduler.offer(place, summonses),
-          onUnpaired: (d) => {
-            unpaired.set(d, app.pairedAt);
-            note(`${d} refused this place: it was forgotten or ${app.agent.name} was stopped.`);
-            // Not from inside the client's own auth callback.
-            queueMicrotask(() => void disconnect(d));
+        connectPlace(
+          app,
+          key,
+          {
+            onList: (place, summonses) => scheduler.offer(place, summonses),
+            onUnpaired: (d) => {
+              unpaired.set(d, app.pairedAt);
+              note(`${d} refused this place: it was forgotten or ${app.agent.name} was stopped.`);
+              // Not from inside the client's own auth callback.
+              queueMicrotask(() => void disconnect(d));
+            },
+            note,
           },
-          note,
-        }),
+          domain,
+        ),
       );
-      note(`Listening to ${domain} for ${app.agent.name}.`);
+      note(`Listening to ${app.domain} for ${app.agent.name} (${TOOL_NAMES[tool]}).`);
     }
     scheduler.poke();
     await save();

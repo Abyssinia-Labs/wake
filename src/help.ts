@@ -10,6 +10,10 @@ const GROUPS: readonly { title: string; entries: readonly Entry[] }[] = [
     title: "Get started",
     entries: [
       { use: "pair <domain> <code>", what: "Pair with an app; your agent gives you the command" },
+      {
+        use: "  --tool claude|codex|cursor",
+        what: "Which tool runs it, when the app could not tell",
+      },
       { use: "install", what: "Start listening now and at every login" },
       { use: "status", what: "What is paired, connected and running" },
     ],
@@ -31,7 +35,7 @@ const GROUPS: readonly { title: string; entries: readonly Entry[] }[] = [
     entries: [
       { use: "pause | resume", what: "Stop or go on claiming new work" },
       { use: "prune [--days 14]", what: "Remove run worktrees untouched for a while" },
-      { use: "forget <domain>", what: "Unpair, here and on the app" },
+      { use: "forget <domain>", what: "Unpair its agents, here and on the app" },
       { use: "uninstall", what: "Stop, and do not start at login" },
     ],
   },

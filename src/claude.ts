@@ -3,6 +3,7 @@
 // a second fence; branch protection on the repository is the real one.
 import { describeEvent, resultOf } from "./claude-events";
 import type { PermissionMode } from "./config";
+import type { AgentTool } from "./contract";
 
 export type ClaudeRun = {
   cwd: string;
@@ -19,6 +20,10 @@ export type ClaudeRun = {
   permissionMode?: PermissionMode;
   /** Each step of the run, as a log line (claude-events.ts). */
   onEvent?: (line: string) => void;
+  /** Which tool runs it (tools.ts); Claude Code when absent. */
+  tool?: AgentTool;
+  /** The tool's own session id, for a tool that picks it rather than taking Wake's. */
+  onSession?: (id: string) => void;
 };
 
 export type ClaudeResult = { ok: boolean; reason?: string };
@@ -36,14 +41,19 @@ const CODE_TOOLS = [
 ];
 
 export function rules(
-  o: Pick<ClaudeRun, "sessionId" | "defaultBranch"> & { live?: boolean },
+  o: Pick<ClaudeRun, "sessionId" | "defaultBranch" | "tool"> & { live?: boolean },
 ): string {
+  // Codex and Cursor pick their own session ids, which the agent cannot see;
+  // Wake logs them, and `wakectl status` shows how to resume.
+  const knowsId = (o.tool ?? "claude") === "claude";
   const lines = [
     o.live
       ? "Wake started this session in herdr because an app summoned you. Your person can watch it and step in."
       : "Wake started this session because an app summoned you. Nobody is watching it live.",
     // The first run (GAT-37, 2026-10-08) said nothing for minutes while it read.
-    `Before anything else, comment where you were asked that you are on it, and give your Claude Code session id, ${o.sessionId}, so the person knows and can resume it with \`claude --resume ${o.sessionId}\`.`,
+    knowsId
+      ? `Before anything else, comment where you were asked that you are on it, and give your Claude Code session id, ${o.sessionId}, so the person knows and can resume it with \`claude --resume ${o.sessionId}\`.`
+      : "Before anything else, comment where you were asked that you are on it, so the person knows.",
     // The second (GAT-20) was asked a question, read "then do the work", and
     // opened a pull request nobody asked for. Do what was asked, no more.
     "Then do what you were asked, and no more: a question is answered in a comment, and code changes only when the ask is for a change. If you think a change is needed but were not asked for one, say so in your answer and let the person decide. Finish with a comment saying what you found or did.",

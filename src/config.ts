@@ -24,8 +24,13 @@ export type Config = {
   runTimeoutMinutes: number;
   /** Tools a run may use beyond Wake's list, in Claude Code's syntax. */
   extraAllowedTools: string[];
+  /** Headless `claude -p`, or a tab in herdr to watch (falls back to headless). */
+  run: RunMode;
   apps: Record<string, PairedApp>;
 };
+
+export const RUN_MODES = ["headless", "herdr"] as const;
+export type RunMode = (typeof RUN_MODES)[number];
 
 export type Paths = {
   home: string;
@@ -61,6 +66,7 @@ export function defaults(): Config {
     maxRuns: 2,
     runTimeoutMinutes: 120,
     extraAllowedTools: [],
+    run: "headless",
     apps: {},
   };
 }
@@ -95,6 +101,7 @@ export async function loadConfig(): Promise<Config> {
     maxRuns: positive(v.maxRuns) ?? base.maxRuns,
     runTimeoutMinutes: positive(v.runTimeoutMinutes) ?? base.runTimeoutMinutes,
     extraAllowedTools: strings(v.extraAllowedTools) ?? base.extraAllowedTools,
+    run: RUN_MODES.find((mode) => mode === v.run) ?? base.run,
     // Written only by Wake, so its shape is trusted once it is an object.
     apps: apps as Record<string, PairedApp>,
   };

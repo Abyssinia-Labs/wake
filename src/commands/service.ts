@@ -3,7 +3,7 @@
 import { mkdir, rm } from "node:fs/promises";
 import { homedir } from "node:os";
 import { dirname } from "node:path";
-import { paths } from "../config";
+import { loadConfig, paths, RUN_MODES, type RunMode, saveConfig } from "../config";
 import { exec } from "../exec";
 import { load, plist, plistPath, programArguments, unload } from "../launchd";
 import { say } from "../log";
@@ -45,4 +45,21 @@ export async function logs(follow: boolean): Promise<void> {
   const args = ["tail", "-n", "50", ...(follow ? ["-f"] : []), paths().log];
   const proc = Bun.spawn(args, { stdout: "inherit", stderr: "inherit" });
   await proc.exited;
+}
+
+/** `wakectl mode [headless|herdr]`: how runs start; the next one uses it. */
+export async function mode(next: string | undefined): Promise<void> {
+  const config = await loadConfig();
+  if (next === undefined) {
+    say(`Runs are ${config.run}.`);
+    return;
+  }
+  const chosen = RUN_MODES.find((one) => one === next) as RunMode | undefined;
+  if (!chosen) throw new Error(`mode is one of ${RUN_MODES.join(", ")}`);
+  await saveConfig({ ...config, run: chosen });
+  say(
+    chosen === "herdr"
+      ? "Runs open as a tab in herdr's Wake workspace, where you can watch and step in. With herdr not running, they run headless."
+      : "Runs are headless: `wakectl logs -f` follows them, and `claude --resume` opens one afterwards.",
+  );
 }

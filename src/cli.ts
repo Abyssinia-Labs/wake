@@ -4,7 +4,7 @@ import { parseArgs } from "node:util";
 import pkg from "../package.json";
 import { forget, pair } from "./commands/pair";
 import { prune } from "./commands/prune";
-import { install, logs, pause, resume, uninstall } from "./commands/service";
+import { install, logs, mode, pause, resume, uninstall } from "./commands/service";
 import { status } from "./commands/status";
 import { listen } from "./listener";
 import { messageOf, say, warn } from "./log";
@@ -18,6 +18,7 @@ const HELP = `wakectl — starts your agent when Gatherd or Antescript hands it 
   wakectl status                 What's paired, connected and running
   wakectl logs [-f]              The listener's log
   wakectl pause | resume         Stop or go on claiming new work
+  wakectl mode [headless|herdr]  How runs start: headless, or a tab in herdr to watch
   wakectl prune [--days 14]      Remove old run worktrees
   wakectl listen                 Run the listener here (install does this for you)
 `;
@@ -56,6 +57,8 @@ async function main(argv: string[]): Promise<void> {
       return status();
     case "logs":
       return logs(values.follow);
+    case "mode":
+      return mode(rest[0]);
     case "pause":
       return pause();
     case "resume":

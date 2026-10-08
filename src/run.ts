@@ -3,9 +3,10 @@
 import { mkdir } from "node:fs/promises";
 import { join } from "node:path";
 import { type ClaudeResult, type ClaudeRun, runClaude } from "./claude";
-import type { Config, PairedApp, Paths } from "./config";
+import type { Config, PairedApp, Paths, RunMode } from "./config";
 import type { Outcome, Run, Summons } from "./contract";
 import type { Exec } from "./exec";
+import { herdrRunning, runInHerdr } from "./herdr";
 import { rememberWorktree } from "./made";
 import { findClone } from "./repos";
 import { prepareWorktree } from "./worktree";
@@ -14,13 +15,19 @@ export type Started = { sessionId: string; cwd: string };
 
 export type RunDeps = {
   exec: Exec;
-  claude: (run: ClaudeRun) => Promise<ClaudeResult>;
+  claude: (run: ClaudeRun, how: { mode: RunMode; ref: string }) => Promise<ClaudeResult>;
   newId: () => string;
 };
 
 export const realDeps = (exec: Exec): RunDeps => ({
   exec,
-  claude: (run) => runClaude(run),
+  claude: async (run, how) => {
+    if (how.mode === "herdr") {
+      if (await herdrRunning(exec)) return await runInHerdr({ ...run, ref: how.ref }, exec);
+      run.onEvent?.("herdr is not running, so this run is headless");
+    }
+    return await runClaude(run);
+  },
   newId: () => crypto.randomUUID(),
 });
 
@@ -72,17 +79,20 @@ export async function runSummons(
   }
 
   o.onStart({ sessionId, cwd });
-  const result = await o.deps.claude({
-    cwd,
-    sessionId,
-    prompt: composePrompt(run, summons, sessionId),
-    mcpServer: app.mcpServer ?? app.app,
-    defaultBranch,
-    extraAllowedTools: o.config.extraAllowedTools,
-    timeoutMs: o.config.runTimeoutMinutes * 60_000,
-    name: `${summons.target.ref} · Wake`,
-    ...(o.onEvent ? { onEvent: o.onEvent } : {}),
-  });
+  const result = await o.deps.claude(
+    {
+      cwd,
+      sessionId,
+      prompt: composePrompt(run, summons, sessionId),
+      mcpServer: app.mcpServer ?? app.app,
+      defaultBranch,
+      extraAllowedTools: o.config.extraAllowedTools,
+      timeoutMs: o.config.runTimeoutMinutes * 60_000,
+      name: `${summons.target.ref} · Wake`,
+      ...(o.onEvent ? { onEvent: o.onEvent } : {}),
+    },
+    { mode: o.config.run, ref: summons.target.ref },
+  );
   return result.ok
     ? { id: summons.id, outcome: "done" }
     : { id: summons.id, outcome: "failed", reason: result.reason };

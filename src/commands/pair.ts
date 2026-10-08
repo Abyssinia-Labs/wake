@@ -65,7 +65,7 @@ export async function pair(domain: string, code: string, toolFlag?: string): Pro
     );
     say(
       dim(
-        `  ${paired.app} said ${paired.agent.name} asked, which is how ChatGPT and Codex in the ChatGPT app connect. Wake starts Claude Code, the Codex CLI and Cursor's CLI: connect one of those to ${paired.app}, ask it for a code there, or pair again with --tool.`,
+        `  ${paired.app} could not tell which tool asked: ${paired.agent.name} is how the Codex CLI and the ChatGPT app reach it. If you asked from the Codex CLI, get a new code there and pair with --tool codex. Wake can't start the ChatGPT app.`,
       ),
     );
     return;

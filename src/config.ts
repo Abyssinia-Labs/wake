@@ -32,7 +32,10 @@ export type Paths = {
   config: string;
   state: string;
   paused: string;
+  /** Where runs were made before they moved into the clone; prune still clears it. */
   worktrees: string;
+  /** The list of worktrees Wake made (made.ts). */
+  made: string;
   rooms: string;
   log: string;
 };
@@ -46,6 +49,7 @@ export function paths(): Paths {
     state: join(home, "state.json"),
     paused: join(home, "paused"),
     worktrees: join(home, "worktrees"),
+    made: join(home, "worktrees.json"),
     rooms: join(home, "rooms"),
     log: override ? join(home, "wake.log") : join(homedir(), "Library", "Logs", "Wake", "wake.log"),
   };

@@ -1,7 +1,11 @@
 // A run works in its own worktree of the person's clone, on the branch the
-// app named, so it never touches what the person has checked out. The
-// worktree is kept afterwards: `claude --resume` needs the same folder.
-import { access } from "node:fs/promises";
+// app named, so it never touches what the person has checked out. It lives
+// in the clone's .claude/worktrees/, where Claude Code keeps its own, so the
+// session belongs to the repository: `claude --resume` there, then Ctrl+W,
+// lists it. The worktree is kept afterwards; resuming needs the same folder.
+// Claude Code's own --worktree is not used: it always makes a new
+// `worktree-<name>` branch, and a run must be on the ticket's branch.
+import { access, appendFile, readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { type Exec, git, gitOk } from "./exec";
 
@@ -16,8 +20,28 @@ async function exists(path: string): Promise<boolean> {
   }
 }
 
-export function worktreePath(root: string, repo: string, branch: string): string {
-  return join(root, repo.replace("/", "--"), branch.replaceAll("/", "--"));
+export const WORKTREES_DIR = join(".claude", "worktrees");
+
+export function worktreePath(clone: string, branch: string): string {
+  return join(clone, WORKTREES_DIR, branch.replaceAll("/", "--"));
+}
+
+/**
+ * Keeps the worktrees out of `git status` in the clone, through the clone's
+ * own .git/info/exclude: local, never committed, so no repository changes.
+ */
+export async function excludeWorktrees(run: Exec, clone: string): Promise<void> {
+  const relative = await git(run, ["rev-parse", "--git-path", "info/exclude"], clone);
+  const file = relative.startsWith("/") ? relative : join(clone, relative);
+  let text = "";
+  try {
+    text = await readFile(file, "utf8");
+  } catch {
+    // No exclude file yet: appending makes one.
+  }
+  const line = "/.claude/worktrees/";
+  if (text.split("\n").some((one) => one.trim() === line)) return;
+  await appendFile(file, `${text === "" || text.endsWith("\n") ? "" : "\n"}${line}\n`);
 }
 
 async function defaultBranchOf(run: Exec, clone: string): Promise<string> {
@@ -32,11 +56,12 @@ async function defaultBranchOf(run: Exec, clone: string): Promise<string> {
 
 export async function prepareWorktree(
   run: Exec,
-  o: { clone: string; repo: string; branch: string; root: string },
+  o: { clone: string; branch: string },
 ): Promise<Prepared> {
   await git(run, ["fetch", "origin", "--prune", "--quiet"], o.clone);
+  await excludeWorktrees(run, o.clone);
   const defaultBranch = await defaultBranchOf(run, o.clone);
-  const cwd = worktreePath(o.root, o.repo, o.branch);
+  const cwd = worktreePath(o.clone, o.branch);
 
   if (await exists(cwd)) {
     const current = await git(run, ["rev-parse", "--abbrev-ref", "HEAD"], cwd);

@@ -20,6 +20,9 @@ describe("claudeArgs", () => {
     expect(args).not.toContain(base.prompt);
     expect(args).toContain(base.sessionId);
     expect(args.join(" ")).toContain("--output-format stream-json --verbose");
+    expect(claudeArgs({ ...base, name: "GAT-37 · Wake" }).join(" ")).toContain(
+      "--name GAT-37 · Wake",
+    );
   });
 
   test("asks for a comment before anything else, naming the session", () => {

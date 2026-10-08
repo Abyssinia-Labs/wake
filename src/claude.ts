@@ -12,6 +12,8 @@ export type ClaudeRun = {
   defaultBranch?: string;
   extraAllowedTools: string[];
   timeoutMs: number;
+  /** What `/resume` shows for it, so the person finds it by ticket. */
+  name?: string;
   /** Each step of the run, as a log line (claude-events.ts). */
   onEvent?: (line: string) => void;
 };
@@ -78,6 +80,7 @@ export function claudeArgs(o: ClaudeRun): string[] {
     "-p",
     "--session-id",
     o.sessionId,
+    ...(o.name ? ["--name", o.name] : []),
     "--permission-mode",
     "acceptEdits",
     // A line per event, so Wake can log each step; -p needs --verbose for it.

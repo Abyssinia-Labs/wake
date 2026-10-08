@@ -17,6 +17,7 @@ const p: Paths = {
   state: join(home, "state.json"),
   paused: join(home, "paused"),
   worktrees: join(home, "worktrees"),
+  made: join(home, "worktrees.json"),
   rooms: join(home, "rooms"),
   log: join(home, "wake.log"),
 };

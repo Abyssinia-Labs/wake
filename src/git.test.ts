@@ -10,7 +10,6 @@ import { prepareWorktree } from "./worktree";
 
 let dir = "";
 let clone = "";
-const repo = "abyssinia-labs/sample";
 
 beforeAll(async () => {
   dir = await mkdtemp(join(tmpdir(), "wake-git-"));
@@ -69,19 +68,22 @@ describe("findClone", () => {
 });
 
 describe("prepareWorktree", () => {
-  test("a new branch starts from the default branch, and is reused after", async () => {
-    const root = join(dir, "worktrees");
-    const first = await prepareWorktree(exec, { clone, repo, branch: "gat-70-new", root });
+  test("a new branch starts from the default branch, in the clone's .claude/worktrees, reused after", async () => {
+    const first = await prepareWorktree(exec, { clone, branch: "gat-70-new" });
+    expect(first.cwd).toBe(join(clone, ".claude", "worktrees", "gat-70-new"));
     expect(first.defaultBranch).toBe("main");
     expect(await git(exec, ["rev-parse", "--abbrev-ref", "HEAD"], first.cwd)).toBe("gat-70-new");
     expect(await git(exec, ["rev-parse", "--abbrev-ref", "HEAD"], clone)).toBe("main");
-    const again = await prepareWorktree(exec, { clone, repo, branch: "gat-70-new", root });
+    const again = await prepareWorktree(exec, { clone, branch: "gat-70-new" });
     expect(again.cwd).toBe(first.cwd);
+    // Out of the clone's `git status`, through .git/info/exclude, once.
+    expect(await git(exec, ["status", "--porcelain"], clone)).toBe("");
+    const exclude = await Bun.file(join(clone, ".git", "info", "exclude")).text();
+    expect(exclude.split("\n").filter((line) => line === "/.claude/worktrees/")).toHaveLength(1);
   });
 
   test("a branch already on the remote is tracked, not recreated", async () => {
-    const root = join(dir, "worktrees");
-    const { cwd } = await prepareWorktree(exec, { clone, repo, branch: "gat-9-existing", root });
+    const { cwd } = await prepareWorktree(exec, { clone, branch: "gat-9-existing" });
     expect(await git(exec, ["rev-parse", "--abbrev-ref", "@{upstream}"], cwd)).toBe(
       "origin/gat-9-existing",
     );

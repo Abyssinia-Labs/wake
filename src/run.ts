@@ -6,6 +6,7 @@ import { type ClaudeResult, type ClaudeRun, runClaude } from "./claude";
 import type { Config, PairedApp, Paths } from "./config";
 import type { Outcome, Run, Summons } from "./contract";
 import type { Exec } from "./exec";
+import { rememberWorktree } from "./made";
 import { findClone } from "./repos";
 import { prepareWorktree } from "./worktree";
 
@@ -60,13 +61,9 @@ export async function runSummons(
         reason: `No clone of ${summons.repo} in the folders Wake looks in (wakectl status).`,
       };
     }
-    const prepared = await prepareWorktree(o.deps.exec, {
-      clone,
-      repo: summons.repo,
-      branch: summons.branch,
-      root: o.paths.worktrees,
-    });
+    const prepared = await prepareWorktree(o.deps.exec, { clone, branch: summons.branch });
     cwd = prepared.cwd;
+    await rememberWorktree(o.paths.made, cwd);
     defaultBranch = prepared.defaultBranch;
   } else {
     // No repository: an empty folder per app, with the app's tools only.
@@ -83,6 +80,7 @@ export async function runSummons(
     defaultBranch,
     extraAllowedTools: o.config.extraAllowedTools,
     timeoutMs: o.config.runTimeoutMinutes * 60_000,
+    name: `${summons.target.ref} · Wake`,
     ...(o.onEvent ? { onEvent: o.onEvent } : {}),
   });
   return result.ok

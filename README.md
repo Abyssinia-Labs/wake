@@ -44,6 +44,16 @@ in herdr waits for you), `auto` (Claude Code's auto mode decides), or
 `wakectl allow "Bash(npm test:*)"` adds a tool to the allowed list, and
 `--remove` takes it back. `bypassPermissions` is never offered.
 
+**Which tool, and where.** A pairing names the tool that runs its agent:
+Claude Code, Codex or Cursor (`wakectl pair … --tool codex` when the app
+cannot tell; the Codex CLI reaches Gatherd as ChatGPT). Each run's worktree
+sits where its tool keeps its own: Claude Code's in the clone's
+`.claude/worktrees`, Cursor's in `~/.cursor/worktrees/<repo>`, Codex's in
+`~/.codex/worktrees/wake/<repo>`. Interactive Codex asks whether to trust
+each new folder; `wakectl trust codex on` has Wake add the run's worktree to
+`~/.codex/config.toml` first, marked as Wake's, and `wakectl prune` takes it
+out again.
+
 `wakectl pause` stops new claims (a run already going finishes) and
 `wakectl resume` goes on. `wakectl prune` removes run worktrees untouched
 for 14 days, and keeps any with uncommitted work.

@@ -29,6 +29,8 @@ export type Config = {
   /** Headless `claude -p`, or a tab in herdr to watch (falls back to headless). */
   run: RunMode;
   permissionMode: PermissionMode;
+  /** Trust a Codex run's worktree in Codex's config first, so herdr runs are not asked (codex-trust.ts). */
+  trustCodexWorktrees: boolean;
   apps: Record<string, PairedApp>;
 };
 
@@ -81,6 +83,7 @@ export function defaults(): Config {
     extraAllowedTools: [],
     run: "headless",
     permissionMode: "acceptEdits",
+    trustCodexWorktrees: false,
     apps: {},
   };
 }
@@ -116,6 +119,7 @@ export async function loadConfig(): Promise<Config> {
     runTimeoutMinutes: positive(v.runTimeoutMinutes) ?? base.runTimeoutMinutes,
     extraAllowedTools: strings(v.extraAllowedTools) ?? base.extraAllowedTools,
     run: RUN_MODES.find((mode) => mode === v.run) ?? base.run,
+    trustCodexWorktrees: v.trustCodexWorktrees === true,
     // Anything else in the file, bypassPermissions included, is read as the default.
     permissionMode:
       PERMISSION_MODES.find((mode) => mode === v.permissionMode) ?? base.permissionMode,

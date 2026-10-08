@@ -69,12 +69,20 @@ describe("findClone", () => {
 
 describe("prepareWorktree", () => {
   test("a new branch starts from the default branch, in the clone's .claude/worktrees, reused after", async () => {
-    const first = await prepareWorktree(exec, { clone, branch: "gat-70-new" });
+    const first = await prepareWorktree(exec, {
+      clone,
+      branch: "gat-70-new",
+      root: join(clone, ".claude", "worktrees"),
+    });
     expect(first.cwd).toBe(join(clone, ".claude", "worktrees", "gat-70-new"));
     expect(first.defaultBranch).toBe("main");
     expect(await git(exec, ["rev-parse", "--abbrev-ref", "HEAD"], first.cwd)).toBe("gat-70-new");
     expect(await git(exec, ["rev-parse", "--abbrev-ref", "HEAD"], clone)).toBe("main");
-    const again = await prepareWorktree(exec, { clone, branch: "gat-70-new" });
+    const again = await prepareWorktree(exec, {
+      clone,
+      branch: "gat-70-new",
+      root: join(clone, ".claude", "worktrees"),
+    });
     expect(again.cwd).toBe(first.cwd);
     // Out of the clone's `git status`, through .git/info/exclude, once.
     expect(await git(exec, ["status", "--porcelain"], clone)).toBe("");
@@ -83,9 +91,37 @@ describe("prepareWorktree", () => {
   });
 
   test("a branch already on the remote is tracked, not recreated", async () => {
-    const { cwd } = await prepareWorktree(exec, { clone, branch: "gat-9-existing" });
+    const { cwd } = await prepareWorktree(exec, {
+      clone,
+      branch: "gat-9-existing",
+      root: join(clone, ".claude", "worktrees"),
+    });
     expect(await git(exec, ["rev-parse", "--abbrev-ref", "@{upstream}"], cwd)).toBe(
       "origin/gat-9-existing",
     );
+  });
+});
+
+describe("each tool's own place", () => {
+  test("a branch another tool's run already has is carried on there", async () => {
+    const elsewhere = join(dir, "codex-root");
+    const first = await prepareWorktree(exec, {
+      clone,
+      branch: "gat-71-shared",
+      root: join(clone, ".claude", "worktrees"),
+    });
+    const again = await prepareWorktree(exec, { clone, branch: "gat-71-shared", root: elsewhere });
+    const { realpath } = await import("node:fs/promises");
+    expect(await realpath(again.cwd)).toBe(await realpath(first.cwd));
+  });
+
+  test("Claude Code in the clone, Cursor and Codex in their own homes", async () => {
+    const { worktreeRoot } = await import("./worktree");
+    expect(worktreeRoot("claude", "/p/gatherd", "/h")).toBe("/p/gatherd/.claude/worktrees");
+    expect(worktreeRoot("cursor", "/p/gatherd", "/h")).toBe("/h/.cursor/worktrees/gatherd");
+    const saved = process.env.CODEX_HOME;
+    delete process.env.CODEX_HOME;
+    expect(worktreeRoot("codex", "/p/gatherd", "/h")).toBe("/h/.codex/worktrees/wake/gatherd");
+    if (saved !== undefined) process.env.CODEX_HOME = saved;
   });
 });

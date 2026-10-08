@@ -80,3 +80,24 @@ export async function allow(rule: string | undefined, remove: boolean): Promise<
       : `${mark.ok()} Allowed for runs: ${cyan(rule)}`,
   );
 }
+
+/** `wakectl trust codex [on|off]`: let a Codex run in herdr start without asking to trust its folder. */
+export async function trust(tool: string | undefined, next: string | undefined): Promise<void> {
+  if (tool !== "codex") throw new Error("usage: wakectl trust codex [on|off]");
+  const config = await loadConfig();
+  if (next === undefined) {
+    say(
+      config.trustCodexWorktrees
+        ? `Codex worktrees are trusted ${dim("(an entry in ~/.codex/config.toml per run, removed by wakectl prune)")}`
+        : `Codex worktrees are not trusted ${dim("(a Codex run in herdr asks first; answer it in the tab)")}`,
+    );
+    return;
+  }
+  if (next !== "on" && next !== "off") throw new Error("usage: wakectl trust codex [on|off]");
+  await saveConfig({ ...config, trustCodexWorktrees: next === "on" });
+  say(
+    next === "on"
+      ? `${mark.ok()} Codex worktrees are trusted\n${dim("  Each Codex run in herdr adds its worktree to ~/.codex/config.toml, marked as Wake's; wakectl prune takes it out.")}`
+      : `${mark.ok()} Codex worktrees are not trusted ${dim("Entries already added stay until wakectl prune.")}`,
+  );
+}

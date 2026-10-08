@@ -5,7 +5,7 @@ import pkg from "../package.json";
 import { forget, pair } from "./commands/pair";
 import { prune } from "./commands/prune";
 import { install, logs, pause, resume, uninstall } from "./commands/service";
-import { allow, mode, permissions } from "./commands/settings";
+import { allow, mode, permissions, trust } from "./commands/settings";
 import { status } from "./commands/status";
 import { COMMANDS, help } from "./help";
 import { listen } from "./listener";
@@ -65,6 +65,8 @@ async function main(argv: string[]): Promise<void> {
       return permissions(rest[0]);
     case "allow":
       return allow(rest[0], values.remove);
+    case "trust":
+      return trust(rest[0], rest[1]);
     case "prune": {
       const days = Number(values.days);
       if (!Number.isFinite(days) || days < 0) throw new Usage("prune [--days <n>]");

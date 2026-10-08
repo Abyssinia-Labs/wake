@@ -22,6 +22,8 @@ export type ClaudeRun = {
   onEvent?: (line: string) => void;
   /** Which tool runs it (tools.ts); Claude Code when absent. */
   tool?: AgentTool;
+  /** Trust the worktree in Codex's config before an interactive Codex starts (opt-in). */
+  trustFolder?: boolean;
   /** The tool's own session id, for a tool that picks it rather than taking Wake's. */
   onSession?: (id: string) => void;
 };

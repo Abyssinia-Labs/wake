@@ -28,6 +28,7 @@ const GROUPS: readonly { title: string; entries: readonly Entry[] }[] = [
       { use: "mode [headless|herdr]", what: "In the background, or a tab in herdr you can watch" },
       { use: "permissions [mode]", what: "What a run may do unasked: acceptEdits, auto, dontAsk" },
       { use: "allow [rule] [--remove]", what: "Tools a run may use beyond Wake's own" },
+      { use: "trust codex [on|off]", what: "Let Codex runs in herdr skip 'trust this folder?'" },
     ],
   },
   {
@@ -53,6 +54,7 @@ export const COMMANDS = [
   "mode",
   "permissions",
   "allow",
+  "trust",
   "prune",
   "listen",
   "help",

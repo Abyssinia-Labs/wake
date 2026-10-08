@@ -4,6 +4,7 @@
 // forced, and one Wake did not make is never touched.
 import { readdir, stat } from "node:fs/promises";
 import { dirname, join } from "node:path";
+import { untrustCodexFolder } from "../codex-trust";
 import { paths } from "../config";
 import { exec, git } from "../exec";
 import { messageOf, say } from "../log";
@@ -48,6 +49,7 @@ export async function prune(days: number): Promise<void> {
       // Without --force, git refuses a worktree with changes, which is the point.
       await git(exec, ["worktree", "remove", worktree], dirname(common));
       await forgetWorktree(p.made, worktree);
+      await untrustCodexFolder(worktree);
       removed += 1;
     } catch (error) {
       say(`${mark.warn()} Kept ${tildify(worktree)} ${dim(messageOf(error))}`);

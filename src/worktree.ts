@@ -5,8 +5,10 @@
 // lists it. The worktree is kept afterwards; resuming needs the same folder.
 // Claude Code's own --worktree is not used: it always makes a new
 // `worktree-<name>` branch, and a run must be on the ticket's branch.
-import { access, appendFile, readFile } from "node:fs/promises";
-import { join } from "node:path";
+import { access, appendFile, readFile, realpath } from "node:fs/promises";
+import { homedir } from "node:os";
+import { basename, join } from "node:path";
+import type { AgentTool } from "./contract";
 import { type Exec, git, gitOk } from "./exec";
 
 export type Prepared = { cwd: string; defaultBranch: string };
@@ -22,8 +24,49 @@ async function exists(path: string): Promise<boolean> {
 
 export const WORKTREES_DIR = join(".claude", "worktrees");
 
-export function worktreePath(clone: string, branch: string): string {
-  return join(clone, WORKTREES_DIR, branch.replaceAll("/", "--"));
+/**
+ * Where each tool keeps its worktrees, so a run's sits with the tool's own:
+ * Claude Code's in the clone's .claude/worktrees (its /resume lists them),
+ * Cursor's in ~/.cursor/worktrees/<repo>, Codex's in a `wake` folder of its
+ * worktrees root, apart from the ones the Codex app manages and prunes.
+ */
+export function worktreeRoot(tool: AgentTool, clone: string, home: string = homedir()): string {
+  const repo = basename(clone);
+  switch (tool) {
+    case "codex":
+      return join(process.env.CODEX_HOME ?? join(home, ".codex"), "worktrees", "wake", repo);
+    case "cursor":
+      return join(home, ".cursor", "worktrees", repo);
+    default:
+      return join(clone, WORKTREES_DIR);
+  }
+}
+
+export function worktreePath(root: string, branch: string): string {
+  return join(root, branch.replaceAll("/", "--"));
+}
+
+async function sameFolder(a: string, b: string): Promise<boolean> {
+  try {
+    return (await realpath(a)) === (await realpath(b));
+  } catch {
+    return a === b;
+  }
+}
+
+/** Where `branch` is already checked out, in any worktree of the clone, if anywhere. */
+export async function checkedOutAt(
+  run: Exec,
+  clone: string,
+  branch: string,
+): Promise<string | null> {
+  const listed = await git(run, ["worktree", "list", "--porcelain"], clone);
+  let path: string | null = null;
+  for (const line of listed.split("\n")) {
+    if (line.startsWith("worktree ")) path = line.slice("worktree ".length);
+    if (line === `branch refs/heads/${branch}` && path) return path;
+  }
+  return null;
 }
 
 /**
@@ -60,12 +103,12 @@ async function defaultBranchOf(run: Exec, clone: string): Promise<string> {
 
 export async function prepareWorktree(
   run: Exec,
-  o: { clone: string; branch: string },
+  o: { clone: string; branch: string; root: string },
 ): Promise<Prepared> {
   await git(run, ["fetch", "origin", "--prune", "--quiet"], o.clone);
-  await excludeWorktrees(run, o.clone);
+  if (o.root.startsWith(`${o.clone}/`)) await excludeWorktrees(run, o.clone);
   const defaultBranch = await defaultBranchOf(run, o.clone);
-  const cwd = worktreePath(o.clone, o.branch);
+  const cwd = worktreePath(o.root, o.branch);
 
   if (await exists(cwd)) {
     const current = await git(run, ["rev-parse", "--abbrev-ref", "HEAD"], cwd);
@@ -74,6 +117,13 @@ export async function prepareWorktree(
     }
     return { cwd, defaultBranch };
   }
+
+  // A branch is checked out once: if an earlier run, of this tool or another,
+  // already has it, carry on there rather than fail. Not the person's own
+  // checkout: that git refuses below, and the run fails saying why.
+  const elsewhere = await checkedOutAt(run, o.clone, o.branch);
+  if (elsewhere && !(await sameFolder(elsewhere, o.clone)))
+    return { cwd: elsewhere, defaultBranch };
 
   const local = await gitOk(
     run,

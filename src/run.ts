@@ -13,7 +13,7 @@ import { findClone } from "./repos";
 import { runCodex } from "./runners/codex";
 import { runCursor } from "./runners/cursor";
 import { toolOf } from "./tools";
-import { prepareWorktree } from "./worktree";
+import { prepareWorktree, worktreeRoot } from "./worktree";
 
 /** A run under way; `sessionId` is empty until a tool that picks its own has said it. */
 export type Started = { sessionId: string; cwd: string; tool: AgentTool };
@@ -79,7 +79,11 @@ export async function runSummons(
         reason: `No clone of ${summons.repo} in the folders Wake looks in (wakectl status).`,
       };
     }
-    const prepared = await prepareWorktree(o.deps.exec, { clone, branch: summons.branch });
+    const prepared = await prepareWorktree(o.deps.exec, {
+      clone,
+      branch: summons.branch,
+      root: worktreeRoot(toolOf(app) ?? "claude", clone),
+    });
     cwd = prepared.cwd;
     await rememberWorktree(o.paths.made, cwd);
     await installDependencies(o.deps.exec, cwd, (line) => o.onEvent?.(line));
@@ -108,6 +112,7 @@ export async function runSummons(
       timeoutMs: o.config.runTimeoutMinutes * 60_000,
       name: `${summons.target.ref} · Wake`,
       permissionMode: o.config.permissionMode,
+      trustFolder: o.config.trustCodexWorktrees,
       ...(o.onEvent ? { onEvent: o.onEvent } : {}),
     },
     { mode: o.config.run, ref: summons.target.ref, tool },

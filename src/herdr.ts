@@ -12,6 +12,7 @@ import { mkdir } from "node:fs/promises";
 import { homedir } from "node:os";
 import { join } from "node:path";
 import { allowedTools, type ClaudeResult, type ClaudeRun, disallowedTools, rules } from "./claude";
+import { trustCodexFolder } from "./codex-trust";
 import type { Exec } from "./exec";
 import { writeCursorPermissions } from "./runners/cursor";
 
@@ -181,6 +182,9 @@ export async function runInHerdr(o: HerdrRun, run: Exec): Promise<ClaudeResult> 
   const name = agentName(o.ref, o.sessionId);
   const tool = o.tool ?? "claude";
   if (tool === "cursor") await writeCursorPermissions(run, o);
+  if (tool === "codex" && o.trustFolder && (await trustCodexFolder(o.cwd))) {
+    o.onEvent?.("trusted the worktree in Codex's config (wakectl trust codex)");
+  }
   try {
     await herdr(run, [
       "agent",

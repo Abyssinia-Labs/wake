@@ -141,6 +141,11 @@ export function findWorkspace(listed: unknown): string | undefined {
   return typeof wake?.workspace_id === "string" ? wake.workspace_id : undefined;
 }
 
+/** Whether `agent start` stopped on a question the agent asked before it was ready. */
+export function startBlocked(error: unknown): boolean {
+  return error instanceof Error && error.message.includes("agent_not_ready");
+}
+
 /** Whether `agent prompt --wait` settled on idle rather than done. */
 export function settledIdle(stdout: string): boolean {
   try {
@@ -176,18 +181,45 @@ export async function runInHerdr(o: HerdrRun, run: Exec): Promise<ClaudeResult> 
   const name = agentName(o.ref, o.sessionId);
   const tool = o.tool ?? "claude";
   if (tool === "cursor") await writeCursorPermissions(run, o);
-  await herdr(run, [
-    "agent",
-    "start",
-    name,
-    "--kind",
-    tool,
-    "--pane",
-    pane,
-    "--",
-    ...nativeArgs(o, settings),
-  ]);
-  o.onEvent?.(`in herdr: workspace ${WORKSPACE}, tab ${o.ref}, agent ${name}`);
+  try {
+    await herdr(run, [
+      "agent",
+      "start",
+      name,
+      "--kind",
+      tool,
+      "--pane",
+      pane,
+      "--",
+      ...nativeArgs(o, settings),
+    ]);
+    o.onEvent?.(`in herdr: workspace ${WORKSPACE}, tab ${o.ref}, agent ${name}`);
+  } catch (error) {
+    // A question before it is ready (Codex asks whether to trust a new folder,
+    // and every worktree is one): the person is watching here, so wait for
+    // their answer rather than fail the run (GAT-31, 2026-10-08).
+    if (!startBlocked(error)) throw error;
+    o.onEvent?.(
+      `waiting for you in herdr: the ${o.ref} tab is asking a question before it starts (Codex asks whether to trust the folder)`,
+    );
+    const ready = await run([
+      "herdr",
+      "agent",
+      "wait",
+      name,
+      "--until",
+      "idle",
+      "--timeout",
+      String(o.timeoutMs),
+    ]);
+    if (ready.code !== 0) {
+      return {
+        ok: false,
+        reason: `The ${o.ref} tab in herdr was still asking a question when Wake stopped waiting.`,
+      };
+    }
+    o.onEvent?.("answered; starting the work");
+  }
 
   // Submitted, then waited on until herdr says it is done; blocked keeps it
   // waiting for the person, which is the point of running here.

@@ -119,3 +119,38 @@ describe("runInHerdr", () => {
     expect(await herdrRunning(up)).toBe(true);
   });
 });
+
+describe("a question before the agent is ready", () => {
+  test("waits for the person, then prompts", async () => {
+    const calls: string[][] = [];
+    const exec: Exec = async (cmd) => {
+      calls.push(cmd);
+      if (cmd[2] === "start") {
+        return {
+          code: 1,
+          stdout: JSON.stringify({
+            error: { code: "agent_not_ready", message: "blocked during startup" },
+          }),
+          stderr: "",
+        };
+      }
+      const out =
+        cmd[1] === "workspace"
+          ? { result: { workspaces: [{ workspace_id: "w2", label: "Wake" }] } }
+          : cmd[1] === "tab"
+            ? { result: { root_pane: { pane_id: "w2:p7" } } }
+            : { result: { agent: { status: "done" } } };
+      return { code: 0, stdout: JSON.stringify(out), stderr: "" };
+    };
+    const said: string[] = [];
+    const result = await runInHerdr(
+      { ...base, tool: "codex", ref: "GAT-31", onEvent: (line) => said.push(line) },
+      exec,
+    );
+    expect(result).toEqual({ ok: true });
+    const order = calls.map((cmd) => `${cmd[1]} ${cmd[2]}`);
+    expect(order.indexOf("agent wait")).toBeGreaterThan(order.indexOf("agent start"));
+    expect(order.indexOf("agent prompt")).toBeGreaterThan(order.indexOf("agent wait"));
+    expect(said.some((line) => line.startsWith("waiting for you in herdr"))).toBe(true);
+  });
+});

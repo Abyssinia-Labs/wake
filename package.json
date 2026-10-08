@@ -1,6 +1,6 @@
 {
   "name": "@abyssinia-labs/wake",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Starts your agent when Gatherd or Antescript hands it work",
   "license": "UNLICENSED",
   "private": true,

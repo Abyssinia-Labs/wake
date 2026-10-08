@@ -10,21 +10,27 @@ import {
   saveConfig,
 } from "../config";
 import { say } from "../log";
+import { bold, cyan, dim, mark } from "../ui";
 
 /** `wakectl mode [headless|herdr]`: how runs start. */
 export async function mode(next: string | undefined): Promise<void> {
   const config = await loadConfig();
   if (next === undefined) {
-    say(`Runs are ${config.run}.`);
+    say(
+      `Runs are ${bold(config.run)}. ${dim(`Change with wakectl mode ${config.run === "herdr" ? "headless" : "herdr"}.`)}`,
+    );
     return;
   }
   const chosen = RUN_MODES.find((one) => one === next) as RunMode | undefined;
   if (!chosen) throw new Error(`mode is one of ${RUN_MODES.join(", ")}`);
   await saveConfig({ ...config, run: chosen });
+  say(`${mark.ok()} Runs are ${bold(chosen)}`);
   say(
-    chosen === "herdr"
-      ? "Runs open as a tab in herdr's Wake workspace, where you can watch and step in. With herdr not running, they run headless."
-      : "Runs are headless: `wakectl logs -f` follows them, and `claude --resume` opens one afterwards.",
+    dim(
+      chosen === "herdr"
+        ? "  Each opens as a tab in herdr's Wake workspace, where you can watch and step in. With herdr not running, a run is headless."
+        : "  wakectl logs -f follows them, and claude --resume opens one afterwards.",
+    ),
   );
 }
 
@@ -40,7 +46,7 @@ const MEANS: Record<PermissionMode, string> = {
 export async function permissions(next: string | undefined): Promise<void> {
   const config = await loadConfig();
   if (next === undefined) {
-    say(`Permissions: ${config.permissionMode}, ${MEANS[config.permissionMode]}`);
+    say(`Permissions are ${bold(config.permissionMode)}: ${dim(MEANS[config.permissionMode])}`);
     return;
   }
   if (next === "bypassPermissions") {
@@ -51,7 +57,8 @@ export async function permissions(next: string | undefined): Promise<void> {
   const chosen = PERMISSION_MODES.find((one) => one === next);
   if (!chosen) throw new Error(`permissions is one of ${PERMISSION_MODES.join(", ")}`);
   await saveConfig({ ...config, permissionMode: chosen });
-  say(`Permissions: ${chosen}, ${MEANS[chosen]}`);
+  say(`${mark.ok()} Permissions are ${bold(chosen)}`);
+  say(dim(`  ${MEANS[chosen]}`));
 }
 
 /** `wakectl allow [rule] [--remove]`: tools a run may use beyond Wake's own list. */
@@ -60,12 +67,16 @@ export async function allow(rule: string | undefined, remove: boolean): Promise<
   if (rule === undefined) {
     say(
       config.extraAllowedTools.length > 0
-        ? `Also allowed: ${config.extraAllowedTools.join(", ")}`
-        : "Nothing allowed beyond Wake's own list (edits, git, gh, bun, the app's tools).",
+        ? `Also allowed: ${config.extraAllowedTools.map((one) => cyan(one)).join(", ")}`
+        : `Nothing beyond Wake's own list ${dim("(edits, git, gh, bun, the app's tools)")}`,
     );
     return;
   }
   const rest = config.extraAllowedTools.filter((one) => one !== rule);
   await saveConfig({ ...config, extraAllowedTools: remove ? rest : [...rest, rule] });
-  say(remove ? `No longer allowed: ${rule}` : `Allowed for runs: ${rule}`);
+  say(
+    remove
+      ? `${mark.ok()} No longer allowed: ${cyan(rule)}`
+      : `${mark.ok()} Allowed for runs: ${cyan(rule)}`,
+  );
 }

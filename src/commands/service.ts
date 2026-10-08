@@ -7,6 +7,8 @@ import { paths } from "../config";
 import { exec } from "../exec";
 import { load, plist, plistPath, programArguments, unload } from "../launchd";
 import { say } from "../log";
+import { colorLogLine } from "../log-colors";
+import { colorOn, cyan, dim, mark, spin, tildify } from "../ui";
 
 export async function install(): Promise<void> {
   const p = paths();
@@ -19,30 +21,50 @@ export async function install(): Promise<void> {
     path,
     plist({ args: programArguments(process.execPath, process.argv[1]), env, log: p.log }),
   );
-  await load(exec, path);
-  say(`Wake is running, and will start at every login. Its log: ${p.log}`);
+  await spin("Starting the listener", () => load(exec, path));
+  say(`${mark.ok()} Wake is listening, and will start at every login`);
+  say(dim(`  Its log: ${tildify(p.log)}. Follow it with wakectl logs -f.`));
 }
 
 export async function uninstall(): Promise<void> {
-  const stopped = await unload(exec);
+  const stopped = await spin("Stopping the listener", () => unload(exec));
   await rm(plistPath(), { force: true });
-  say(stopped ? "Wake stopped and won't start at login." : "Wake wasn't running.");
+  say(
+    stopped
+      ? `${mark.ok()} Wake stopped, and won't start at login`
+      : `${mark.warn()} Wake wasn't running. ${dim("Nothing will start it at login now.")}`,
+  );
 }
 
 export async function pause(): Promise<void> {
   const p = paths();
   await mkdir(p.home, { recursive: true });
   await Bun.write(p.paused, `${new Date().toISOString()}\n`);
-  say("Paused: Wake claims nothing new. A run already going finishes. `wakectl resume` to go on.");
+  say(`${mark.warn()} Paused: Wake claims nothing new`);
+  say(dim(`  A run already going finishes. ${cyan("wakectl resume")} to go on.`));
 }
 
 export async function resume(): Promise<void> {
   await rm(paths().paused, { force: true });
-  say("Resumed. Wake looks again within half a minute.");
+  say(`${mark.ok()} Resumed ${dim("Wake looks again within half a minute.")}`);
 }
 
+/** The listener's log; in a terminal each line is coloured on its way out. */
 export async function logs(follow: boolean): Promise<void> {
   const args = ["tail", "-n", "50", ...(follow ? ["-f"] : []), paths().log];
-  const proc = Bun.spawn(args, { stdout: "inherit", stderr: "inherit" });
+  if (!colorOn()) {
+    await Bun.spawn(args, { stdout: "inherit", stderr: "inherit" }).exited;
+    return;
+  }
+  const proc = Bun.spawn(args, { stdout: "pipe", stderr: "inherit" });
+  const decoder = new TextDecoder();
+  let rest = "";
+  for await (const chunk of proc.stdout) {
+    rest += decoder.decode(chunk, { stream: true });
+    const lines = rest.split("\n");
+    rest = lines.pop() ?? "";
+    for (const line of lines) process.stdout.write(`${colorLogLine(line)}\n`);
+  }
+  if (rest) process.stdout.write(`${colorLogLine(rest)}\n`);
   await proc.exited;
 }

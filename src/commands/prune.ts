@@ -9,6 +9,7 @@ import { exec, git } from "../exec";
 import { messageOf, say } from "../log";
 import { forgetWorktree, madeWorktrees } from "../made";
 import { isAlive, readState } from "../state";
+import { dim, mark, tildify } from "../ui";
 
 async function dirs(path: string): Promise<string[]> {
   try {
@@ -49,8 +50,10 @@ export async function prune(days: number): Promise<void> {
       await forgetWorktree(p.made, worktree);
       removed += 1;
     } catch (error) {
-      say(`Kept ${worktree}: ${messageOf(error)}`);
+      say(`${mark.warn()} Kept ${tildify(worktree)} ${dim(messageOf(error))}`);
     }
   }
-  say(`Removed ${removed} worktree${removed === 1 ? "" : "s"} older than ${days} days.`);
+  say(
+    `${mark.ok()} Removed ${removed} worktree${removed === 1 ? "" : "s"} ${dim(`untouched for ${days} days`)}`,
+  );
 }

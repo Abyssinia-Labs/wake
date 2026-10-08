@@ -8,14 +8,17 @@ import { discover, forgetPlace, isUnpaired, pairPlace } from "../http";
 import { plistPath } from "../launchd";
 import { say } from "../log";
 import { keychain } from "../secrets";
+import { bold, cyan, dim, mark, spin } from "../ui";
 
 export async function pair(domain: string, code: string): Promise<void> {
   const key = domainKey(domain);
-  const discovery = await discover(domain);
-  const paired = await pairPlace(discovery, code.trim().toUpperCase(), {
-    name: hostname(),
-    platform: process.platform,
-  });
+  const discovery = await spin(`Finding Wake on ${key}`, () => discover(domain));
+  const paired = await spin(`Pairing this machine (${hostname()})`, () =>
+    pairPlace(discovery, code.trim().toUpperCase(), {
+      name: hostname(),
+      platform: process.platform,
+    }),
+  );
   await keychain.set(key, paired.placeKey);
   const config = await loadConfig();
   config.apps[key] = {
@@ -28,13 +31,14 @@ export async function pair(domain: string, code: string): Promise<void> {
     pairedAt: Date.now(),
   };
   await saveConfig(config);
-  say(
-    `Paired with ${paired.app} as ${paired.agent.name}. A mention or an assignment now starts it here.`,
-  );
+  say(`${mark.ok()} Paired with ${bold(paired.app)} as ${bold(paired.agent.name)}`);
+  say(dim("  A mention or an assignment now starts it on this machine."));
   try {
     await access(plistPath());
   } catch {
-    say("Wake isn't running yet: run `wakectl install` to start it now and at every login.");
+    say(
+      `${mark.arrow()} Next: ${cyan("wakectl install")} ${dim("to start listening now and at every login")}`,
+    );
   }
 }
 
@@ -43,20 +47,26 @@ export async function forget(domain: string): Promise<void> {
   const config = await loadConfig();
   const app = config.apps[key];
   if (!app) {
-    say(`Wake isn't paired with ${key}.`);
+    say(
+      `${mark.warn()} Wake isn't paired with ${bold(key)}. ${dim("wakectl status lists what is.")}`,
+    );
     return;
   }
   const placeKey = await keychain.get(key);
   if (placeKey) {
-    try {
-      await forgetPlace(app, placeKey);
-    } catch (error) {
-      // Already gone on the app's side is what forgetting wanted.
-      if (!isUnpaired(error)) throw error;
-    }
+    await spin(`Telling ${key} to forget this machine`, async () => {
+      try {
+        await forgetPlace(app, placeKey);
+      } catch (error) {
+        // Already gone on the app's side is what forgetting wanted.
+        if (!isUnpaired(error)) throw error;
+      }
+    });
     await keychain.delete(key);
   }
   delete config.apps[key];
   await saveConfig(config);
-  say(`Forgot ${key}. ${app.agent.name} is no longer started from this machine.`);
+  say(
+    `${mark.ok()} Forgot ${bold(key)}. ${dim(`${app.agent.name} is no longer started from this machine.`)}`,
+  );
 }

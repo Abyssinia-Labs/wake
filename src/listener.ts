@@ -8,7 +8,7 @@ import { exec } from "./exec";
 import { messageOf, note } from "./log";
 import { connectPlace, type LivePlace } from "./place";
 import { realDeps, runSummons } from "./run";
-import { Scheduler } from "./scheduler";
+import { type Place, Scheduler } from "./scheduler";
 import { keychain } from "./secrets";
 import { type ListenerState, type RunState, writeState } from "./state";
 import { programOf, TOOL_NAMES, toolInstalled, toolOf } from "./tools";
@@ -28,6 +28,8 @@ export async function listen(): Promise<void> {
   // connected, so nothing is claimed that this machine cannot run.
   const missing = new Map<string, string>();
   const runs = new Map<string, RunState>();
+  // Runs under way and the place that claimed each, so stopping can finish them.
+  const active = new Map<string, Place>();
   let config: Config = await loadConfig();
 
   const save = async (): Promise<void> => {
@@ -57,6 +59,7 @@ export async function listen(): Promise<void> {
     work: async (place, summons, run) => {
       const app = config.apps[place.domain];
       if (!app) return { id: summons.id, outcome: "failed", reason: "Wake was unpaired mid-run." };
+      active.set(summons.id, place);
       try {
         return await runSummons(summons, run, app, {
           config,
@@ -82,6 +85,7 @@ export async function listen(): Promise<void> {
           },
         });
       } finally {
+        active.delete(summons.id);
         runs.delete(summons.id);
         void save();
       }
@@ -112,6 +116,13 @@ export async function listen(): Promise<void> {
     for (const [domain, app] of Object.entries(config.apps)) {
       if (live.has(domain) || unpaired.has(domain)) continue;
       const tool = toolOf(app);
+      if (!tool) {
+        if (!missing.has(domain)) {
+          note(`No tool runs ${app.agent.name} on this machine, so ${domain} is not listened to.`);
+        }
+        missing.set(domain, "no tool");
+        continue;
+      }
       if (!(await toolInstalled(exec, tool))) {
         if (!missing.has(domain)) {
           note(
@@ -159,6 +170,17 @@ export async function listen(): Promise<void> {
 
   const stop = async (signal: string): Promise<void> => {
     note(`Stopping on ${signal}.`);
+    // A run cut off here would otherwise show as under way on its ticket for good.
+    await Promise.race([
+      Promise.all(
+        [...active].map(([id, place]) =>
+          place
+            .finish({ id, outcome: "failed", reason: "Wake stopped before the run finished." })
+            .catch((e) => note(`Could not report ${id}: ${messageOf(e)}`)),
+        ),
+      ),
+      Bun.sleep(5_000),
+    ]);
     await Promise.all([...live.keys()].map(disconnect));
     process.exit(0);
   };

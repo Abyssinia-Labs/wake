@@ -93,7 +93,15 @@ describe("runInHerdr", () => {
     expect(start).toContain("GAT-37·Wake");
     const prompt = calls.find((cmd) => cmd[2] === "prompt") ?? [];
     expect(prompt[4]).toContain("rm -rf");
-    expect(prompt.slice(5)).toEqual(["--wait", "--until", "done", "--timeout", "60000"]);
+    expect(prompt.slice(5)).toEqual([
+      "--wait",
+      "--until",
+      "done",
+      "--until",
+      "idle",
+      "--timeout",
+      "60000",
+    ]);
   });
 
   test("herdr not running reads as not running", async () => {

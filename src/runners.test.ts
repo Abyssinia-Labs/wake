@@ -129,3 +129,44 @@ describe("pairings and sessions", () => {
     expect(resumeLine("cursor", "s")).toBe("cursor-agent --resume s");
   });
 });
+
+describe("no tool, no run", () => {
+  test("a pairing names its tool, or its agent's name does, or nothing runs it", async () => {
+    const { toolOf } = await import("./tools");
+    const agent = (name: string) => ({ agent: { id: "a", name } });
+    expect(toolOf({ ...agent("ChatGPT"), tool: "codex" })).toBe("codex");
+    expect(toolOf(agent("Claude"))).toBe("claude");
+    expect(toolOf(agent("Codex (Michael)"))).toBe("codex");
+    expect(toolOf(agent("Cursor"))).toBe("cursor");
+    expect(toolOf(agent("ChatGPT"))).toBeNull();
+    expect(toolOf(agent("nightly-script"))).toBeNull();
+  });
+
+  test("herdr settling on idle is a stop, not done", async () => {
+    const { settledIdle } = await import("./herdr");
+    expect(settledIdle(JSON.stringify({ result: { agent: { status: "idle" } } }))).toBe(true);
+    expect(settledIdle(JSON.stringify({ result: { agent: { status: "done" } } }))).toBe(false);
+    expect(settledIdle("not json")).toBe(false);
+  });
+
+  test("forget finds a pairing by its agent's name, and leaves the others", async () => {
+    const { pairingsOf } = await import("./commands/pair");
+    const { defaults } = await import("./config");
+    const app = (name: string) => ({
+      domain: "gatherd.dev",
+      app: "gatherd",
+      agent: { id: name, name },
+      convexUrl: "c",
+      httpBase: "h",
+      pairedAt: 1,
+    });
+    const config = {
+      ...defaults(),
+      apps: { "gatherd.dev": app("Claude"), "gatherd.dev/chatgpt-j9747y": app("ChatGPT") },
+    };
+    expect(pairingsOf(config, "ChatGPT").map(([key]) => key)).toEqual([
+      "gatherd.dev/chatgpt-j9747y",
+    ]);
+    expect(pairingsOf(config, "gatherd.dev")).toHaveLength(2);
+  });
+});

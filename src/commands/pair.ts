@@ -15,7 +15,7 @@ import { discover, forgetPlace, isUnpaired, pairPlace } from "../http";
 import { plistPath } from "../launchd";
 import { say } from "../log";
 import { keychain } from "../secrets";
-import { programOf, TOOL_NAMES, toolInstalled } from "../tools";
+import { programOf, TOOL_NAMES, toolInstalled, toolOf } from "../tools";
 import { bold, cyan, dim, mark, spin } from "../ui";
 
 /** The config's key for one agent of one app: readable in logs, unique per agent. */
@@ -28,11 +28,13 @@ export function pairingKey(domain: string, agent: { id: string; name: string }):
   return `${domain}/${slug}-${agent.id.slice(0, 6)}`;
 }
 
-/** The pairings a name means: every one of a domain, or the one with that key. */
+/** The pairings a name means: every one of a domain, the one with that key, or an agent's. */
 export function pairingsOf(config: Config, name: string): [string, PairedApp][] {
   const host = domainKey(name);
+  const agent = name.trim().toLowerCase();
   return Object.entries(config.apps).filter(
-    ([key, app]) => app.domain === host || key === name || key === host,
+    ([key, app]) =>
+      app.domain === host || key === name || key === host || app.agent.name.toLowerCase() === agent,
   );
 }
 
@@ -50,7 +52,24 @@ export async function pair(domain: string, code: string, toolFlag?: string): Pro
       platform: process.platform,
     }),
   );
-  const tool = forced ?? paired.agent.tool;
+  const tool = forced ?? paired.agent.tool ?? toolOf({ agent: paired.agent });
+  if (!tool) {
+    // Nothing here can answer as this agent, so the place is given straight back.
+    await spin(`Unpairing ${paired.agent.name}: no tool here runs it`, () =>
+      forgetPlace(discovery, paired.placeKey).catch((error: unknown) => {
+        if (!isUnpaired(error)) throw error;
+      }),
+    );
+    say(
+      `${mark.warn()} ${bold(paired.agent.name)} isn't run by a tool Wake can start, so it was not paired`,
+    );
+    say(
+      dim(
+        `  ${paired.app} said ${paired.agent.name} asked, which is how ChatGPT and Codex in the ChatGPT app connect. Wake starts Claude Code, the Codex CLI and Cursor's CLI: connect one of those to ${paired.app}, ask it for a code there, or pair again with --tool.`,
+      ),
+    );
+    return;
+  }
   const key = pairingKey(host, paired.agent);
   const config = await loadConfig();
   // The same agent paired before, under this key or the old domain-only one.
@@ -72,21 +91,13 @@ export async function pair(domain: string, code: string, toolFlag?: string): Pro
   };
   await saveConfig(config);
 
-  const runner = tool ?? "claude";
   say(
-    `${mark.ok()} Paired with ${bold(paired.app)} as ${bold(paired.agent.name)}, run by ${bold(TOOL_NAMES[runner])}`,
+    `${mark.ok()} Paired with ${bold(paired.app)} as ${bold(paired.agent.name)}, run by ${bold(TOOL_NAMES[tool])}`,
   );
   say(dim("  A mention or an assignment now starts it on this machine."));
-  if (!tool) {
+  if (!(await toolInstalled(exec, tool))) {
     say(
-      dim(
-        `  ${paired.app} did not say which tool asked; Claude Code it is. Pair with --tool codex or --tool cursor to change it.`,
-      ),
-    );
-  }
-  if (!(await toolInstalled(exec, runner))) {
-    say(
-      `${mark.warn()} ${TOOL_NAMES[runner]} (${programOf(runner)}) isn't installed here, so nothing is claimed for it until it is.`,
+      `${mark.warn()} ${TOOL_NAMES[tool]} (${programOf(tool)}) isn't installed here, so nothing is claimed for it until it is.`,
     );
   }
   try {

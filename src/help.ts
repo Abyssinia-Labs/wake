@@ -59,7 +59,7 @@ export const COMMANDS = [
 ];
 
 export function help(): string {
-  const width = 26;
+  const width = 34;
   const lines = [
     `${bold("wakectl")} ${dim(`v${pkg.version}`)}  starts your agent when Gatherd or Antescript hands it work`,
     "",

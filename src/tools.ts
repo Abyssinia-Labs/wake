@@ -18,8 +18,20 @@ const PROGRAMS: Record<AgentTool, string> = {
   cursor: "cursor-agent",
 };
 
-export function toolOf(app: Pick<PairedApp, "tool">): AgentTool {
-  return app.tool ?? "claude";
+/**
+ * The tool that runs a pairing's agent: the one its app named, else one its
+ * agent's name makes plain (Claude, Codex, Cursor, as D-39 names them). Null
+ * when neither says, and then nothing runs: ChatGPT pairs through chatgpt.com,
+ * which Codex in the ChatGPT app also uses, and Wake can start neither of
+ * those. Running some other tool would answer as the wrong agent.
+ */
+export function toolOf(app: Pick<PairedApp, "tool" | "agent">): AgentTool | null {
+  if (app.tool) return app.tool;
+  const name = app.agent.name.toLowerCase();
+  if (name.startsWith("claude")) return "claude";
+  if (name.startsWith("codex")) return "codex";
+  if (name.startsWith("cursor")) return "cursor";
+  return null;
 }
 
 export function programOf(tool: AgentTool): string {

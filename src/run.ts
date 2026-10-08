@@ -90,7 +90,8 @@ export async function runSummons(
     await mkdir(cwd, { recursive: true });
   }
 
-  const tool = toolOf(app);
+  // The listener only connects a pairing with a tool, so this is never the fallback.
+  const tool = toolOf(app) ?? "claude";
   // Claude Code takes Wake's session id; Codex and Cursor pick their own and say it.
   const ours = tool === "claude";
   o.onStart({ sessionId: ours ? sessionId : "", cwd, tool });

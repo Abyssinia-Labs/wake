@@ -141,6 +141,16 @@ export function findWorkspace(listed: unknown): string | undefined {
   return typeof wake?.workspace_id === "string" ? wake.workspace_id : undefined;
 }
 
+/** Whether `agent prompt --wait` settled on idle rather than done. */
+export function settledIdle(stdout: string): boolean {
+  try {
+    const status = findString(JSON.parse(stdout), ["status", "agent_status", "state"]);
+    return status === "idle";
+  } catch {
+    return false;
+  }
+}
+
 export type HerdrRun = ClaudeRun & { ref: string };
 
 export async function runInHerdr(o: HerdrRun, run: Exec): Promise<ClaudeResult> {
@@ -188,12 +198,20 @@ export async function runInHerdr(o: HerdrRun, run: Exec): Promise<ClaudeResult> 
     name,
     openingPrompt(o),
     "--wait",
+    // Done, or idle: a person who stops the session leaves it idle, not done,
+    // and waiting on done alone held the run for its whole timeout (GAT-20).
     "--until",
     "done",
+    "--until",
+    "idle",
     "--timeout",
     String(o.timeoutMs),
   ]);
   if (answer.code === 0) {
+    if (settledIdle(answer.stdout)) {
+      o.onEvent?.("stopped in herdr before it was done");
+      return { ok: false, reason: "Stopped in herdr before it was done; its tab is still open." };
+    }
     o.onEvent?.("done in herdr; the session stays open in its tab");
     return { ok: true };
   }

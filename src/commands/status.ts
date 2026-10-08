@@ -48,13 +48,21 @@ export function statusLines({ config, state, paused, now }: StatusInput): string
     const [dot, words] = !live
       ? [mark.off(), dim("not connected")]
       : live.missing
-        ? [mark.warn(), yellow(`${live.missing} isn't installed`)]
+        ? [
+            mark.warn(),
+            yellow(
+              live.missing === "no tool"
+                ? "no tool here runs it"
+                : `${live.missing} isn't installed`,
+            ),
+          ]
         : live.unpaired
           ? [mark.fail(), red("refused, pair it again")]
           : live.connected
             ? [mark.on(), "listening"]
             : [mark.half(), yellow("connecting")];
-    const tool = dim(TOOL_NAMES[toolOf(app)]);
+    const known = toolOf(app);
+    const tool = dim(known ? TOOL_NAMES[known] : "?");
     lines.push(
       `  ${dot} ${pad(bold(app.domain), 18)}${pad(app.agent.name, 18)}${pad(tool, 14)}${words}`,
     );

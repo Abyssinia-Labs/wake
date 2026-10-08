@@ -1,24 +1,16 @@
 import { describe, expect, test } from "bun:test";
-import { tokenSource } from "./place";
+import { ConvexError } from "convex/values";
+import { isUnpairedError } from "./place";
 
-describe("tokenSource", () => {
-  test("reuses a token until five minutes before it expires, or when forced", async () => {
-    let now = 0;
-    let fetched = 0;
-    const token = tokenSource(
-      { httpBase: "https://h" },
-      "k",
-      async () => {
-        fetched += 1;
-        return { token: `t${fetched}`, expiresAt: now + 60 * 60_000 };
-      },
-      () => now,
-    );
-    expect(await token(false)).toBe("t1");
-    now = 50 * 60_000;
-    expect(await token(false)).toBe("t1");
-    now = 56 * 60_000;
-    expect(await token(false)).toBe("t2");
-    expect(await token(true)).toBe("t3");
+describe("isUnpairedError", () => {
+  test("the app's UNPAIRED, as a ConvexError or as the message a client relays", () => {
+    expect(isUnpairedError(new ConvexError("UNPAIRED"))).toBe(true);
+    expect(
+      isUnpairedError(new Error("[Request ID: x] Server Error Uncaught ConvexError: UNPAIRED")),
+    ).toBe(true);
+  });
+  test("anything else is a failure to report, not a forgotten place", () => {
+    expect(isUnpairedError(new ConvexError("TICKET_NOT_FOUND"))).toBe(false);
+    expect(isUnpairedError(new Error("WebSocket closed"))).toBe(false);
   });
 });

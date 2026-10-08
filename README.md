@@ -56,8 +56,10 @@ branch. For a page, it runs in an empty folder with the app's tools only.
 ## The contract
 
 Wake knows each app only through `wake/v1`: discovery at
-`/.well-known/wake`, three HTTP routes (`pair`, `token`, `forget`) and
-three Convex functions (`wake:pending`, `wake:claim`, `wake:finish`). The
+`/.well-known/wake`, two HTTP routes (`pair`, `forget`) and three Convex
+functions (`wake:pending`, `wake:claim`, `wake:finish`), each called with
+the place key as an argument. The key is the whole credential: nobody
+signs in. The
 full contract and the rules around it are the Wake pattern, kept word for
 word in each app as `docs/product/wake-pattern.md`.
 

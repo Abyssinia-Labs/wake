@@ -1,13 +1,6 @@
-// The HTTP half of wake/v1: discovery and the three place routes. The place
+// The HTTP half of wake/v1: discovery, pairing and forgetting. The place
 // key travels as a bearer token, never in a URL.
-import {
-  asDiscovery,
-  asPaired,
-  asPlaceToken,
-  type Discovery,
-  type Paired,
-  type PlaceToken,
-} from "./contract";
+import { asDiscovery, asPaired, type Discovery, type Paired } from "./contract";
 import { messageOf } from "./log";
 
 export type Fetch = (input: string, init?: RequestInit) => Promise<Response>;
@@ -86,15 +79,6 @@ export async function pairPlace(
 ): Promise<Paired> {
   const url = `${d.httpBase}/wake/v1/pair`;
   return asPaired(await call(fetcher, url, "Pairing", post(null, { code, machine })));
-}
-
-export async function placeToken(
-  d: Pick<Discovery, "httpBase">,
-  key: string,
-  fetcher: Fetch = fetch,
-): Promise<PlaceToken> {
-  const url = `${d.httpBase}/wake/v1/token`;
-  return asPlaceToken(await call(fetcher, url, "The token route", post(key)));
 }
 
 export async function forgetPlace(

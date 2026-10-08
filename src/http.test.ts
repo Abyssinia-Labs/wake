@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { appOrigin, discover, type Fetch, HttpError, isUnpaired, placeToken } from "./http";
+import { appOrigin, discover, type Fetch, forgetPlace, HttpError, isUnpaired } from "./http";
 
 describe("appOrigin", () => {
   test("https for a domain, http only for this machine", () => {
@@ -29,22 +29,19 @@ describe("routes", () => {
     const fetcher: Fetch = async (u, init) => {
       url = u;
       auth = new Headers(init?.headers).get("authorization") ?? "";
-      return Response.json({ token: "jwt", expiresAt: 5 });
+      return new Response(null, { status: 204 });
     };
-    expect(await placeToken({ httpBase: "https://h" }, "pk_secret", fetcher)).toEqual({
-      token: "jwt",
-      expiresAt: 5,
-    });
-    expect(auth).toBe("Bearer pk_secret");
-    expect(url).not.toContain("pk_secret");
+    await forgetPlace({ httpBase: "https://h" }, "gwk_secret", fetcher);
+    expect(auth).toBe("Bearer gwk_secret");
+    expect(url).toBe("https://h/wake/v1/forget");
   });
 
   test("a refusal reads as unpaired, with the app's code", async () => {
-    const fetcher: Fetch = async () => Response.json({ error: "agent_stopped" }, { status: 403 });
-    const error = await placeToken({ httpBase: "https://h" }, "k", fetcher).catch((e) => e);
+    const fetcher: Fetch = async () => Response.json({ error: "unpaired" }, { status: 401 });
+    const error = await forgetPlace({ httpBase: "https://h" }, "k", fetcher).catch((e) => e);
     expect(error).toBeInstanceOf(HttpError);
     expect(isUnpaired(error)).toBe(true);
-    expect((error as HttpError).code).toBe("agent_stopped");
+    expect((error as HttpError).code).toBe("unpaired");
   });
 
   test("a server error is not unpaired", () => {

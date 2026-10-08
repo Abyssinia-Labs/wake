@@ -1,8 +1,10 @@
-// A paired app, live: a Convex subscription to `wake:pending` under the
-// place's own JWT. An idle subscription costs nothing and nothing polls
-// (the pattern's "Cost"). The place key never leaves this process except
-// to the app's token route.
+// A paired app, live: a Convex subscription to `wake:pending` with the place
+// key as its argument. The key is the whole credential (the pattern's
+// contract, as amended on 2026-10-08): nobody signs in, and each of the three
+// functions finds the place by the key's hash. An idle subscription costs
+// nothing and nothing polls (the pattern's "Cost").
 import { ConvexClient } from "convex/browser";
+import { ConvexError } from "convex/values";
 import type { PairedApp } from "./config";
 import {
   asClaim,
@@ -10,11 +12,10 @@ import {
   claimRef,
   finishRef,
   type Outcome,
-  type PlaceToken,
   pendingRef,
   type Summons,
+  UNPAIRED,
 } from "./contract";
-import { isUnpaired, placeToken } from "./http";
 import { messageOf } from "./log";
 import type { Place } from "./scheduler";
 
@@ -26,59 +27,53 @@ export type LivePlace = {
 
 export type PlaceEvents = {
   onList: (place: Place, summonses: Summons[]) => void;
-  /** The app refused the key: the place was forgotten or its agent stopped. */
+  /** The app refused the key: the place was forgotten or its agent revoked. */
   onUnpaired: (domain: string) => void;
   note: (line: string) => void;
 };
 
-/** A token with less than this left is fetched again rather than reused. */
-const REFRESH_MARGIN_MS = 5 * 60_000;
-
-export function tokenSource(
-  app: Pick<PairedApp, "httpBase">,
-  key: string,
-  fetchToken: typeof placeToken = placeToken,
-  now: () => number = Date.now,
-): (force: boolean) => Promise<string> {
-  let cached: PlaceToken | undefined;
-  return async (force) => {
-    if (!force && cached && cached.expiresAt - now() > REFRESH_MARGIN_MS) return cached.token;
-    cached = await fetchToken(app, key);
-    return cached.token;
-  };
+/** Whether an error from a wake:* function means the key opens nothing now. */
+export function isUnpairedError(error: unknown): boolean {
+  if (error instanceof ConvexError) return error.data === UNPAIRED;
+  return error instanceof Error && error.message.includes(UNPAIRED);
 }
 
 export function connectPlace(app: PairedApp, key: string, events: PlaceEvents): LivePlace {
   const client = new ConvexClient(app.convexUrl);
-  const token = tokenSource(app, key);
   let unpaired = false;
 
-  client.setAuth(async ({ forceRefreshToken }) => {
-    if (unpaired) return null;
-    try {
-      return await token(forceRefreshToken);
-    } catch (error) {
-      if (isUnpaired(error)) {
-        unpaired = true;
-        events.onUnpaired(app.domain);
-        return null;
-      }
-      events.note(`No token from ${app.domain}: ${messageOf(error)}`);
-      return null;
+  const refused = (error: unknown): boolean => {
+    if (!isUnpairedError(error)) return false;
+    if (!unpaired) {
+      unpaired = true;
+      events.onUnpaired(app.domain);
     }
-  });
+    return true;
+  };
 
   const place: Place = {
     domain: app.domain,
-    claim: async (id) => asClaim(await client.mutation(claimRef, { id })),
+    claim: async (id) => {
+      try {
+        return asClaim(await client.mutation(claimRef, { key, id }));
+      } catch (error) {
+        // A key that stopped working loses every race from here on.
+        if (refused(error)) return { claimed: false };
+        throw error;
+      }
+    },
     finish: async (outcome: Outcome) => {
-      await client.mutation(finishRef, outcome);
+      try {
+        await client.mutation(finishRef, { ...outcome, key });
+      } catch (error) {
+        if (!refused(error)) throw error;
+      }
     },
   };
 
   client.onUpdate(
     pendingRef,
-    {},
+    { key },
     (value) => {
       try {
         const { summonses, rejected } = asSummonses(value);
@@ -90,7 +85,9 @@ export function connectPlace(app: PairedApp, key: string, events: PlaceEvents): 
         events.note(messageOf(error));
       }
     },
-    (error) => events.note(`${app.domain}: ${messageOf(error)}`),
+    (error) => {
+      if (!refused(error)) events.note(`${app.domain}: ${messageOf(error)}`);
+    },
   );
 
   return {

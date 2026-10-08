@@ -9,7 +9,6 @@ export const CONTRACT = "wake/v1";
 export type Discovery = { version: typeof CONTRACT; convexUrl: string; httpBase: string };
 export type Agent = { id: string; name: string };
 export type Paired = { placeKey: string; app: string; agent: Agent };
-export type PlaceToken = { token: string; expiresAt: number };
 export type Target = { kind: string; ref: string; url: string };
 /** A summons carries no text (the pattern's second principle). */
 export type Summons = {
@@ -25,11 +24,18 @@ export type Run = { prompt: string };
 export type Claim = { claimed: true; run: Run } | { claimed: false };
 export type Outcome = { id: string; outcome: "done" | "failed"; reason?: string };
 
-export const pendingRef = makeFunctionReference<"query", Record<string, never>, unknown>(
-  "wake:pending",
+// Each takes the place key as an argument: it is the whole credential, and
+// nobody signs in (the pattern's contract, as amended on 2026-10-08).
+export const pendingRef = makeFunctionReference<"query", { key: string }, unknown>("wake:pending");
+export const claimRef = makeFunctionReference<"mutation", { key: string; id: string }, unknown>(
+  "wake:claim",
 );
-export const claimRef = makeFunctionReference<"mutation", { id: string }, unknown>("wake:claim");
-export const finishRef = makeFunctionReference<"mutation", Outcome, unknown>("wake:finish");
+export const finishRef = makeFunctionReference<"mutation", Outcome & { key: string }, unknown>(
+  "wake:finish",
+);
+
+/** What a wake:* function throws for a key that no longer opens anything. */
+export const UNPAIRED = "UNPAIRED";
 
 export class ContractError extends Error {
   constructor(what: string, detail?: string) {
@@ -85,13 +91,6 @@ export function asPaired(v: unknown): Paired {
       return { placeKey: v.placeKey, app: v.app, agent: { id, name } };
   }
   throw new ContractError("pairing");
-}
-
-export function asPlaceToken(v: unknown): PlaceToken {
-  if (isRecord(v) && isText(v.token) && typeof v.expiresAt === "number") {
-    return { token: v.token, expiresAt: v.expiresAt };
-  }
-  throw new ContractError("a place token");
 }
 
 function asSummons(v: unknown): Summons | null {

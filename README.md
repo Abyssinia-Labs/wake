@@ -34,6 +34,16 @@ bun run wakectl help
 3. `wakectl status` shows what is paired, connected and running, with the
    `claude --resume` line for each run. `wakectl logs -f` follows the log.
 
+**How runs start, and what they may do.** `wakectl mode herdr` opens each
+run as a tab in herdr's Wake workspace, an interactive session you can watch
+and step into (headless when herdr isn't running); `wakectl mode headless`
+is the default. `wakectl permissions` picks Claude Code's permission mode:
+`acceptEdits` (the default: anything outside the allowed tools asks, which
+in herdr waits for you), `auto` (Claude Code's auto mode decides), or
+`dontAsk` (anything not allowed is denied, so a run never waits).
+`wakectl allow "Bash(npm test:*)"` adds a tool to the allowed list, and
+`--remove` takes it back. `bypassPermissions` is never offered.
+
 `wakectl pause` stops new claims (a run already going finishes) and
 `wakectl resume` goes on. `wakectl prune` removes run worktrees untouched
 for 14 days, and keeps any with uncommitted work.

@@ -16,6 +16,8 @@ describe("claudeArgs", () => {
     const args = claudeArgs(base);
     expect(args.slice(0, 2)).toEqual(["claude", "-p"]);
     expect(args).toContain("acceptEdits");
+    const auto = claudeArgs({ ...base, permissionMode: "auto" });
+    expect(auto[auto.indexOf("--permission-mode") + 1]).toBe("auto");
     expect(args.join(" ")).not.toContain("bypassPermissions");
     expect(args).not.toContain(base.prompt);
     expect(args).toContain(base.sessionId);

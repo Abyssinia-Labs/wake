@@ -26,10 +26,21 @@ export type Config = {
   extraAllowedTools: string[];
   /** Headless `claude -p`, or a tab in herdr to watch (falls back to headless). */
   run: RunMode;
+  permissionMode: PermissionMode;
   apps: Record<string, PairedApp>;
 };
 
 export const RUN_MODES = ["headless", "herdr"] as const;
+
+/**
+ * The Claude Code permission modes a run may use. `acceptEdits` asks about
+ * anything outside the allowed tools, which in herdr waits for the person;
+ * `auto` lets Claude Code's auto mode decide; `dontAsk` denies anything not
+ * allowed, so a run never waits. Never bypassPermissions (the pattern's "What
+ * a run may do"); `plan` would never edit and `manual` asks about everything.
+ */
+export const PERMISSION_MODES = ["acceptEdits", "auto", "dontAsk"] as const;
+export type PermissionMode = (typeof PERMISSION_MODES)[number];
 export type RunMode = (typeof RUN_MODES)[number];
 
 export type Paths = {
@@ -67,6 +78,7 @@ export function defaults(): Config {
     runTimeoutMinutes: 120,
     extraAllowedTools: [],
     run: "headless",
+    permissionMode: "acceptEdits",
     apps: {},
   };
 }
@@ -102,6 +114,9 @@ export async function loadConfig(): Promise<Config> {
     runTimeoutMinutes: positive(v.runTimeoutMinutes) ?? base.runTimeoutMinutes,
     extraAllowedTools: strings(v.extraAllowedTools) ?? base.extraAllowedTools,
     run: RUN_MODES.find((mode) => mode === v.run) ?? base.run,
+    // Anything else in the file, bypassPermissions included, is read as the default.
+    permissionMode:
+      PERMISSION_MODES.find((mode) => mode === v.permissionMode) ?? base.permissionMode,
     // Written only by Wake, so its shape is trusted once it is an object.
     apps: apps as Record<string, PairedApp>,
   };

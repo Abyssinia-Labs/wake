@@ -50,7 +50,7 @@ export function agentName(ref: string, salt: string): string {
 export function claudeSettings(o: ClaudeRun): Record<string, unknown> {
   return {
     permissions: {
-      defaultMode: "acceptEdits",
+      defaultMode: o.permissionMode ?? "acceptEdits",
       allow: allowedTools(o),
       deny: disallowedTools(o.defaultBranch),
     },

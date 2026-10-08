@@ -36,6 +36,11 @@ describe("shapes herdr accepts", () => {
       },
     });
   });
+  test("the settings carry the chosen permission mode", () => {
+    const settings = claudeSettings({ ...base, permissionMode: "dontAsk" });
+    expect((settings.permissions as Record<string, unknown>).defaultMode).toBe("dontAsk");
+  });
+
   test("the opening prompt is the live rules, then the app's prompt", () => {
     const text = openingPrompt(base);
     expect(text.startsWith("Wake started this session in herdr")).toBe(true);

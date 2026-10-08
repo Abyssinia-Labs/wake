@@ -91,6 +91,7 @@ export async function runSummons(
       extraAllowedTools: o.config.extraAllowedTools,
       timeoutMs: o.config.runTimeoutMinutes * 60_000,
       name: `${summons.target.ref} · Wake`,
+      permissionMode: o.config.permissionMode,
       ...(o.onEvent ? { onEvent: o.onEvent } : {}),
     },
     { mode: o.config.run, ref: summons.target.ref },

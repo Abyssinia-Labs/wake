@@ -2,6 +2,7 @@
 // list of tools (the pattern's "What a run may do"). The disallowed list is
 // a second fence; branch protection on the repository is the real one.
 import { describeEvent, resultOf } from "./claude-events";
+import type { PermissionMode } from "./config";
 
 export type ClaudeRun = {
   cwd: string;
@@ -14,6 +15,8 @@ export type ClaudeRun = {
   timeoutMs: number;
   /** What `/resume` shows for it, so the person finds it by ticket. */
   name?: string;
+  /** Claude Code's permission mode (config.ts); acceptEdits when absent. */
+  permissionMode?: PermissionMode;
   /** Each step of the run, as a log line (claude-events.ts). */
   onEvent?: (line: string) => void;
 };
@@ -89,7 +92,7 @@ export function claudeArgs(o: ClaudeRun): string[] {
     o.sessionId,
     ...(o.name ? ["--name", o.name] : []),
     "--permission-mode",
-    "acceptEdits",
+    o.permissionMode ?? "acceptEdits",
     // A line per event, so Wake can log each step; -p needs --verbose for it.
     "--output-format",
     "stream-json",

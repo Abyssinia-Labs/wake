@@ -6,7 +6,8 @@ import { ConvexError, v } from "convex/values";
 import type { Doc } from "./_generated/dataModel.js";
 import { type MutationCtx, mutation, type QueryCtx, query } from "./_generated/server.js";
 import { hashSecret, KEY_SHAPE } from "./keys.js";
-import { target } from "./schema.js";
+import { target, tool } from "./schema.js";
+import { isRunReport } from "./shape.js";
 
 /** Oldest first, at most this many: Wake runs two at a time. */
 const PENDING_LIMIT = 50;
@@ -75,6 +76,40 @@ export const claim = mutation({
     });
     await ctx.db.patch(place._id, { lastSeenAt: now });
     return { claimed: true as const, run: { prompt: row.prompt } };
+  },
+});
+
+/**
+ * wake:started: the agent is running, under a name people see and the
+ * session its owner resumes. A later call for the same run replaces the
+ * first (the session id of Codex and Cursor comes after they start).
+ */
+export const started = mutation({
+  args: {
+    key: v.string(),
+    id: v.string(),
+    run: v.object({ name: v.string(), tool, session: v.optional(v.string()) }),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const place = await placeOf(ctx, args.key);
+    const id = ctx.db.normalizeId("summonses", args.id);
+    const row = id ? await ctx.db.get(id) : null;
+    if (!row || row.place !== place._id || row.state !== "claimed") return null;
+    if (!isRunReport(args.run)) return null;
+    const now = Date.now();
+    await ctx.db.patch(row._id, {
+      run: {
+        name: args.run.name,
+        tool: args.run.tool,
+        ...(args.run.session === undefined ? {} : { session: args.run.session }),
+        machine: place.machine,
+        startedAt: row.run?.startedAt ?? now,
+      },
+      updatedAt: now,
+    });
+    await ctx.db.patch(place._id, { lastSeenAt: now });
+    return null;
   },
 });
 

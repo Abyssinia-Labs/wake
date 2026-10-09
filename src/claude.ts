@@ -17,8 +17,10 @@ export type ClaudeRun = {
   branch?: string;
   extraAllowedTools: string[];
   timeoutMs: number;
-  /** What `/resume` shows for it, so the person finds it by ticket. */
+  /** What `/resume` shows for it, so the person finds it by ticket and run name. */
   name?: string;
+  /** The app recorded the start (`wake:started`), so the agent needn't comment to say it. */
+  acknowledged?: boolean;
   /** Claude Code's permission mode (config.ts); acceptEdits when absent. */
   permissionMode?: PermissionMode;
   /** Each step of the run, as a log line (claude-events.ts). */
@@ -34,7 +36,7 @@ export type ClaudeRun = {
 export type ClaudeResult = { ok: boolean; reason?: string };
 
 export function rules(
-  o: Pick<ClaudeRun, "sessionId" | "defaultBranch" | "tool"> & { live?: boolean },
+  o: Pick<ClaudeRun, "sessionId" | "defaultBranch" | "tool" | "acknowledged"> & { live?: boolean },
 ): string {
   // Codex and Cursor pick their own session ids, which the agent cannot see;
   // Wake logs them, and `wakectl status` shows how to resume.
@@ -43,10 +45,14 @@ export function rules(
     o.live
       ? "Wake started this session in herdr because an app summoned you. Your person can watch it and step in."
       : "Wake started this session because an app summoned you. Nobody is watching it live.",
-    // The first run (GAT-37, 2026-10-08) said nothing for minutes while it read.
-    knowsId
-      ? `Before anything else, comment where you were asked that you are on it, and give your Claude Code session id, ${o.sessionId}, so the person knows and can resume it with \`claude --resume ${o.sessionId}\`.`
-      : "Before anything else, comment where you were asked that you are on it, so the person knows.",
+    // The first run (GAT-37, 2026-10-08) said nothing for minutes while it
+    // read. An app with `wake:started` shows that from Wake, and a comment
+    // saying so only lengthens the thread (the owner, 2026-10-09).
+    o.acknowledged
+      ? "Wake has already shown where you were asked that you are on it, with your session. Don't comment just to say you have started."
+      : knowsId
+        ? `Before anything else, comment where you were asked that you are on it, and give your Claude Code session id, ${o.sessionId}, so the person knows and can resume it with \`claude --resume ${o.sessionId}\`.`
+        : "Before anything else, comment where you were asked that you are on it, so the person knows.",
     // The second (GAT-20) was asked a question, read "then do the work", and
     // opened a pull request nobody asked for. Do what was asked, no more.
     "Then do what you were asked, and no more: a question is answered in a comment, and code changes only when the ask is for a change. If you think a change is needed but were not asked for one, say so in your answer and let the person decide. Finish with a comment saying what you found or did.",

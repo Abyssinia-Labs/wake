@@ -51,6 +51,15 @@ export function someOf(items: readonly string[], noun: string, shown = 3): strin
   return `${items.length} ${noun}: ${items.slice(0, shown).join(", ")} and ${items.length - shown} more`;
 }
 
+/** How long ago, short: "just now", "12 min", "3 h 5 min", "4 days". */
+export function ago(at: number, now: number): string {
+  const minutes = Math.round((now - at) / 60_000);
+  if (minutes < 1) return "just now";
+  if (minutes < 60) return `${minutes} min`;
+  if (minutes < 48 * 60) return `${Math.floor(minutes / 60)} h ${minutes % 60} min`;
+  return `${Math.floor(minutes / (24 * 60))} days`;
+}
+
 export function pad(text: string, width: number): string {
   // biome-ignore lint/suspicious/noControlCharactersInRegex: matching ANSI escapes is the point.
   const visible = text.replace(/\x1b\[[0-9;]*m/g, "").length;

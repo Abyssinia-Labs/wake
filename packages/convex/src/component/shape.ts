@@ -55,3 +55,11 @@ export function checkSummons(s: SummonsShape): void {
   if (s.branch !== undefined && !isBranch(s.branch)) bad("branch");
   if (s.prompt.trim() === "" || s.prompt.length > MAX_PROMPT) bad("prompt");
 }
+
+const RUN_NAME = /^[a-z]{1,16}-[a-z]{1,16}$/;
+const SESSION = /^[A-Za-z0-9_-]{1,128}$/;
+
+/** `wake:started`'s rules: a call that breaks one is ignored, not stored. */
+export function isRunReport(r: { name: string; session?: string }): boolean {
+  return RUN_NAME.test(r.name) && (r.session === undefined || SESSION.test(r.session));
+}

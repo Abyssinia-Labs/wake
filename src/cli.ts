@@ -4,6 +4,7 @@ import { parseArgs } from "node:util";
 import pkg from "../package.json";
 import { check } from "./commands/check";
 import { doctor, setup } from "./commands/doctor";
+import { open } from "./commands/open";
 import { forget, pair } from "./commands/pair";
 import { prune } from "./commands/prune";
 import { repos } from "./commands/repos";
@@ -71,6 +72,8 @@ async function main(argv: string[]): Promise<void> {
       return status();
     case "logs":
       return logs(values.follow);
+    case "open":
+      return open(rest[0]);
     case "pause":
       return pause();
     case "resume":

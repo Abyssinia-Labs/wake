@@ -195,7 +195,8 @@ export async function runInHerdr(o: HerdrRun, run: Exec): Promise<ClaudeResult> 
     // which broke every herdr run, 2026-10-09), so a ref may not start
     // with a dash and be read as an option instead.
     "--label",
-    tabLabel(o.ref),
+    // The ticket and the run's name, as the app shows it (`wake:started`).
+    tabLabel(o.name ?? o.ref),
     "--no-focus",
   ]);
   const pane = findString(tab, ["pane_id"]);

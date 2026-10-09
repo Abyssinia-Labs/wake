@@ -26,6 +26,8 @@ export type Summons = {
 export type Run = { prompt: string };
 export type Claim = { claimed: true; run: Run } | { claimed: false };
 export type Outcome = { id: string; outcome: "done" | "failed"; reason?: string };
+/** What `wake:started` tells the app: the run's name, its tool, its session when known. */
+export type RunReport = { name: string; tool: AgentTool; session?: string };
 
 // Each takes the place key as an argument: it is the whole credential, and
 // nobody signs in (the pattern's contract, as amended on 2026-10-08).
@@ -36,6 +38,12 @@ export const claimRef = makeFunctionReference<"mutation", { key: string; id: str
 export const finishRef = makeFunctionReference<"mutation", Outcome & { key: string }, unknown>(
   "wake:finish",
 );
+/** Optional in wake/v1: an app that doesn't serve it hears of a run from the agent instead. */
+export const startedRef = makeFunctionReference<
+  "mutation",
+  { key: string; id: string; run: RunReport },
+  unknown
+>("wake:started");
 
 /** What a wake:* function throws for a key that no longer opens anything. */
 export const UNPAIRED = "UNPAIRED";

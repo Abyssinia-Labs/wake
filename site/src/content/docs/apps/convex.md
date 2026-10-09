@@ -20,16 +20,16 @@ app.use(wake);
 export default app;
 ```
 
-## The three functions
+## The functions
 
-They must be called `wake:pending`, `wake:claim` and `wake:finish`, so they
-go in `convex/wake.ts`:
+They must be called `wake:pending`, `wake:claim`, `wake:started` and
+`wake:finish`, so they go in `convex/wake.ts`:
 
 ```ts
 import { exposeApi } from "@abyssinia-labs/wake-convex";
 import { components } from "./_generated/api";
 
-export const { pending, claim, finish } = exposeApi(components.wake, { app: "acme" });
+export const { pending, claim, started, finish } = exposeApi(components.wake, { app: "acme" });
 ```
 
 They take no auth: the place key is the credential, and the component
@@ -81,7 +81,7 @@ export const wake = new Wake(components.wake, { app: "acme" });
 | `wake.summon(ctx, { agent, owner, askedBy, scope?, subject, kind, target, repo?, branch?, prompt })` | A person assigned or mentioned an agent. |
 | `wake.answer(ctx, { id, yes })` | The owner answered a summons someone else made. |
 | `wake.settle(ctx, { subject, agent?, kind?, state, reason })` | It stopped being wanted: unassigned, closed, answered. |
-| `wake.forSubject(ctx, subject)` | Show each agent's latest summons where it was made. |
+| `wake.forSubject(ctx, subject)` | Show each agent's latest summons where it was made, with its `run` (name, tool, machine, and the session, for the owner's eyes) once it started. |
 | `wake.places(ctx, agent)`, `wake.forgetPlace(ctx, { agent, place })` | An agent's machines, on your agents screen. |
 | `wake.revokeAgent(ctx, agent)` | In the mutation that revokes an agent. |
 | `wake.deleteScope(ctx, scope)` | A workspace is deleted; call until `done`. |

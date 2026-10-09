@@ -145,9 +145,10 @@ export class Wake {
 }
 
 /**
- * wake:pending, wake:claim and wake:finish, for the host's `convex/wake.ts`:
+ * wake:pending, wake:claim, wake:started and wake:finish, for the host's
+ * `convex/wake.ts`:
  *
- *   export const { pending, claim, finish } = exposeApi(components.wake, { app: "acme" });
+ *   export const { pending, claim, started, finish } = exposeApi(components.wake, { app: "acme" });
  *
  * They take no auth: the place key is the credential (the spec), and the
  * component checks it.
@@ -163,6 +164,18 @@ export function exposeApi(component: ComponentApi, options: WakeOptions) {
     claim: mutationGeneric({
       args: { key: v.string(), id: v.string() },
       handler: async (ctx, args) => await ctx.runMutation(component.wire.claim, args),
+    }),
+    started: mutationGeneric({
+      args: {
+        key: v.string(),
+        id: v.string(),
+        run: v.object({
+          name: v.string(),
+          tool: v.union(v.literal("claude"), v.literal("codex"), v.literal("cursor")),
+          session: v.optional(v.string()),
+        }),
+      },
+      handler: async (ctx, args) => await ctx.runMutation(component.wire.started, args),
     }),
     finish: mutationGeneric({
       args: {

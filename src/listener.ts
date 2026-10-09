@@ -6,6 +6,7 @@ import { existsSync } from "node:fs";
 import { recordAsked } from "./asked";
 import { type Config, keepPrivate, loadConfig, paths } from "./config";
 import { exec } from "./exec";
+import { type RunRecord, recordRun } from "./history";
 import { messageOf, note } from "./log";
 import { connectPlace, type LivePlace } from "./place";
 import { realDeps, runSummons } from "./run";
@@ -54,6 +55,10 @@ export async function listen(): Promise<void> {
     await writeState(p.state, state).catch((e) => note(`Could not write state: ${messageOf(e)}`));
   };
 
+  /** Kept by name for `wakectl open`, after the run is gone from the state. */
+  const keep = (run: RunRecord): Promise<void> =>
+    recordRun(p.history, run).catch((e) => note(`Could not record the run: ${messageOf(e)}`));
+
   const scheduler = new Scheduler({
     maxRuns: config.maxRuns,
     isPaused: () => existsSync(p.paused),
@@ -63,29 +68,45 @@ export async function listen(): Promise<void> {
       if (!app) return { id: summons.id, outcome: "failed", reason: "Wake was unpaired mid-run." };
       active.set(summons.id, place);
       try {
-        return await runSummons(summons, run, app, {
+        const outcome = await runSummons(summons, run, app, {
           config,
           paths: p,
           deps,
           onEvent: (line) => note(`${summons.target.ref}: ${line}`),
-          onStart: ({ sessionId, cwd, tool }) => {
+          onStart: ({ sessionId, cwd, tool, name }) => {
             const known = runs.get(summons.id);
             note(
               known
-                ? `${summons.target.ref}: ${TOOL_NAMES[tool]} session ${sessionId}`
-                : `Started ${summons.target.ref} in ${TOOL_NAMES[tool]}${sessionId ? ` as session ${sessionId}` : ""} in ${cwd}.`,
+                ? `${summons.target.ref} (${name}): ${TOOL_NAMES[tool]} session ${sessionId}`
+                : `Started ${summons.target.ref} as ${name} in ${TOOL_NAMES[tool]}${sessionId ? `, session ${sessionId},` : ""} in ${cwd}.`,
             );
-            runs.set(summons.id, {
+            const now = {
               app: app.app,
               ref: summons.target.ref,
               sessionId,
               cwd,
               tool,
+              name,
               startedAt: known?.startedAt ?? Date.now(),
-            });
+            };
+            runs.set(summons.id, now);
+            void keep({ ...now, summons: summons.id });
             void save();
           },
+          report: (run) => place.started(summons.id, run),
         });
+        const ran = runs.get(summons.id);
+        if (ran?.name) {
+          void keep({
+            ...ran,
+            name: ran.name,
+            tool: ran.tool ?? "claude",
+            summons: summons.id,
+            finishedAt: Date.now(),
+            outcome: outcome.outcome,
+          });
+        }
+        return outcome;
       } finally {
         active.delete(summons.id);
         runs.delete(summons.id);

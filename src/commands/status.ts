@@ -6,14 +6,7 @@ import { type Config, loadConfig, paths } from "../config";
 import { say } from "../log";
 import { isAlive, type ListenerState, readState } from "../state";
 import { resumeLine, TOOL_NAMES, toolOf } from "../tools";
-import { bold, cyan, dim, mark, pad, red, someOf, tildify, yellow } from "../ui";
-
-function ago(at: number, now: number): string {
-  const minutes = Math.round((now - at) / 60_000);
-  if (minutes < 1) return "just now";
-  if (minutes < 60) return `${minutes} min`;
-  return `${Math.floor(minutes / 60)} h ${minutes % 60} min`;
-}
+import { ago, bold, cyan, dim, mark, pad, red, someOf, tildify, yellow } from "../ui";
 
 export type StatusInput = {
   config: Config;
@@ -86,7 +79,7 @@ export function statusLines({ config, state, paused, now }: StatusInput): string
     lines.push("", bold("Running now"));
     for (const run of runs) {
       lines.push(
-        `  ${mark.half()} ${pad(bold(run.ref), 10)}${pad(ago(run.startedAt, now), 10)}${dim(tildify(run.cwd))}`,
+        `  ${mark.half()} ${pad(bold(run.ref), 10)}${pad(run.name ?? "", 16)}${pad(ago(run.startedAt, now), 10)}${dim(tildify(run.cwd))}`,
       );
       lines.push(
         run.sessionId

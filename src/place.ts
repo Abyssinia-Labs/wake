@@ -1,7 +1,7 @@
 // A paired app, live: a Convex subscription to `wake:pending` with the place
 // key as its argument. The key is the whole credential (the pattern's
-// contract, as amended on 2026-10-08): nobody signs in, and each of the three
-// functions finds the place by the key's hash. An idle subscription costs
+// contract, as amended on 2026-10-08): nobody signs in, and each function
+// finds the place by the key's hash. An idle subscription costs
 // nothing and nothing polls (the pattern's "Cost").
 import { ConvexClient } from "convex/browser";
 import { ConvexError } from "convex/values";
@@ -13,7 +13,9 @@ import {
   finishRef,
   type Outcome,
   pendingRef,
+  type RunReport,
   type Summons,
+  startedRef,
   UNPAIRED,
 } from "./contract";
 import { messageOf } from "./log";
@@ -73,6 +75,18 @@ export function connectPlace(
         await client.mutation(finishRef, { ...outcome, key });
       } catch (error) {
         if (!refused(error)) throw error;
+      }
+    },
+    started: async (id: string, run: RunReport) => {
+      try {
+        await client.mutation(startedRef, { key, id, run });
+        return true;
+      } catch (error) {
+        // `wake:started` is optional, and a production deployment says only
+        // "Server Error" for a function it lacks: either way the agent says
+        // it is on it instead.
+        refused(error);
+        return false;
       }
     },
   };

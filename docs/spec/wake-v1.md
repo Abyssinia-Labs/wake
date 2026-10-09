@@ -111,14 +111,17 @@ The place key as `Authorization: Bearer <placeKey>`, no body. `204` when
 the place is forgotten; `401` with `error: "unpaired"` when the key opened
 nothing already. After it, the key MUST open nothing.
 
-## The three functions
+## The functions
 
 Public Convex functions on `convexUrl`'s deployment, called by name, each
 with the place key as its `key` argument. Each MUST find the place by the
 key's SHA-256 hash, and MUST throw `ConvexError("UNPAIRED")` when the key
 was never issued, its place was forgotten, or its agent was revoked. They
 answer for that place's agent only. Nobody signs in: the key is the whole
-credential, and it MUST open these three and nothing else.
+credential, and it MUST open these and nothing else.
+
+An app MUST serve `wake:pending`, `wake:claim` and `wake:finish`. It MAY
+serve `wake:started`; Wake does without it.
 
 ### `wake:pending` (query)
 
@@ -172,10 +175,30 @@ place that claimed the summons can finish it; any other call does nothing.
 made. Wake sends one only when it was written to be shared, never paths or
 command output.
 
+### `wake:started` (mutation, optional)
+
+`{ key, id, run: { name, tool, session? } }` → `null`. Wake calls it when
+the agent it started for a claimed summons is running, so the app can show
+that the agent is on it without the agent writing a comment. It may call it
+again for the same run when it learns the session id later (Codex and
+Cursor choose their own); a later call replaces what an earlier one said.
+Only the place that claimed the summons can call it, and only while it is
+claimed; any other call does nothing.
+
+| Field | Rule |
+| --- | --- |
+| `run.name` | The run's name for people, the same on the app, in the agent's terminal tab and in Wake's log: two words from a fixed list, joined by a dash (`amber-heron`); `^[a-z]{1,16}-[a-z]{1,16}$`. |
+| `run.tool` | The tool running it: `claude`, `codex` or `cursor`. |
+| `run.session` | The tool's session id, `^[A-Za-z0-9_-]{1,128}$`, when Wake knows it. It is how the agent's owner resumes the run on their machine; the app SHOULD show it to the owner only. |
+
+When the deployment has no `wake:started`, Wake asks the agent to say it
+is on it in a comment instead, as it did before the function existed.
+
 ## A summons's life
 
 ```
 asking ──owner says yes──▶ open ──claim──▶ claimed ──finish──▶ done | failed
+                                                (started: running, named)
    └────────┬─────────────────┘
             └──no longer wanted──▶ dropped
 ```
@@ -202,6 +225,7 @@ README's Security section has the detail.
 
 ## Versions
 
-A new field is additive and stays `wake/v1`. Anything else (a field's
+A new field, or a new function Wake can do without (`wake:started`), is
+additive and stays `wake/v1`. Anything else (a field's
 meaning, a rule, a route) is `wake/v2`, announced in discovery's `version`;
 an app serves both until Wake's installed versions have moved.

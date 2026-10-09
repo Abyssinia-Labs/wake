@@ -14,6 +14,14 @@ export const state = v.union(
   v.literal("dropped"),
 );
 export const target = v.object({ kind: v.string(), ref: v.string(), url: v.string() });
+/** What `wake:started` says about a claimed summons's run. */
+export const run = v.object({
+  name: v.string(),
+  tool,
+  session: v.optional(v.string()),
+  machine: v.string(),
+  startedAt: v.number(),
+});
 
 export default defineSchema({
   // Wake on one machine, paired to one agent. Its key is kept as a hash.
@@ -71,6 +79,8 @@ export default defineSchema({
     noticedAt: v.optional(v.number()),
     place: v.optional(v.id("places")),
     claimedAt: v.optional(v.number()),
+    /** Its run, once Wake says the agent is running (`wake:started`). */
+    run: v.optional(run),
     finishedAt: v.optional(v.number()),
   })
     .index("by_subject_agent", ["subject", "agent", "state"])

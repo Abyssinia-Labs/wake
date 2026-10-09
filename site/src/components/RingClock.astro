@@ -1,0 +1,26 @@
+<script>
+  // The hero clock rings twice when the page opens, and for as long as a
+  // pointer rests on it. It stops only between rings, so it never snaps.
+  const clock = document.querySelector<SVGSVGElement>(".wake-clock");
+  const body = clock?.querySelector(".body");
+  if (clock && body && !matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    let rings = 0;
+    let hovered = false;
+    const ring = (times: number): void => {
+      rings = Math.max(rings, times);
+      clock.classList.add("is-ringing");
+    };
+    body.addEventListener("animationiteration", () => {
+      rings -= 1;
+      if (rings <= 0 && !hovered) clock.classList.remove("is-ringing");
+    });
+    clock.addEventListener("pointerenter", () => {
+      hovered = true;
+      ring(1);
+    });
+    clock.addEventListener("pointerleave", () => {
+      hovered = false;
+    });
+    setTimeout(() => ring(2), 400);
+  }
+</script>

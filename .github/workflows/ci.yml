@@ -48,3 +48,5 @@ jobs:
       - run: bun run --cwd packages/convex typecheck
       - run: bun run --cwd packages/convex test
       - run: bun run --cwd packages/convex build
+      # wakectl.dev: the site builds, with the spec copied in from docs/spec.
+      - run: bun run --cwd site build

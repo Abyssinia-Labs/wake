@@ -134,3 +134,46 @@ test("a machine without an agent stops at the checks, saying how to fix it", asy
   expect(io.said.join("\n")).toContain("Fix what's marked");
   expect(checkLines([{ level: "fail", what: "x", fix: "do y" }]).join("\n")).toContain("do y");
 });
+
+test("approving more than ten repositories at once is confirmed, and no asks again", async () => {
+  const many = join(dir, "many");
+  for (let i = 0; i < 12; i++) {
+    const clone = join(many, `r${String(i).padStart(2, "0")}`);
+    await mkdir(clone, { recursive: true });
+    await git(exec, ["init", "--quiet"], clone);
+    await git(
+      exec,
+      ["remote", "add", "origin", `git@github.com:acme/r${String(i).padStart(2, "0")}.git`],
+      clone,
+    );
+  }
+  const config = await loadConfig();
+  await saveConfig({ ...config, roots: [many], repos: {} });
+  const io = scripted([
+    "", // folders: keep ~/many
+    "", // no new pairing
+    "all", // every clone...
+    "", // ...not confirmed (the default is no)
+    "1 2", // so it asks again
+    "", // runs: herdr
+    "", // permissions: as they are
+  ]);
+  await setupFlow({
+    io,
+    run: ready,
+    probe: async () => ({
+      platform: "darwin",
+      bunVersion: "1.3.3",
+      exists: (path) => path === "/p.plist" || existsSync(path),
+      plist: "/p.plist",
+      listener: 9,
+      paused: false,
+    }),
+    home: dir,
+    pair: async () => {},
+    install: async () => {},
+    askedPath: join(dir, "asked-none.json"),
+  });
+  expect((await loadConfig()).repos).toEqual({ "app.example.com": ["acme/r00", "acme/r01"] });
+  expect(io.said.join("\n")).not.toContain("acme/r00, acme/r01, acme/r02, acme/r03");
+});

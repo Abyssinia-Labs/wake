@@ -7,7 +7,7 @@ import type { Config } from "./config";
 import { AGENT_TOOLS, type AgentTool } from "./contract";
 import type { Exec } from "./exec";
 import { programOf, TOOL_NAMES, toolInstalled } from "./tools";
-import { tildify } from "./ui";
+import { someOf, tildify } from "./ui";
 
 export type Level = "ok" | "warn" | "fail" | "info";
 export type Check = { level: Level; what: string; detail?: string; fix?: string };
@@ -129,7 +129,7 @@ export function wakeChecks(config: Config, probe: Probe): Check[] {
     const repos = config.repos[domain] ?? [];
     checks.push(
       repos.length > 0
-        ? { level: "ok", what: `${domain} may run in ${repos.join(", ")}` }
+        ? { level: "ok", what: `${domain} may run in ${someOf(repos, "repositories")}` }
         : {
             level: "warn",
             what: `${domain}: no repository approved`,

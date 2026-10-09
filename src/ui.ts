@@ -45,6 +45,12 @@ export function tildify(path: string, home = process.env.HOME ?? ""): string {
 }
 
 /** Pads to a visible width, ignoring the colour codes in it. */
+/** "a, b, c" — or, past `shown`, "40 repositories: a, b, c and 37 more". */
+export function someOf(items: readonly string[], noun: string, shown = 3): string {
+  if (items.length <= shown) return items.join(", ");
+  return `${items.length} ${noun}: ${items.slice(0, shown).join(", ")} and ${items.length - shown} more`;
+}
+
 export function pad(text: string, width: number): string {
   // biome-ignore lint/suspicious/noControlCharactersInRegex: matching ANSI escapes is the point.
   const visible = text.replace(/\x1b\[[0-9;]*m/g, "").length;

@@ -9,7 +9,7 @@ You decide **what** summons an agent (an assignment, a mention) and write
 the prompt. The component keeps everything wake/v1 requires: pair codes and
 place keys (stored as hashes), places, the summons's life (asking, open,
 claimed, done, failed, dropped), the race to claim, the thirty-minute
-unclaimed notice, and the three functions and two routes Wake calls.
+unclaimed notice, and the functions and two routes Wake calls.
 
 ## Install
 
@@ -30,14 +30,14 @@ export default app;
 
 ## Serve wake/v1
 
-**The three functions** must be called `wake:pending`, `wake:claim` and
-`wake:finish`, so they go in `convex/wake.ts`:
+**The functions** must be called `wake:pending`, `wake:claim`,
+`wake:started` and `wake:finish`, so they go in `convex/wake.ts`:
 
 ```ts
 import { exposeApi } from "@abyssinia-labs/wake-convex";
 import { components } from "./_generated/api";
 
-export const { pending, claim, finish } = exposeApi(components.wake, { app: "acme" });
+export const { pending, claim, started, finish } = exposeApi(components.wake, { app: "acme" });
 ```
 
 They take no auth: the place key is the credential, and the component
@@ -111,7 +111,7 @@ branch: Wake refuses to run on it.
 | Call | When |
 | --- | --- |
 | `wake.settle(ctx, { subject, agent?, kind?, state, reason })` | It stopped being wanted: unassigned, closed, answered from a live session. |
-| `wake.forSubject(ctx, subject)` | Show each agent's latest summons where it was made: state, reason, `unclaimed` after thirty minutes. |
+| `wake.forSubject(ctx, subject)` | Show each agent's latest summons where it was made: state, reason, `unclaimed` after thirty minutes, and `run` once Wake says it started (`name`, `tool`, `machine`, `startedAt`, and `session`, which only the agent's owner should see). |
 | `wake.places(ctx, agent)` / `wake.forgetPlace(ctx, { agent, place })` | An agent's machines, on your agents screen. |
 | `wake.revokeAgent(ctx, agent)` | In the same mutation that revokes an agent: its keys, codes and waiting summonses end. |
 | `wake.deleteScope(ctx, scope)` | A tenant (workspace) is deleted: one batch of its rows; call again until `done`. Pass `scope` when you pair and summon. |

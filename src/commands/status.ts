@@ -86,7 +86,7 @@ export function statusLines({ config, state, paused, now }: StatusInput): string
     lines.push("", bold("Running now"));
     for (const run of runs) {
       lines.push(
-        `  ${mark.half()} ${pad(bold(run.ref), 10)}${pad(ago(run.startedAt, now), 10)}${dim(tildify(run.cwd))}`,
+        `  ${mark.half()} ${pad(bold(run.ref), 10)}${pad(run.name ?? "", 16)}${pad(ago(run.startedAt, now), 10)}${dim(tildify(run.cwd))}`,
       );
       lines.push(
         run.sessionId

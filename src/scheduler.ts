@@ -2,7 +2,7 @@
 // most `maxRuns` at once, none while paused. Each claim races every other
 // place of the same agent (the pattern's third principle); a lost race is
 // not an error, it is someone else's run.
-import type { Claim, Outcome, Run, Summons } from "./contract";
+import type { Claim, Outcome, Run, RunReport, Summons } from "./contract";
 import { reasonFor } from "./errors";
 import { messageOf } from "./log";
 
@@ -10,6 +10,8 @@ export type Place = {
   domain: string;
   claim(id: string): Promise<Claim>;
   finish(outcome: Outcome): Promise<void>;
+  /** `wake:started`; false when the app doesn't serve it, so the agent says it instead. */
+  started(id: string, run: RunReport): Promise<boolean>;
 };
 
 export type Work = (place: Place, summons: Summons, run: Run) => Promise<Outcome>;

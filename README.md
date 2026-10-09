@@ -64,6 +64,13 @@ also has its own command:
    running, with the resume line for each run; `wakectl logs -f` follows
    the log; `wakectl doctor` lists anything missing, with its fix.
 
+**Each run has a name**, two words like `amber-heron`, the same in
+`wakectl status`, the log, the herdr tab and, when the app supports it,
+where you asked. Wake tells such an app the run has started, with its
+name, tool and session id, so the agent doesn't comment just to say it is
+on it; the app shows it, and shows you the session to resume. An app that
+doesn't support it gets the agent's comment, as before.
+
 **How runs start, and what they may do.** `wakectl mode herdr` opens each
 run as a tab in herdr's Wake workspace, an interactive session you can watch
 and step into (headless when herdr isn't running); `wakectl mode headless`
@@ -155,8 +162,9 @@ only in words written to be shared; paths and command output stay in
 
 Any app can let Wake start its users' agents by serving `wake/v1`:
 discovery at `/.well-known/wake`, two HTTP routes (`pair`, `forget`) and
-three Convex functions (`wake:pending`, `wake:claim`, `wake:finish`), each
-called with the place key as an argument.
+three Convex functions (`wake:pending`, `wake:claim`, `wake:finish`), plus
+an optional fourth (`wake:started`), each called with the place key as an
+argument.
 
 - **The spec**: [docs/spec/wake-v1.md](docs/spec/wake-v1.md).
 - **On Convex**: [`@abyssinia-labs/wake-convex`](packages/convex) is the

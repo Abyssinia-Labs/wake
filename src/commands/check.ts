@@ -3,7 +3,7 @@
 // issued, a key that opens nothing), so checking pairs nothing and changes
 // nothing on the app.
 import { ConvexHttpClient } from "convex/browser";
-import { claimRef, type Discovery, finishRef, pendingRef } from "../contract";
+import { claimRef, type Discovery, finishRef, pendingRef, startedRef } from "../contract";
 import { appOrigin, discover, HttpError, pairPlace } from "../http";
 import { messageOf, say } from "../log";
 import { isUnpairedError } from "../place";
@@ -41,14 +41,26 @@ async function expectStatus(
   }
 }
 
-async function expectUnpaired(what: string, call: () => Promise<unknown>): Promise<Probe> {
+async function expectUnpaired(
+  what: string,
+  call: () => Promise<unknown>,
+  optional = false,
+): Promise<Probe> {
   try {
     await call();
     return { what, ok: false, detail: "answered instead of throwing UNPAIRED" };
   } catch (error) {
-    return isUnpairedError(error)
-      ? { what, ok: true }
-      : { what, ok: false, detail: messageOf(error) };
+    if (isUnpairedError(error)) return { what, ok: true };
+    // An optional function passes either way: Wake does without it, and a
+    // production deployment won't say whether it is missing or failed.
+    if (optional) {
+      return {
+        what: what.replace(/ throws UNPAIRED$/, " isn't served"),
+        ok: true,
+        detail: "agents comment that they started instead",
+      };
+    }
+    return { what, ok: false, detail: messageOf(error) };
   }
 }
 
@@ -106,6 +118,16 @@ export async function checkApp(domain: string, fetcher: typeof fetch = fetch): P
     ),
     await expectUnpaired("wake:finish throws UNPAIRED", () =>
       client.mutation(finishRef, { key: NOBODY, id: "x", outcome: "failed" }),
+    ),
+    await expectUnpaired(
+      "wake:started (optional) throws UNPAIRED",
+      () =>
+        client.mutation(startedRef, {
+          key: NOBODY,
+          id: "x",
+          run: { name: "amber-heron", tool: "claude" },
+        }),
+      true,
     ),
   );
   return probes;

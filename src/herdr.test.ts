@@ -87,9 +87,9 @@ describe("runInHerdr", () => {
       "w2:p5",
     ]);
     expect(start.join(" ")).not.toContain("rm -rf");
-    // The label is its own argument: herdr refuses `--label=…`.
+    // The label is its own argument (herdr refuses `--label=…`): the ticket and the run's name.
     const tab = calls.find((cmd) => cmd[1] === "tab") ?? [];
-    expect(tab[tab.indexOf("--label") + 1]).toBe("GAT-37");
+    expect(tab[tab.indexOf("--label") + 1]).toBe("GAT-37 · Wake");
     expect(tab.some((arg) => arg.startsWith("--label="))).toBe(false);
     expect(start).toContain("GAT-37·Wake");
     const prompt = calls.find((cmd) => cmd[2] === "prompt") ?? [];

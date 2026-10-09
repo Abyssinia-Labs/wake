@@ -120,6 +120,13 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
           kind: string;
           owner: string;
           reason?: string;
+          run?: {
+            machine: string;
+            name: string;
+            session?: string;
+            startedAt: number;
+            tool: "claude" | "codex" | "cursor";
+          };
           state: "asking" | "open" | "claimed" | "done" | "failed" | "dropped";
           unclaimed: boolean;
           updatedAt: number;
@@ -191,6 +198,21 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
           repo?: string;
           target: { kind: string; ref: string; url: string };
         }>,
+        Name
+      >;
+      started: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          id: string;
+          key: string;
+          run: {
+            name: string;
+            session?: string;
+            tool: "claude" | "codex" | "cursor";
+          };
+        },
+        null,
         Name
       >;
     };

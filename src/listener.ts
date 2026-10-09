@@ -68,12 +68,12 @@ export async function listen(): Promise<void> {
           paths: p,
           deps,
           onEvent: (line) => note(`${summons.target.ref}: ${line}`),
-          onStart: ({ sessionId, cwd, tool }) => {
+          onStart: ({ sessionId, cwd, tool, name }) => {
             const known = runs.get(summons.id);
             note(
               known
-                ? `${summons.target.ref}: ${TOOL_NAMES[tool]} session ${sessionId}`
-                : `Started ${summons.target.ref} in ${TOOL_NAMES[tool]}${sessionId ? ` as session ${sessionId}` : ""} in ${cwd}.`,
+                ? `${summons.target.ref} (${name}): ${TOOL_NAMES[tool]} session ${sessionId}`
+                : `Started ${summons.target.ref} as ${name} in ${TOOL_NAMES[tool]}${sessionId ? `, session ${sessionId},` : ""} in ${cwd}.`,
             );
             runs.set(summons.id, {
               app: app.app,
@@ -81,10 +81,12 @@ export async function listen(): Promise<void> {
               sessionId,
               cwd,
               tool,
+              name,
               startedAt: known?.startedAt ?? Date.now(),
             });
             void save();
           },
+          report: (run) => place.started(summons.id, run),
         });
       } finally {
         active.delete(summons.id);

@@ -27,7 +27,7 @@ rest is the same in every app.
 ## Three ways in
 
 1. **On Convex:** add [the component](/apps/convex/). It is the whole
-   server half: keys, places, the summons's life, the three functions and
+   server half: keys, places, the summons's life, the functions and
    the two routes. You write the summon calls and the prompt.
 2. **Anything else:** implement the [spec](/spec/wake-v1/). The functions
    are Convex functions because Wake subscribes to `wake:pending`; an app

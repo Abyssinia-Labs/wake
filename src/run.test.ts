@@ -95,6 +95,42 @@ describe("runSummons", () => {
     expect(outcome).toEqual({ id: "s1", outcome: "failed", reason: "Out of turns." });
   });
 
+  test("the app hears the run started, by name, so the agent isn't asked to say it", async () => {
+    const seen: ClaudeRun[] = [];
+    const reports: unknown[] = [];
+    let named = "";
+    await runSummons(page, { prompt: "x" }, app, {
+      config: defaults(),
+      paths: p,
+      deps: deps(seen),
+      onStart: (s) => {
+        named = s.name;
+      },
+      report: async (run) => {
+        reports.push(run);
+        return true;
+      },
+    });
+    expect(named).toMatch(/^[a-z]+-[a-z]+$/);
+    expect(reports).toEqual([
+      { name: named, tool: "claude", session: "11111111-2222-4333-8444-555555555555" },
+    ]);
+    expect(seen[0]?.acknowledged).toBe(true);
+    expect(seen[0]?.name).toBe(`Launch plan · ${named}`);
+  });
+
+  test("an app without wake:started leaves the agent to say it is on it", async () => {
+    const seen: ClaudeRun[] = [];
+    await runSummons(page, { prompt: "x" }, app, {
+      config: defaults(),
+      paths: p,
+      deps: deps(seen),
+      onStart: () => {},
+      report: async () => false,
+    });
+    expect(seen[0]?.acknowledged).toBe(false);
+  });
+
   test("the prompt is the app's, with the summons and session at its foot", () => {
     const prompt = composePrompt({ prompt: "  Read the thread.\n" }, page, "sess");
     expect(prompt.startsWith("Read the thread.\n")).toBe(true);

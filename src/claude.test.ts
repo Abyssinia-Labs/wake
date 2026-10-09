@@ -41,6 +41,13 @@ describe("claudeArgs", () => {
     expect(rules).not.toContain("Then do the work");
   });
 
+  test("when the app recorded the start, the agent is told not to comment to say so", () => {
+    const args = claudeArgs({ ...base, acknowledged: true });
+    const rules = args[args.indexOf("--append-system-prompt") + 1] ?? "";
+    expect(rules).toContain("Don't comment just to say you have started.");
+    expect(rules).not.toContain("comment where you were asked that you are on it");
+  });
+
   test("the branch's settings are left out; Wake's own come as one --settings", () => {
     const args = claudeArgs({ ...base, branch: "gat-70-x" });
     expect(args[args.indexOf("--setting-sources") + 1]).toBe("user");

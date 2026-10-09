@@ -5,19 +5,20 @@ import { join, relative } from "node:path";
 import { type ClaudeResult, type ClaudeRun, runClaude } from "./claude";
 import { approveLine } from "./commands/repos";
 import { type Config, type PairedApp, type Paths, type RunMode, repoApproved } from "./config";
-import type { AgentTool, Outcome, Run, Summons } from "./contract";
+import type { AgentTool, Outcome, Run, RunReport, Summons } from "./contract";
 import type { Exec } from "./exec";
 import { herdrRunning, runInHerdr } from "./herdr";
 import { installDependencies } from "./install";
 import { madeWorktrees, rememberWorktree } from "./made";
 import { findClone } from "./repos";
+import { runName } from "./run-name";
 import { runCodex } from "./runners/codex";
 import { runCursor } from "./runners/cursor";
 import { toolOf } from "./tools";
 import { isMade, prepareWorktree, worktreeRoot } from "./worktree";
 
 /** A run under way; `sessionId` is empty until a tool that picks its own has said it. */
-export type Started = { sessionId: string; cwd: string; tool: AgentTool };
+export type Started = { sessionId: string; cwd: string; tool: AgentTool; name: string };
 
 export type RunDeps = {
   exec: Exec;
@@ -99,6 +100,8 @@ async function runOne(
     paths: Paths;
     deps: RunDeps;
     onStart: (s: Started) => void;
+    /** Tells the app the run started (`wake:started`); false when it can't hear it. */
+    report?: (run: RunReport) => Promise<boolean>;
     /** Each step of the run, for the listener's log. */
     onEvent?: (line: string) => void;
   },
@@ -144,20 +147,27 @@ async function runOne(
   const tool = toolOf(app) ?? "claude";
   // Claude Code takes Wake's session id; Codex and Cursor pick their own and say it.
   const ours = tool === "claude";
-  o.onStart({ sessionId: ours ? sessionId : "", cwd, tool });
+  const name = runName(sessionId);
+  o.onStart({ sessionId: ours ? sessionId : "", cwd, tool, name });
+  const acknowledged =
+    (await o.report?.({ name, tool, ...(ours ? { session: sessionId } : {}) })) ?? false;
   const result = await o.deps.claude(
     {
       cwd,
       sessionId,
       tool,
-      onSession: (id) => o.onStart({ sessionId: id, cwd, tool }),
+      acknowledged,
+      onSession: (id) => {
+        o.onStart({ sessionId: id, cwd, tool, name });
+        void o.report?.({ name, tool, session: id });
+      },
       prompt: composePrompt(run, summons, ours ? sessionId : null),
       mcpServer: app.mcpServer ?? app.app,
       defaultBranch,
       ...(summons.branch ? { branch: summons.branch } : {}),
       extraAllowedTools: o.config.extraAllowedTools,
       timeoutMs: o.config.runTimeoutMinutes * 60_000,
-      name: `${summons.target.ref} · Wake`,
+      name: `${summons.target.ref} · ${name}`,
       permissionMode: o.config.permissionMode,
       trustFolder: o.config.trustCodexWorktrees,
       ...(o.onEvent ? { onEvent: o.onEvent } : {}),

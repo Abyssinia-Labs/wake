@@ -11,6 +11,8 @@ export type RunState = {
   startedAt: number;
   /** Which tool runs it, for the resume line; Claude Code in an older state file. */
   tool?: AgentTool;
+  /** Its two-word name (run-name.ts); absent in an older state file. */
+  name?: string;
 };
 
 export type ListenerState = {

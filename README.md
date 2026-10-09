@@ -52,7 +52,9 @@ sits where its tool keeps its own: Claude Code's in the clone's
 `~/.codex/worktrees/wake/<repo>`. Interactive Codex asks whether to trust
 each new folder; `wakectl trust codex on` has Wake add the run's worktree to
 `~/.codex/config.toml` first, marked as Wake's, and `wakectl prune` takes it
-out again.
+out again. Cursor is started with `--trust` for the run's worktree, in herdr
+as headless. If an agent in herdr stops on a question before it is ready,
+Wake waits for you to answer it in the tab rather than failing the run.
 
 `wakectl pause` stops new claims (a run already going finishes) and
 `wakectl resume` goes on. `wakectl prune` removes run worktrees untouched

@@ -68,14 +68,16 @@ export function openingPrompt(o: ClaudeRun): string {
  * The agent's own arguments, per tool (GAT-68). Plain values only: a session
  * id, a sanitised name, a path, fixed flags. Claude Code gets its settings
  * file; Codex its sandbox with network on; Cursor reads the permissions file
- * Wake has written into the worktree.
+ * Wake has written into the worktree, and is told the worktree is trusted:
+ * every worktree is a folder it has not seen, and its trust question is one
+ * herdr does not report as blocked, so a start waits out its timeout (GAT-31).
  */
 export function nativeArgs(o: ClaudeRun, settings: string): string[] {
   switch (o.tool ?? "claude") {
     case "codex":
       return ["--sandbox", "workspace-write", "-c", "sandbox_workspace_write.network_access=true"];
     case "cursor":
-      return ["--approve-mcps"];
+      return ["--trust", "--approve-mcps"];
     default: {
       const args = ["--session-id", o.sessionId, "--settings", settings];
       if (o.name) args.push("--name", o.name.replace(/[^A-Za-z0-9·_-]/g, ""));
@@ -142,9 +144,17 @@ export function findWorkspace(listed: unknown): string | undefined {
   return typeof wake?.workspace_id === "string" ? wake.workspace_id : undefined;
 }
 
-/** Whether `agent start` stopped on a question the agent asked before it was ready. */
+/**
+ * Whether `agent start` stopped on a question the agent asked before it was
+ * ready. herdr says agent_not_ready when it recognises the question; when it
+ * does not, it waits out the startup timeout, which reads the same way here.
+ */
 export function startBlocked(error: unknown): boolean {
-  return error instanceof Error && error.message.includes("agent_not_ready");
+  return (
+    error instanceof Error &&
+    (error.message.includes("agent_not_ready") ||
+      error.message.includes("timed out waiting for agent startup"))
+  );
 }
 
 export type HerdrRun = ClaudeRun & { ref: string };
@@ -194,7 +204,7 @@ export async function runInHerdr(o: HerdrRun, run: Exec): Promise<ClaudeResult> 
     // their answer rather than fail the run (GAT-31, 2026-10-08).
     if (!startBlocked(error)) throw error;
     o.onEvent?.(
-      `waiting for you in herdr: the ${o.ref} tab is asking a question before it starts (Codex asks whether to trust the folder)`,
+      `waiting for you in herdr: the ${o.ref} tab may be asking a question before it starts (whether to trust the folder, say)`,
     );
     const ready = await run([
       "herdr",
@@ -207,9 +217,12 @@ export async function runInHerdr(o: HerdrRun, run: Exec): Promise<ClaudeResult> 
       String(o.timeoutMs),
     ]);
     if (ready.code !== 0) {
+      const why = (ready.stderr || ready.stdout).trim().split("\n").at(-1) ?? "";
       return {
         ok: false,
-        reason: `The ${o.ref} tab in herdr was still asking a question when Wake stopped waiting.`,
+        reason: why.includes("timeout")
+          ? `The ${o.ref} tab in herdr was still asking a question when Wake stopped waiting.`
+          : `herdr never saw ${o.tool ?? "claude"} ready in the ${o.ref} tab: ${why || "no reason given"}`,
       };
     }
     o.onEvent?.("answered; starting the work");

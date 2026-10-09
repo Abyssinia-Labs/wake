@@ -1,4 +1,7 @@
 import { describe, expect, test } from "bun:test";
+import { mkdtemp } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import type { ClaudeRun } from "./claude";
 import type { Exec } from "./exec";
 import {
@@ -7,6 +10,7 @@ import {
   findString,
   findWorkspace,
   herdrRunning,
+  nativeArgs,
   openingPrompt,
   runInHerdr,
 } from "./herdr";
@@ -152,6 +156,56 @@ describe("a question before the agent is ready", () => {
     expect(order.indexOf("agent wait")).toBeGreaterThan(order.indexOf("agent start"));
     expect(order.indexOf("agent prompt")).toBeGreaterThan(order.indexOf("agent wait"));
     expect(said.some((line) => line.startsWith("waiting for you in herdr"))).toBe(true);
+  });
+});
+
+describe("a start herdr timed out on", () => {
+  const started = (wait: { code: number; stdout: string }): { exec: Exec; calls: string[][] } => {
+    const calls: string[][] = [];
+    const exec: Exec = async (cmd) => {
+      calls.push(cmd);
+      if (cmd[2] === "start") {
+        return {
+          code: 1,
+          stdout: JSON.stringify({
+            error: { code: "timeout", message: "timed out waiting for agent startup" },
+            id: "cli:agent:start",
+          }),
+          stderr: "",
+        };
+      }
+      if (cmd[2] === "wait") return { ...wait, stderr: "" };
+      const out =
+        cmd[1] === "workspace"
+          ? { result: { workspaces: [{ workspace_id: "w2", label: "Wake" }] } }
+          : cmd[1] === "tab"
+            ? { result: { root_pane: { pane_id: "w2:p8" } } }
+            : { result: { agent: { status: "idle" } } };
+      return { code: 0, stdout: JSON.stringify(out), stderr: "" };
+    };
+    return { exec, calls };
+  };
+  // Cursor's permissions file is written into the worktree, so a real folder.
+  const cursor = { ...base, tool: "cursor" as const, ref: "GAT-31", defaultBranch: undefined };
+  const inTemp = async (): Promise<typeof cursor> => ({
+    ...cursor,
+    cwd: await mkdtemp(join(tmpdir(), "wake-herdr-")),
+  });
+
+  test("Cursor is told the worktree is trusted", () => {
+    expect(nativeArgs(cursor, "unused")).toEqual(["--trust", "--approve-mcps"]);
+  });
+  test("waits for the person as a blocked start does, then prompts", async () => {
+    const { exec, calls } = started({ code: 0, stdout: "{}" });
+    expect(await runInHerdr(await inTemp(), exec)).toEqual({ ok: true });
+    expect(calls.some((cmd) => cmd[2] === "prompt")).toBe(true);
+  });
+  test("says what herdr said when it never saw the agent", async () => {
+    const { exec, calls } = started({ code: 1, stdout: '{"error":{"code":"agent_not_found"}}' });
+    const result = await runInHerdr(await inTemp(), exec);
+    expect(result.ok).toBe(false);
+    expect(result.reason).toContain("agent_not_found");
+    expect(calls.some((cmd) => cmd[2] === "prompt")).toBe(false);
   });
 });
 

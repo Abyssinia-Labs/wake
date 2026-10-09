@@ -1,6 +1,6 @@
 {
   "name": "@abyssinia-labs/wake",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "Starts your coding agent when an app hands it work",
   "keywords": [
     "agents",
@@ -21,7 +21,8 @@
   "license": "MIT",
   "type": "module",
   "bin": {
-    "wakectl": "src/cli.ts"
+    "wakectl": "src/cli.ts",
+    "wake": "src/cli.ts"
   },
   "files": [
     "src",

@@ -39,6 +39,13 @@ alike. In short:
 A change to `wake/v1` is a change to the specification first; open an
 issue for it.
 
+## The website
+
+`site/` is wakectl.dev (Astro Starlight). `bun run --cwd site dev` serves it
+locally; `bun run --cwd site deploy` builds it and deploys the Cloudflare
+Worker that serves it, on the Abyssinia Labs account. The spec page is
+copied from `docs/spec/wake-v1.md` at build time: edit the spec there.
+
 ## Pull requests
 
 `bun test`, `bun run typecheck` and `bun run lint` pass, and the README

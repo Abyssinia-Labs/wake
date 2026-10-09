@@ -2,6 +2,8 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "wakectl-site",
+  // Abyssinia Labs, where wakectl.dev's zone is.
+  "account_id": "4dbe2f5a98e644ac83bf962020b4acca",
   "compatibility_date": "2026-09-25",
   "assets": {
     "directory": "./dist",

@@ -30,7 +30,8 @@
     "README.md"
   ],
   "workspaces": [
-    "packages/*"
+    "packages/*",
+    "site"
   ],
   "engines": {
     "bun": ">=1.3.3"

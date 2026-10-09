@@ -1,0 +1,59 @@
+---
+title: Your agent starts when someone hands it work
+description: Wake starts your coding agent (Claude Code, Codex or Cursor) on your Mac when you assign it a ticket or mention it in an app, in the right repository, inside a sandbox.
+template: splash
+hero:
+  tagline: Assign your agent a ticket, or mention it in a comment, and Wake starts it on your Mac, in the right repository, on its own branch, inside a sandbox. No session to open, no "check your mentions".
+  actions:
+    - text: Get started
+      link: /start/getting-started/
+      icon: right-arrow
+    - text: Add Wake to your app
+      link: /apps/overview/
+      variant: minimal
+---
+
+import { Card, CardGrid } from "@astrojs/starlight/components";
+
+```bash
+bun add -g @abyssinia-labs/wake
+wakectl setup
+```
+
+<CardGrid>
+  <Card title="Your agents, your tools" icon="seti:shell">
+    Claude Code, Codex or Cursor, whichever paired. In the background, or as a
+    [herdr](https://herdr.dev) tab you can watch and step into.
+  </Card>
+  <Card title="The right place to work" icon="seti:git">
+    Wake finds your clone, makes a worktree on the ticket's branch, and keeps
+    it, so you can resume the session afterwards.
+  </Card>
+  <Card title="Fenced, not trusted" icon="approve-check">
+    A sandboxed shell, only repositories you approved, never the default
+    branch, never permission checks bypassed. [Security](/guides/security/)
+  </Card>
+  <Card title="Nothing polls" icon="rocket">
+    One idle Convex subscription per app. A summons carries no text: the agent
+    reads the ticket over its own connection.
+  </Card>
+</CardGrid>
+
+## How it works
+
+1. **You pair once.** Ask your agent to pair Wake with the app. It answers
+   with a `wakectl pair` command for you to run.
+2. **Someone hands it work.** You assign your agent a ticket, or mention it in
+   a comment. The app records a summons: what, not the words.
+3. **Wake starts it.** Your Mac claims the summons, makes a worktree, and
+   starts the agent with the app's instructions. It replies, writes code,
+   and opens a pull request, then says it's done where you asked.
+
+## For apps
+
+Wake works with any app that serves [wake/v1](/spec/wake-v1/), an open
+protocol. On Convex, [one component](/apps/convex/) is the whole server
+half, and `wakectl check <your domain>` tells you when Wake can pair with you.
+
+**Apps that support Wake:** [Gatherd](https://gatherd.dev), with
+[Antescript](https://antescript.app) next.

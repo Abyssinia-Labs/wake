@@ -14,7 +14,7 @@ import { join } from "node:path";
 import { allowedTools, type ClaudeResult, type ClaudeRun, disallowedTools, rules } from "./claude";
 import { trustCodexFolder } from "./codex-trust";
 import type { Exec } from "./exec";
-import { writeCursorPermissions } from "./runners/cursor";
+import { cursorModeArgs, writeCursorPermissions } from "./runners/cursor";
 
 const WORKSPACE = "Wake";
 /** No spaces in it, unlike Application Support, so a path is one plain argument. */
@@ -77,7 +77,7 @@ export function nativeArgs(o: ClaudeRun, settings: string): string[] {
     case "codex":
       return ["--sandbox", "workspace-write", "-c", "sandbox_workspace_write.network_access=true"];
     case "cursor":
-      return ["--trust", "--approve-mcps"];
+      return ["--trust", "--approve-mcps", ...cursorModeArgs(o)];
     default: {
       const args = ["--session-id", o.sessionId, "--settings", settings];
       if (o.name) args.push("--name", o.name.replace(/[^A-Za-z0-9·_-]/g, ""));

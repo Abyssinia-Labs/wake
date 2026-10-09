@@ -103,7 +103,15 @@ describe("Cursor", () => {
     expect(args).toContain("--trust");
     expect(args).toContain("--approve-mcps");
     expect(args).not.toContain("--force");
+    expect(args).not.toContain("--auto-review");
     expect(args.at(-1)?.endsWith(base.prompt)).toBe(true);
+  });
+
+  test("auto is Cursor's Auto-review; nothing ever runs everything", () => {
+    const args = cursorArgs({ ...base, permissionMode: "auto" });
+    expect(args).toContain("--auto-review");
+    expect(args).not.toContain("--force");
+    expect(args).not.toContain("--yolo");
   });
 
   test("its tool calls read as steps", () => {

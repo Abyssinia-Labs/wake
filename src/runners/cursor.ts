@@ -2,9 +2,10 @@
 // Cursor reads permissions from a project file, so Wake writes the run's own
 // into the worktree as .cursor/cli.json: the same tools Claude Code gets, the
 // same fences, deny over allow. Only where the repository does not keep its
-// own, and kept out of git. Cursor has no auto mode; `auto` runs as
-// acceptEdits and the log says so. The prompt is an argument, not a shell
-// string: Bun hands it to cursor-agent as one argv entry.
+// own, and kept out of git. `auto` is Cursor's Auto-review (`--auto-review`):
+// its classifier runs what it judges safe and asks about the rest, as Claude
+// Code's auto mode does. The prompt is an argument, not a shell string: Bun
+// hands it to cursor-agent as one argv entry.
 import { access, mkdir } from "node:fs/promises";
 import { join } from "node:path";
 import { type ClaudeResult, type ClaudeRun, rules, type Spawn, spawnClaude } from "../claude";
@@ -99,6 +100,11 @@ export async function writeCursorPermissions(run: Exec, o: ClaudeRun): Promise<b
   return true;
 }
 
+/** Cursor's flags for the permission mode; acceptEdits and dontAsk are the file's allowlist alone. */
+export function cursorModeArgs(o: Pick<ClaudeRun, "permissionMode">): string[] {
+  return o.permissionMode === "auto" ? ["--auto-review"] : [];
+}
+
 export function cursorArgs(o: ClaudeRun): string[] {
   return [
     "cursor-agent",
@@ -107,6 +113,7 @@ export function cursorArgs(o: ClaudeRun): string[] {
     "stream-json",
     "--trust",
     "--approve-mcps",
+    ...cursorModeArgs(o),
     "--workspace",
     o.cwd,
     `${rules({ ...o, tool: "cursor" })}\n\n---\n\n${o.prompt}`,
@@ -138,7 +145,6 @@ export async function runCursor(
   run: Exec,
   spawn: Spawn = spawnClaude,
 ): Promise<ClaudeResult> {
-  if (o.permissionMode === "auto") o.onEvent?.("Cursor has no auto mode; this run is acceptEdits");
   await writeCursorPermissions(run, o);
   let result: Record<string, unknown> | null = null;
   let session = false;

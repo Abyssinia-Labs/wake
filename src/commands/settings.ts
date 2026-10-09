@@ -37,12 +37,12 @@ export async function mode(next: string | undefined): Promise<void> {
 const MEANS: Record<PermissionMode, string> = {
   acceptEdits:
     "edits and the allowed tools go ahead; anything else asks. Headless, an ask is denied; in herdr it waits for you.",
-  auto: "Claude Code's auto mode decides what is safe to run, so a run rarely waits on you.",
+  auto: "Claude Code's auto mode, or Cursor's Auto-review, decides what is safe to run, so a run rarely waits on you.",
   dontAsk:
     "anything not allowed is denied rather than asked, so a run never waits. Widen it with `wakectl allow`.",
 };
 
-/** `wakectl permissions [acceptEdits|auto|dontAsk]`: Claude Code's permission mode for runs. */
+/** `wakectl permissions [acceptEdits|auto|dontAsk]`: the permission mode for runs. */
 export async function permissions(next: string | undefined): Promise<void> {
   const config = await loadConfig();
   if (next === undefined) {

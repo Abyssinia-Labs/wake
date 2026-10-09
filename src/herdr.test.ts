@@ -195,6 +195,7 @@ describe("a start herdr timed out on", () => {
 
   test("Cursor is told the worktree is trusted", () => {
     expect(nativeArgs(cursor, "unused")).toEqual(["--trust", "--approve-mcps"]);
+    expect(nativeArgs({ ...cursor, permissionMode: "auto" }, "unused")).toContain("--auto-review");
   });
   test("Cursor's project file has only the keys Cursor accepts, and an old one is replaced", async () => {
     const run = await inTemp();

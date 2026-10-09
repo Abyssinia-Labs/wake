@@ -37,10 +37,12 @@ bun run wakectl help
 **How runs start, and what they may do.** `wakectl mode herdr` opens each
 run as a tab in herdr's Wake workspace, an interactive session you can watch
 and step into (headless when herdr isn't running); `wakectl mode headless`
-is the default. `wakectl permissions` picks Claude Code's permission mode:
+is the default. `wakectl permissions` picks the permission mode:
 `acceptEdits` (the default: anything outside the allowed tools asks, which
-in herdr waits for you), `auto` (Claude Code's auto mode decides), or
-`dontAsk` (anything not allowed is denied, so a run never waits).
+in herdr waits for you), `auto` (Claude Code's auto mode, or Cursor's
+Auto-review, decides what is safe and asks about the rest), or `dontAsk`
+(anything not allowed is denied, so a run never waits; Claude Code only, a
+Cursor run keeps to its allowed list and asks).
 `wakectl allow "Bash(npm test:*)"` adds a tool to the allowed list, and
 `--remove` takes it back. `bypassPermissions` is never offered.
 

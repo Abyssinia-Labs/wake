@@ -68,8 +68,10 @@ also has its own command:
 `wakectl status`, the log, the herdr tab and, when the app supports it,
 where you asked. Wake tells such an app the run has started, with its
 name, tool and session id, so the agent doesn't comment just to say it is
-on it; the app shows it, and shows you the session to resume. An app that
-doesn't support it gets the agent's comment, as before.
+on it; the app shows it, and shows you how to get back in: `wakectl open
+amber-heron` starts the run's tool on its session, in its folder, in your
+terminal (`wakectl open` lists recent runs). An app that doesn't support
+it gets the agent's comment, as before.
 
 **How runs start, and what they may do.** `wakectl mode herdr` opens each
 run as a tab in herdr's Wake workspace, an interactive session you can watch
@@ -176,7 +178,7 @@ argument.
 ## Names
 
 - Packages: `@abyssinia-labs/wake` (the command) and `@abyssinia-labs/wake-convex` (the Convex component), on npm
-- Command: `wakectl` (`install`, `status`, `logs`, `pause`, `pair`, `forget`)
+- Command: `wakectl` (`install`, `status`, `logs`, `open`, `pause`, `pair`, `forget`)
 - Homebrew, later: `brew install abyssinia-labs/tap/wake`
 
 ## Contributing and security

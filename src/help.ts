@@ -23,7 +23,10 @@ const GROUPS: readonly { title: string; entries: readonly Entry[] }[] = [
   },
   {
     title: "Watch",
-    entries: [{ use: "logs [-f]", what: "The listener's log, following it with -f" }],
+    entries: [
+      { use: "logs [-f]", what: "The listener's log, following it with -f" },
+      { use: "open [name]", what: "Back into a run by its name (amber-heron), or list them" },
+    ],
   },
   {
     title: "How runs work",
@@ -58,6 +61,7 @@ export const COMMANDS = [
   "uninstall",
   "status",
   "logs",
+  "open",
   "pause",
   "resume",
   "mode",

@@ -64,6 +64,8 @@ export type Paths = {
   made: string;
   /** The repositories each app has named in a summons (asked.ts). */
   asked: string;
+  /** The runs this machine made, by name, for `wakectl open` (history.ts). */
+  history: string;
   rooms: string;
   log: string;
 };
@@ -79,6 +81,7 @@ export function paths(): Paths {
     worktrees: join(home, "worktrees"),
     made: join(home, "worktrees.json"),
     asked: join(home, "asked-repos.json"),
+    history: join(home, "runs.json"),
     rooms: join(home, "rooms"),
     log: override ? join(home, "wake.log") : join(homedir(), "Library", "Logs", "Wake", "wake.log"),
   };
@@ -182,6 +185,6 @@ export async function keepPrivate(p: Paths): Promise<void> {
   await Promise.all([
     quietly(p.home, 0o700),
     quietly(dirname(p.log), 0o700),
-    ...[p.log, p.config, p.state, p.made].map((path) => quietly(path, 0o600)),
+    ...[p.log, p.config, p.state, p.made, p.history].map((path) => quietly(path, 0o600)),
   ]);
 }

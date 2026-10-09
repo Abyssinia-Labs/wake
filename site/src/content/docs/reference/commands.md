@@ -19,6 +19,7 @@ description: Every wakectl command.
 | Command | Does |
 | --- | --- |
 | `wakectl logs [-f]` | The listener's log; `-f` follows it. |
+| `wakectl open [name]` | Back into a run by the name the app shows (`amber-heron`): its tool, on its session, in its folder. With no name, the recent runs. |
 
 ## How runs work
 

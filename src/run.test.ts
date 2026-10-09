@@ -19,6 +19,7 @@ const p: Paths = {
   worktrees: join(home, "worktrees"),
   made: join(home, "worktrees.json"),
   asked: join(home, "asked-repos.json"),
+  history: join(home, "runs.json"),
   rooms: join(home, "rooms"),
   log: join(home, "wake.log"),
 };

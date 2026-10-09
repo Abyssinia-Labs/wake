@@ -91,6 +91,15 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
         Name
       >;
     };
+    scopes: {
+      deleteScope: FunctionReference<
+        "mutation",
+        "internal",
+        { scope: string },
+        { deleted: number; done: boolean },
+        Name
+      >;
+    };
     summonses: {
       answer: FunctionReference<
         "mutation",

@@ -10,6 +10,7 @@
 
 import type * as keys from "../keys.js";
 import type * as places from "../places.js";
+import type * as scopes from "../scopes.js";
 import type * as shape from "../shape.js";
 import type * as summonses from "../summonses.js";
 import type * as wire from "../wire.js";
@@ -24,6 +25,7 @@ import { anyApi, componentsGeneric } from "convex/server";
 const fullApi: ApiFromModules<{
   keys: typeof keys;
   places: typeof places;
+  scopes: typeof scopes;
   shape: typeof shape;
   summonses: typeof summonses;
   wire: typeof wire;

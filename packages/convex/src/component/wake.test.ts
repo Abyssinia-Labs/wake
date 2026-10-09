@@ -202,3 +202,27 @@ describe("keys that open nothing", () => {
     expect(row?.state).toBe("dropped");
   });
 });
+
+describe("deleting a scope", () => {
+  test("removes every row the scope has, in batches, and nothing of another scope", async () => {
+    const t = convexTest(schema, modules);
+    for (let i = 0; i < 3; i++) {
+      await t.mutation(api.summonses.summon, ask({ scope: "ws-1", subject: `t-${i}` }));
+    }
+    await t.mutation(api.summonses.summon, ask({ scope: "ws-2", subject: "other" }));
+    await t.mutation(api.places.storeCode, {
+      agent: "a",
+      agentName: "Claude",
+      owner: "o",
+      scope: "ws-1",
+      codeHash: "h",
+      expiresAt: Date.now() + 1000,
+    });
+    expect(await t.mutation(api.scopes.deleteScope, { scope: "ws-1" })).toEqual({
+      deleted: 4,
+      done: true,
+    });
+    expect(await t.query(api.summonses.forSubject, { subject: "t-0" })).toEqual([]);
+    expect(await t.query(api.summonses.forSubject, { subject: "other" })).toHaveLength(1);
+  });
+});

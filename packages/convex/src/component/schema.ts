@@ -31,7 +31,8 @@ export default defineSchema({
     forgottenAt: v.optional(v.number()),
   })
     .index("by_key_hash", ["keyHash"])
-    .index("by_agent", ["agent"]),
+    .index("by_agent", ["agent"])
+    .index("by_scope", ["scope"]),
 
   // A pair code: one use, ten minutes, kept as a hash.
   codes: defineTable({
@@ -45,7 +46,8 @@ export default defineSchema({
     usedAt: v.optional(v.number()),
   })
     .index("by_code_hash", ["codeHash"])
-    .index("by_agent", ["agent"]),
+    .index("by_agent", ["agent"])
+    .index("by_scope", ["scope"]),
 
   // One ask of one agent about one subject (the host's ticket or page).
   summonses: defineTable({
@@ -73,5 +75,6 @@ export default defineSchema({
   })
     .index("by_subject_agent", ["subject", "agent", "state"])
     .index("by_agent_state", ["agent", "state", "at"])
-    .index("by_owner_state", ["owner", "state", "at"]),
+    .index("by_owner_state", ["owner", "state", "at"])
+    .index("by_scope", ["scope"]),
 });

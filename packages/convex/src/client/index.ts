@@ -130,6 +130,14 @@ export class Wake {
     return await ctx.runMutation(this.component.places.remove, o);
   }
 
+  /**
+   * The host deleted a tenant: one batch of what the component keeps for
+   * `scope`. Call it again until `done`, from the host's deletion steps.
+   */
+  async deleteScope(ctx: RunMutation, scope: string): Promise<{ deleted: number; done: boolean }> {
+    return await ctx.runMutation(this.component.scopes.deleteScope, { scope });
+  }
+
   /** The host revoked an agent: its keys, codes and waiting summonses end with it. */
   async revokeAgent(ctx: RunMutation, agent: string): Promise<void> {
     await ctx.runMutation(this.component.places.revokeAgent, { agent });

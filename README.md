@@ -8,8 +8,7 @@ background or in a [herdr](https://herdr.dev) tab you can watch. The agent
 replies, claims the work, writes code and opens a pull request, inside a
 sandbox and on its own branch.
 
-Status: early, and in daily use. macOS only, from source until the npm
-package is published. Docs, and the apps that support Wake, are coming to
+Status: early, and in daily use. macOS only. Docs, and the apps that support Wake, are coming to
 [wakectl.dev](https://wakectl.dev).
 
 ## How it works
@@ -32,11 +31,12 @@ in to the app's MCP server. `gh` for pull requests.
 ## Using it
 
 ```bash
-git clone https://github.com/Abyssinia-Labs/wake.git && cd wake
-bun install
-bun link            # puts wakectl on your PATH
-wakectl help
+bun add -g @abyssinia-labs/wake
+wakectl setup
 ```
+
+Or from source: clone this repository, then `bun install` and `bun link`,
+which puts `wakectl` on your PATH.
 
 Then run **`wakectl setup`**. It checks the machine (Bun, git, gh, which
 agents you have), asks where your clones are, pairs your agent, asks which

@@ -16,8 +16,10 @@ app's code. A change to the contract is a change to the pattern first.
 - Exact pins, as the apps: `"convex": "1.45.0"`, not `^`.
 - Scripts: `bun test`, `bun run typecheck` (TypeScript 7 `tsc`),
   `bun run lint` (Biome), `bun run format`, `bun run wakectl <command>`.
-- `"private": true` stays in `package.json` until the owner decides to
-  publish `@abyssinia-labs/wake`.
+- Published to npm as `@abyssinia-labs/wake` (owner's call, 2026-10-09).
+  A release is a `vX.Y.Z` tag matching `package.json`; the release
+  workflow publishes it through npm's trusted publishing. Never publish
+  from a machine.
 
 ## Code standards
 

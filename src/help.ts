@@ -65,7 +65,7 @@ export const COMMANDS = [
 export function help(): string {
   const width = 34;
   const lines = [
-    `${bold("wakectl")} ${dim(`v${pkg.version}`)}  starts your agent when Gatherd or Antescript hands it work`,
+    `${bold("wakectl")} ${dim(`v${pkg.version}`)}  starts your agent when an app hands it work`,
     "",
   ];
   for (const group of GROUPS) {
@@ -77,8 +77,8 @@ export function help(): string {
   }
   lines.push(
     bold("Examples"),
-    `  ${dim("$")} wakectl pair gatherd.dev K7QD-2M9X`,
-    `  ${dim("$")} wakectl repos allow abyssinia-labs/gatherd`,
+    `  ${dim("$")} wakectl pair app.example.com K7QD-2M9X`,
+    `  ${dim("$")} wakectl repos allow your-org/your-repo`,
     `  ${dim("$")} wakectl mode herdr`,
     `  ${dim("$")} wakectl allow "Bash(npm test:*)"`,
     "",

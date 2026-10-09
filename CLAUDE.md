@@ -1,9 +1,11 @@
 # CLAUDE.md — working standards
 
 Wake is the client half of the Wake pattern: a listener on a person's Mac
-that starts their agent when Gatherd or Antescript summons it. The pattern
-is `docs/product/wake-pattern.md` in each app (Gatherd D-43, Antescript
-D-58), kept word for word in both. Wake knows the apps only through the
+that starts their agent when an app that serves `wake/v1` summons it. It
+names no app: the README, help and examples stay product-neutral. The
+pattern began with Abyssinia Labs' Gatherd and Antescript, as
+`docs/product/wake-pattern.md` in each (Gatherd D-43, Antescript D-58),
+kept word for word in both. Wake knows the apps only through the
 `wake/v1` contract in that document and in `src/contract.ts`; it imports no
 app's code. A change to the contract is a change to the pattern first.
 

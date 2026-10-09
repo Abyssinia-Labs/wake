@@ -2,15 +2,14 @@
 
 Wake starts your coding agent when someone hands it work. Mention your
 agent in a comment, or assign it a ticket, in an app that speaks
-`wake/v1` ([Gatherd](https://gatherd.dev) today,
-[Antescript](https://antescript.app) next), and Wake, running on your Mac,
+`wake/v1`, and Wake, running on your Mac,
 starts it in the right repository: Claude Code, Codex or Cursor, in the
 background or in a [herdr](https://herdr.dev) tab you can watch. The agent
 replies, claims the work, writes code and opens a pull request, inside a
 sandbox and on its own branch.
 
-Status: early. It runs every day against Gatherd. macOS only, from source
-until the npm package is published. Docs are coming to
+Status: early, and in daily use. macOS only, from source until the npm
+package is published. Docs, and the apps that support Wake, are coming to
 [wakectl.dev](https://wakectl.dev).
 
 ## How it works
@@ -22,7 +21,7 @@ until the npm package is published. Docs are coming to
 - The summons carries no text. The agent reads what it was asked over its
   own connection to the app, so the app checks access as on any call.
 - Your agent pairs Wake itself: it asks the app for a code and runs
-  `wakectl pair gatherd.dev <code>`, so Wake serves exactly that agent.
+  `wakectl pair <app domain> <code>`, so Wake serves exactly that agent.
 
 ## Requirements
 
@@ -40,8 +39,8 @@ wakectl help
 ```
 
 1. In a Claude Code session on your Mac, ask your agent to pair Wake. It
-   asks the app for a code and runs `wakectl pair gatherd.dev <code>`.
-2. `wakectl repos allow abyssinia-labs/gatherd` lets the app run in that
+   asks the app for a code and runs `wakectl pair <app domain> <code>`.
+2. `wakectl repos allow your-org/your-repo` lets the app run in that
    repository on this machine. A summons for a repository you haven't
    approved is refused, and the ticket says the command to approve it.
 3. `wakectl install` starts the listener now and at every login, as a
@@ -64,7 +63,7 @@ Cursor run keeps to its allowed list and asks).
 
 **Which tool, and where.** A pairing names the tool that runs its agent:
 Claude Code, Codex or Cursor (`wakectl pair … --tool codex` when the app
-cannot tell; the Codex CLI reaches Gatherd as ChatGPT). Each run's worktree
+cannot tell: the Codex CLI often reaches an app as ChatGPT). Each run's worktree
 sits where its tool keeps its own: Claude Code's in the clone's
 `.claude/worktrees`, Cursor's in `~/.cursor/worktrees/<repo>`, Codex's in
 `~/.codex/worktrees/wake/<repo>`. A branch an earlier run already has

@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { mkdtemp } from "node:fs/promises";
+import { mkdir, mkdtemp } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { ClaudeRun } from "./claude";
@@ -14,6 +14,7 @@ import {
   openingPrompt,
   runInHerdr,
 } from "./herdr";
+import { writeCursorPermissions } from "./runners/cursor";
 
 const base: ClaudeRun = {
   cwd: "/repo/.claude/worktrees/gat-37-x",
@@ -194,6 +195,17 @@ describe("a start herdr timed out on", () => {
 
   test("Cursor is told the worktree is trusted", () => {
     expect(nativeArgs(cursor, "unused")).toEqual(["--trust", "--approve-mcps"]);
+  });
+  test("Cursor's project file has only the keys Cursor accepts, and an old one is replaced", async () => {
+    const run = await inTemp();
+    const file = join(run.cwd, ".cursor", "cli.json");
+    await mkdir(join(run.cwd, ".cursor"), { recursive: true });
+    await Bun.write(file, JSON.stringify({ version: 1, permissions: { allow: [], deny: [] } }));
+    expect(
+      await writeCursorPermissions(async () => ({ code: 1, stdout: "", stderr: "" }), run),
+    ).toBe(true);
+    const written: unknown = JSON.parse(await Bun.file(file).text());
+    expect(Object.keys(written as object)).toEqual(["permissions"]);
   });
   test("waits for the person as a blocked start does, then prompts", async () => {
     const { exec, calls } = started({ code: 0, stdout: "{}" });

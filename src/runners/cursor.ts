@@ -65,6 +65,19 @@ async function exists(path: string): Promise<boolean> {
   }
 }
 
+/**
+ * A project file with a top-level `version`, which Wake wrote before
+ * 2026-10-08 and Cursor will not start with: replaced rather than kept.
+ */
+async function refusedByCursor(file: string): Promise<boolean> {
+  try {
+    const parsed: unknown = JSON.parse(await Bun.file(file).text());
+    return isRecord(parsed) && "version" in parsed;
+  } catch {
+    return false;
+  }
+}
+
 /** Writes the run's permissions where Cursor reads them, unless the repository keeps its own. */
 export async function writeCursorPermissions(run: Exec, o: ClaudeRun): Promise<boolean> {
   const file = join(o.cwd, ".cursor", "cli.json");
@@ -77,9 +90,11 @@ export async function writeCursorPermissions(run: Exec, o: ClaudeRun): Promise<b
     );
     return false;
   }
-  if (await exists(file)) return false;
+  if ((await exists(file)) && !(await refusedByCursor(file))) return false;
   await mkdir(join(o.cwd, ".cursor"), { recursive: true });
-  await Bun.write(file, JSON.stringify({ version: 1, permissions: cursorPermissions(o) }, null, 2));
+  // `permissions` only: a project file with any other key, `version` say, is
+  // refused outright and cursor-agent exits before it starts (GAT-31).
+  await Bun.write(file, JSON.stringify({ permissions: cursorPermissions(o) }, null, 2));
   if (o.defaultBranch) await excludeFromGit(run, o.cwd, "/.cursor/cli.json");
   return true;
 }

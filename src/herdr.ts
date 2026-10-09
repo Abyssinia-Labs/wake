@@ -15,6 +15,7 @@ import { type ClaudeResult, type ClaudeRun, rules } from "./claude";
 import { trustCodexFolder } from "./codex-trust";
 import type { Exec } from "./exec";
 import { claudeSettings } from "./fence";
+import { promptUntilTurnEnds } from "./herdr-prompt";
 import { branchListsMcps, cursorModeArgs, writeCursorPermissions } from "./runners/cursor";
 
 const WORKSPACE = "Wake";
@@ -218,6 +219,8 @@ export async function runInHerdr(o: HerdrRun, run: Exec): Promise<ClaudeResult> 
       o.onEvent?.("trusted the worktree in Codex's config (wakectl trust codex)");
     }
   }
+  // A question before startup that was answered: the prompt waits a moment.
+  let answered = false;
   try {
     await herdr(run, [
       "agent",
@@ -259,39 +262,14 @@ export async function runInHerdr(o: HerdrRun, run: Exec): Promise<ClaudeResult> 
       };
     }
     o.onEvent?.("answered; starting the work");
+    answered = true;
   }
 
-  // Submitted, then waited on until herdr says it is done; blocked keeps it
-  // waiting for the person, which is the point of running here.
-  const answer = await run([
-    "herdr",
-    "agent",
-    "prompt",
+  return await promptUntilTurnEnds(run, {
     name,
-    openingPrompt(o),
-    "--wait",
-    // Done or idle: either is the turn ended. herdr calls a finished turn
-    // done only until someone has seen it, so one the person watched to the
-    // end is idle (GAT-31), and so is one they stopped (GAT-20). Waiting on
-    // done alone held a stopped run for its whole timeout.
-    "--until",
-    "done",
-    "--until",
-    "idle",
-    "--timeout",
-    String(o.timeoutMs),
-  ]);
-  if (answer.code === 0) {
-    // Finished and stopped look alike from here, so neither is called a
-    // failure: the person was watching, and the agent's comment says which.
-    o.onEvent?.("its turn ended in herdr; the session stays open in its tab");
-    return { ok: true };
-  }
-  const why = (answer.stderr || answer.stdout).trim().split("\n").at(-1) ?? "";
-  return {
-    ok: false,
-    reason: why.includes("timeout")
-      ? `Stopped waiting after ${Math.round(o.timeoutMs / 60_000)} minutes; it is still open in herdr.`
-      : `herdr: ${why || "the agent's tab closed before it was done."}`,
-  };
+    text: openingPrompt(o),
+    timeoutMs: o.timeoutMs,
+    settle: answered,
+    ...(o.onEvent ? { onEvent: o.onEvent } : {}),
+  });
 }

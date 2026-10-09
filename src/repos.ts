@@ -67,3 +67,26 @@ export async function findClone(run: Exec, repo: string, roots: string[]): Promi
   }
   return null;
 }
+
+/** Every clone under `roots` with a GitHub origin, as `owner/name`: what setup offers to approve. */
+export async function listClones(
+  run: Exec,
+  roots: string[],
+): Promise<{ repo: string; path: string }[]> {
+  const found = new Map<string, string>();
+  for (const root of roots) {
+    for (const clone of await clonesUnder(root)) {
+      try {
+        const repo = repoFromRemote(
+          await git(run, ["config", "--get", "remote.origin.url"], clone),
+        );
+        if (repo && !found.has(repo)) found.set(repo, clone);
+      } catch {
+        // No origin: nothing a summons could name.
+      }
+    }
+  }
+  return [...found]
+    .map(([repo, path]) => ({ repo, path }))
+    .sort((a, b) => a.repo.localeCompare(b.repo));
+}

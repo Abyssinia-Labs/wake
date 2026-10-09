@@ -38,16 +38,24 @@ bun link            # puts wakectl on your PATH
 wakectl help
 ```
 
-1. In a Claude Code session on your Mac, ask your agent to pair Wake. It
-   asks the app for a code and runs `wakectl pair <app domain> <code>`.
-2. `wakectl repos allow your-org/your-repo` lets the app run in that
-   repository on this machine. A summons for a repository you haven't
-   approved is refused, and the ticket says the command to approve it.
-3. `wakectl install` starts the listener now and at every login, as a
-   LaunchAgent (`dev.abyssinia.wake`), with the PATH of the shell you ran it
-   from, so it finds `claude`, `git` and `gh`.
-4. `wakectl status` shows what is paired, connected and running, with the
-   `claude --resume` line for each run. `wakectl logs -f` follows the log.
+Then run **`wakectl setup`**. It checks the machine (Bun, git, gh, which
+agents you have), asks where your clones are, pairs your agent, asks which
+repositories each app may run in, how runs should open and what they may
+do unasked, and starts the listener. Run it again any time; every answer
+also has its own command:
+
+1. **Pair.** In Claude Code, Codex or Cursor, with the app's MCP server
+   connected, ask your agent to pair Wake. It answers with
+   `wakectl pair <app domain> <code>`.
+2. **Approve repositories.** `wakectl repos allow your-org/your-repo` lets
+   the app run there on this machine. A summons for a repository you
+   haven't approved is refused, and the ticket says the command.
+3. **Listen.** `wakectl install` starts the listener now and at every
+   login, as a LaunchAgent (`dev.abyssinia.wake`), with the PATH of the
+   shell you ran it from, so it finds your agents, `git` and `gh`.
+4. **Check.** `wakectl status` shows what is paired, connected and
+   running, with the resume line for each run; `wakectl logs -f` follows
+   the log; `wakectl doctor` lists anything missing, with its fix.
 
 **How runs start, and what they may do.** `wakectl mode herdr` opens each
 run as a tab in herdr's Wake workspace, an interactive session you can watch

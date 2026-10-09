@@ -9,6 +9,8 @@ const GROUPS: readonly { title: string; entries: readonly Entry[] }[] = [
   {
     title: "Get started",
     entries: [
+      { use: "setup", what: "Everything a first run needs, asked in order" },
+      { use: "doctor", what: "What this machine has and lacks, with fixes" },
       { use: "pair <domain> <code>", what: "Pair with an app; your agent gives you the command" },
       {
         use: "  --tool claude|codex|cursor",
@@ -44,6 +46,8 @@ const GROUPS: readonly { title: string; entries: readonly Entry[] }[] = [
 ];
 
 export const COMMANDS = [
+  "setup",
+  "doctor",
   "pair",
   "forget",
   "install",
@@ -77,6 +81,7 @@ export function help(): string {
   }
   lines.push(
     bold("Examples"),
+    `  ${dim("$")} wakectl setup`,
     `  ${dim("$")} wakectl pair app.example.com K7QD-2M9X`,
     `  ${dim("$")} wakectl repos allow your-org/your-repo`,
     `  ${dim("$")} wakectl mode herdr`,

@@ -7,10 +7,30 @@ export default defineConfig({
   site: "https://wakectl.dev",
   integrations: [
     starlight({
-      title: "Wake",
+      title: "wakectl",
       description:
         "Wake starts your coding agent (Claude Code, Codex, Cursor) on your Mac when someone hands it work in an app.",
-      logo: { src: "./src/assets/mark.svg", alt: "Wake" },
+      logo: {
+        light: "./src/assets/mark-light.svg",
+        dark: "./src/assets/mark-dark.svg",
+        alt: "",
+      },
+      // Risograph inks: Blue + Fluorescent Orange by day, Yellow + Pink by night (riso.css).
+      customCss: ["./src/styles/riso.css"],
+      head: [
+        { tag: "link", attrs: { rel: "preconnect", href: "https://fonts.googleapis.com" } },
+        {
+          tag: "link",
+          attrs: { rel: "preconnect", href: "https://fonts.gstatic.com", crossorigin: true },
+        },
+        {
+          tag: "link",
+          attrs: {
+            rel: "stylesheet",
+            href: "https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Work+Sans:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap",
+          },
+        },
+      ],
       favicon: "/favicon.svg",
       social: [{ icon: "github", label: "GitHub", href: "https://github.com/Abyssinia-Labs/wake" }],
       editLink: { baseUrl: "https://github.com/Abyssinia-Labs/wake/edit/main/site/" },

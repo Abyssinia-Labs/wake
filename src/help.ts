@@ -41,6 +41,7 @@ const GROUPS: readonly { title: string; entries: readonly Entry[] }[] = [
       { use: "prune [--days 14]", what: "Remove run worktrees untouched for a while" },
       { use: "forget <domain>", what: "Unpair its agents, here and on the app" },
       { use: "uninstall", what: "Stop, and do not start at login" },
+      { use: "check <domain>", what: "Test an app against the wake/v1 spec" },
     ],
   },
 ];
@@ -48,6 +49,7 @@ const GROUPS: readonly { title: string; entries: readonly Entry[] }[] = [
 export const COMMANDS = [
   "setup",
   "doctor",
+  "check",
   "pair",
   "forget",
   "install",

@@ -2,6 +2,7 @@
 // wakectl: pair Wake with an app, run the listener, and look after it.
 import { parseArgs } from "node:util";
 import pkg from "../package.json";
+import { check } from "./commands/check";
 import { doctor, setup } from "./commands/doctor";
 import { forget, pair } from "./commands/pair";
 import { prune } from "./commands/prune";
@@ -44,6 +45,11 @@ async function main(argv: string[]): Promise<void> {
       return setup();
     case "doctor":
       return doctor();
+    case "check": {
+      const [domain] = rest;
+      if (!domain) throw new Usage("check <domain>");
+      return check(domain);
+    }
     case "pair": {
       const [domain, code] = rest;
       if (!domain || !code) throw new Usage("pair <domain> <code> [--tool claude|codex|cursor]");

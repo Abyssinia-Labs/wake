@@ -12,6 +12,14 @@ bun run typecheck
 bun run lint
 ```
 
+The Convex component in `packages/convex` has its own checks, run with
+vitest in the edge runtime as Convex runs functions:
+
+```bash
+bun run --cwd packages/convex test
+bun run --cwd packages/convex typecheck
+```
+
 [Bun](https://bun.sh) runs everything: never `npm`, `npx`, `pnpm` or
 `yarn`. Dependencies are pinned exactly and `bun.lock` is committed.
 

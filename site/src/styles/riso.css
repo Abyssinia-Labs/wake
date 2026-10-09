@@ -1,0 +1,122 @@
+/*
+ * wakectl.dev in risograph inks. Two prints of one design:
+ * light is Blue + Fluorescent Orange on cream (pairing 02),
+ * dark is Yellow + Fluorescent Pink on black stock (pairing 08).
+ * --riso-a is the ink type and outlines print in; --riso-b the second
+ * ink, for the off-register shadow and halftones. Starlight's own
+ * colour slots are mapped from them, so every page wears the print.
+ */
+
+/* Dark: Starlight's default theme. */
+:root {
+  --riso-paper: #1c1a22;
+  --riso-card: #26232e;
+  --riso-ink: #f2eee3;
+  --riso-a: #ffe800;
+  --riso-b: #ff48b0;
+
+  --sl-color-white: #f2eee3;
+  --sl-color-gray-1: #ebe6e4;
+  --sl-color-gray-2: #d6d0d6;
+  --sl-color-gray-3: #aaa3b2;
+  --sl-color-gray-4: #6f6879;
+  --sl-color-gray-5: #3d3847;
+  --sl-color-gray-6: #26232e;
+  --sl-color-black: #1c1a22;
+
+  --sl-color-accent-low: #3a3510;
+  --sl-color-accent: #ffe800;
+  --sl-color-accent-high: #fff38c;
+
+  --sl-font: "Work Sans", system-ui, sans-serif;
+  --sl-font-mono: "Space Mono", ui-monospace, monospace;
+}
+
+/* Light. */
+:root[data-theme="light"] {
+  --riso-paper: #f4efe4;
+  --riso-card: #fffcf5;
+  --riso-ink: #14213d;
+  --riso-a: #0078bf;
+  --riso-b: #ff7477;
+
+  --sl-color-white: #14213d;
+  --sl-color-gray-1: #1f2c4a;
+  --sl-color-gray-2: #34405c;
+  --sl-color-gray-3: #535d74;
+  --sl-color-gray-4: #858c9c;
+  --sl-color-gray-5: #cfc9bb;
+  --sl-color-gray-6: #ebe5d7;
+  --sl-color-gray-7: #fffcf5;
+  --sl-color-black: #f4efe4;
+
+  --sl-color-accent-low: #d9e9f5;
+  --sl-color-accent: #0078bf;
+  --sl-color-accent-high: #005a91;
+}
+
+/* Display type: Syne, as the print's headlines. */
+h1,
+h2,
+h3,
+.site-title,
+.hero h1 {
+  font-family: "Syne", var(--sl-font);
+  letter-spacing: -0.02em;
+}
+.site-title {
+  font-weight: 800;
+  font-size: 1.35rem;
+  color: var(--riso-ink);
+}
+
+/* The headline prints in the first ink, its shadow a little off in the second. */
+.hero h1 {
+  font-weight: 800;
+  font-size: clamp(3rem, 8vw, 6.25rem);
+  line-height: 0.92;
+  letter-spacing: -0.04em;
+  color: var(--riso-a);
+  text-shadow: 0.05em 0.04em 0 var(--riso-b);
+}
+.hero .tagline {
+  color: var(--riso-ink);
+  font-size: 1.2rem;
+}
+
+/* Buttons are inked pills. */
+.sl-link-button.primary {
+  background: var(--riso-ink);
+  border-color: var(--riso-ink);
+  color: var(--riso-paper);
+  border-radius: 999px;
+  font-weight: 600;
+}
+.sl-link-button.primary:hover {
+  background: var(--riso-a);
+  border-color: var(--riso-a);
+  color: var(--riso-paper);
+}
+.sl-link-button.minimal {
+  color: var(--riso-ink);
+  font-weight: 600;
+}
+
+/* Cards are stickers: an inked rule and a little lift. */
+.card {
+  background: var(--riso-card);
+  border: 2px solid var(--riso-ink);
+  border-radius: 6px;
+}
+.card .title {
+  font-family: "Syne", var(--sl-font);
+  font-weight: 700;
+}
+.card .icon {
+  color: var(--riso-b);
+}
+
+/* Code reads like a stamped box. */
+.expressive-code .frame {
+  --ec-brdRad: 6px;
+}

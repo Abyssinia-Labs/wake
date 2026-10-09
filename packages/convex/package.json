@@ -17,7 +17,6 @@
   "bugs": "https://github.com/Abyssinia-Labs/wake/issues",
   "author": "Abyssinia Labs LLC",
   "license": "MIT",
-  "private": true,
   "type": "module",
   "files": [
     "dist",

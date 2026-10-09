@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import type { Claim, Outcome, Summons } from "./contract";
+import { PRIVATE_FAILURE, Shareable } from "./errors";
 import { type Place, Scheduler, type SchedulerOptions } from "./scheduler";
 
 const s = (id: string, at: number): Summons => ({
@@ -92,7 +93,19 @@ describe("Scheduler", () => {
     await settle();
     sch.offer(place, [s("x", 1)]);
     await settle();
-    expect(place.finished).toEqual([{ id: "x", outcome: "failed", reason: "No clone of a/b" }]);
+    expect(place.finished).toEqual([{ id: "x", outcome: "failed", reason: PRIVATE_FAILURE }]);
+  });
+
+  test("only a reason written to be shared reaches the app", async () => {
+    const place = fakePlace("gatherd.dev", () => won);
+    const sch = scheduler({
+      work: async () => {
+        throw new Shareable("Wake won't run on main, the default branch.");
+      },
+    });
+    sch.offer(place, [s("y", 1)]);
+    await settle();
+    expect(place.finished[0]?.reason).toBe("Wake won't run on main, the default branch.");
   });
 
   test("nothing is claimed while paused, and a poke after resuming claims", async () => {

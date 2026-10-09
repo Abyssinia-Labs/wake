@@ -55,6 +55,40 @@ function isText(v: unknown): v is string {
   return typeof v === "string" && v.length > 0;
 }
 
+// Every value from an app is bounded and has a known shape: each ends up in a
+// path, a tool name, a command line, a log line or a terminal (the security
+// pass, 2026-10-08).
+/** An app's name: a folder name and an MCP server name, so nothing else. */
+const APP = /^[a-z0-9][a-z0-9-]{0,39}$/;
+/** Ids are the app's own (Convex ids today): short, no punctuation. */
+const ID = /^[A-Za-z0-9_-]{1,128}$/;
+const KIND = /^[a-z][a-z_-]{0,31}$/;
+/** Shown in a terminal: no control characters, no escapes. */
+const LABEL = /^[^\p{Cc}\p{Cf}]{1,64}$/u;
+const KEY = /^[\x21-\x7e]{16,512}$/;
+/** The run's prompt is pasted into an agent: generous, but bounded. */
+export const MAX_PROMPT = 64 * 1024;
+
+export function isAppName(v: unknown): v is string {
+  return typeof v === "string" && APP.test(v);
+}
+
+const LOCAL_HOST = /^(localhost|127\.0\.0\.1|\[::1\])$/;
+
+/** https, or http only for a dev server on this machine; anything else is refused. */
+export function isAppUrl(v: unknown, schemes = ["https:"]): v is string {
+  if (typeof v !== "string" || v.length > 2048) return false;
+  try {
+    const url = new URL(v);
+    if (url.username || url.password) return false;
+    return (
+      schemes.includes(url.protocol) || (url.protocol === "http:" && LOCAL_HOST.test(url.hostname))
+    );
+  } catch {
+    return false;
+  }
+}
+
 // Both end up as arguments to git, so neither may look like an option or
 // climb out of a folder.
 // GitHub owners start with a letter or digit; names may start with a dot (.github).
@@ -83,15 +117,18 @@ export function asDiscovery(v: unknown): Discovery {
     const theirs = typeof v.version === "string" ? v.version : "an unknown version";
     throw new ContractError("discovery", `it speaks ${theirs}; update Wake`);
   }
-  if (!isText(v.convexUrl) || !isText(v.httpBase)) throw new ContractError("discovery");
+  // The pair code, the place key and every summons travel over these.
+  if (!isAppUrl(v.convexUrl) || !isAppUrl(v.httpBase)) {
+    throw new ContractError("discovery", "its URLs must be https");
+  }
   return { version: CONTRACT, convexUrl: v.convexUrl, httpBase: v.httpBase };
 }
 
 export function asPaired(v: unknown): Paired {
-  if (isRecord(v) && isText(v.placeKey) && isText(v.app) && isRecord(v.agent)) {
+  if (isRecord(v) && isKey(v.placeKey) && isAppName(v.app) && isRecord(v.agent)) {
     const { id, name, tool } = v.agent;
     const known = AGENT_TOOLS.find((one) => one === tool);
-    if (isText(id) && isText(name)) {
+    if (isId(id) && isLabel(name)) {
       return {
         placeKey: v.placeKey,
         app: v.app,
@@ -102,11 +139,25 @@ export function asPaired(v: unknown): Paired {
   throw new ContractError("pairing");
 }
 
+function isId(v: unknown): v is string {
+  return typeof v === "string" && ID.test(v);
+}
+function isLabel(v: unknown): v is string {
+  return typeof v === "string" && LABEL.test(v);
+}
+function isKey(v: unknown): v is string {
+  return typeof v === "string" && KEY.test(v);
+}
+function isKind(v: unknown): v is string {
+  return typeof v === "string" && KIND.test(v);
+}
+
 function asSummons(v: unknown): Summons | null {
-  if (!isRecord(v) || !isText(v.id) || !isText(v.app) || !isText(v.kind)) return null;
+  if (!isRecord(v) || !isId(v.id) || !isAppName(v.app) || !isKind(v.kind)) return null;
   if (typeof v.at !== "number" || !isRecord(v.target)) return null;
   const { kind, ref, url } = v.target;
-  if (!isText(kind) || !isText(ref) || !isText(url)) return null;
+  // The pattern leaves a ref's shape to the app (GAT-70, a page's title): a label.
+  if (!isKind(kind) || !isLabel(ref) || !isAppUrl(url)) return null;
   const summons: Summons = {
     id: v.id,
     app: v.app,
@@ -136,7 +187,13 @@ export function asSummonses(v: unknown): { summonses: Summons[]; rejected: numbe
 
 export function asClaim(v: unknown): Claim {
   if (isRecord(v) && v.claimed === false) return { claimed: false };
-  if (isRecord(v) && v.claimed === true && isRecord(v.run) && isText(v.run.prompt)) {
+  if (
+    isRecord(v) &&
+    v.claimed === true &&
+    isRecord(v.run) &&
+    isText(v.run.prompt) &&
+    v.run.prompt.length <= MAX_PROMPT
+  ) {
     return { claimed: true, run: { prompt: v.run.prompt } };
   }
   throw new ContractError("wake:claim");

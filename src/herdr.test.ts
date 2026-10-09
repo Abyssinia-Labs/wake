@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { mkdir, mkdtemp } from "node:fs/promises";
+import { mkdir, mkdtemp, symlink } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { ClaudeRun } from "./claude";
@@ -207,6 +207,14 @@ describe("a start herdr timed out on", () => {
     ).toBe(true);
     const written: unknown = JSON.parse(await Bun.file(file).text());
     expect(Object.keys(written as object)).toEqual(["permissions"]);
+  });
+  test("a .cursor that is a link is refused, not written through", async () => {
+    const run = await inTemp();
+    const elsewhere = await mkdtemp(join(tmpdir(), "wake-elsewhere-"));
+    await symlink(elsewhere, join(run.cwd, ".cursor"));
+    const none: Exec = async () => ({ code: 1, stdout: "", stderr: "" });
+    await expect(writeCursorPermissions(none, run)).rejects.toThrow("link");
+    expect(await Bun.file(join(elsewhere, "cli.json")).exists()).toBe(false);
   });
   test("waits for the person as a blocked start does, then prompts", async () => {
     const { exec, calls } = started({ code: 0, stdout: "{}" });

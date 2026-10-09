@@ -1,6 +1,6 @@
 // Where Wake keeps things, and what it remembers between runs. Place keys
 // are not here: they live in the Keychain (secrets.ts).
-import { mkdir, rename } from "node:fs/promises";
+import { chmod, mkdir, rename, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
 import type { Agent, AgentTool } from "./contract";
@@ -134,8 +134,26 @@ export async function saveConfig(config: Config): Promise<void> {
 }
 
 export async function writeJson(path: string, value: unknown): Promise<void> {
-  await mkdir(dirname(path), { recursive: true });
+  await mkdir(dirname(path), { recursive: true, mode: 0o700 });
   const temporary = `${path}.${process.pid}.tmp`;
-  await Bun.write(temporary, `${JSON.stringify(value, null, 2)}\n`);
+  await writeFile(temporary, `${JSON.stringify(value, null, 2)}\n`, { mode: 0o600 });
   await rename(temporary, path);
+}
+
+/**
+ * Wake's own files are the person's alone: the log holds what each run did,
+ * the state what is running where (the security pass). Folders 0700, files
+ * 0600; made at install and at every start, so an older install catches up.
+ */
+export async function keepPrivate(p: Paths): Promise<void> {
+  const quietly = (path: string, mode: number) => chmod(path, mode).catch(() => undefined);
+  await mkdir(p.home, { recursive: true, mode: 0o700 });
+  await mkdir(dirname(p.log), { recursive: true, mode: 0o700 });
+  // launchd makes the log 0644 when it is missing; made here first, it is kept as is.
+  await writeFile(p.log, "", { flag: "a", mode: 0o600 });
+  await Promise.all([
+    quietly(p.home, 0o700),
+    quietly(dirname(p.log), 0o700),
+    ...[p.log, p.config, p.state, p.made].map((path) => quietly(path, 0o600)),
+  ]);
 }

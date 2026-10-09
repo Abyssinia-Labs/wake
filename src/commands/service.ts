@@ -3,7 +3,7 @@
 import { mkdir, rm } from "node:fs/promises";
 import { homedir } from "node:os";
 import { dirname } from "node:path";
-import { paths } from "../config";
+import { keepPrivate, paths } from "../config";
 import { exec } from "../exec";
 import { load, plist, plistPath, programArguments, unload } from "../launchd";
 import { say } from "../log";
@@ -12,7 +12,7 @@ import { colorOn, cyan, dim, mark, spin, tildify } from "../ui";
 
 export async function install(): Promise<void> {
   const p = paths();
-  await mkdir(dirname(p.log), { recursive: true });
+  await keepPrivate(p);
   const path = plistPath();
   await mkdir(dirname(path), { recursive: true });
   const env: Record<string, string> = { PATH: process.env.PATH ?? "", HOME: homedir() };

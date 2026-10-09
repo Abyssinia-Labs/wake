@@ -73,12 +73,36 @@ config at `~/Library/Application Support/Wake/config.json`. Its settings:
 ## What a run does
 
 For a ticket, Wake finds your clone of the repository the app names,
-fetches, and makes a worktree on the ticket's branch under
-`~/Library/Application Support/Wake/worktrees/`. It starts `claude -p`
-there with edits accepted and a fixed tool list: git, `gh`, Bun and the
-app's MCP server. It may reply, claim, commit, push its branch and open a
-pull request, and never merges, force-pushes or pushes the default
-branch. For a page, it runs in an empty folder with the app's tools only.
+fetches, and makes a worktree on the ticket's branch where its tool keeps
+worktrees (above). It starts the agent there with edits accepted and a
+fixed tool list: git, `gh`, Bun and the app's MCP server. It may reply,
+claim, commit, push its branch and open a pull request, and is told never
+to merge, force-push or push the default branch. For a page, it runs in an
+empty folder with the app's tools only.
+
+## Security
+
+**Turn on branch protection.** The tool lists and deny lists keep an
+honest agent on track; they are not a wall. An agent with a shell can get
+around a deny list, and text in a ticket can try to talk it into doing so.
+What stops a push to your default branch, or a merge, is GitHub: a ruleset
+on the default branch that requires a pull request and lets nobody bypass
+it, admins included.
+
+What Wake refuses on its own:
+
+- A summons for the default branch, or for a branch checked out in a
+  folder Wake didn't make (your own worktree, say).
+- Anything from an app that isn't the shape `wake/v1` allows: discovery
+  URLs that aren't https (http only for a dev server on this machine),
+  an app name that isn't a plain name, unbounded ids, labels or prompts.
+- A repository that ships its own `.cursor/cli.json`, or makes `.cursor`
+  a link, for a Cursor run. Wake writes Cursor's limits fresh at every run.
+- The clone's git hooks, when it makes a worktree.
+
+Two runs on one branch take turns. When a run fails, the ticket says why
+only in words written to be shared; paths and command output stay in
+`wakectl logs`. Wake's config, state and log are readable by you alone.
 
 ## The contract
 

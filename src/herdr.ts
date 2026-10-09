@@ -8,7 +8,7 @@
 // settings file path); everything with words in it, Wake's rules and the
 // app's prompt, is submitted with `herdr agent prompt`, which pastes into
 // Claude Code's input, not into a shell.
-import { mkdir } from "node:fs/promises";
+import { chmod, mkdir, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { join } from "node:path";
 import { allowedTools, type ClaudeResult, type ClaudeRun, disallowedTools, rules } from "./claude";
@@ -160,9 +160,10 @@ export function startBlocked(error: unknown): boolean {
 export type HerdrRun = ClaudeRun & { ref: string };
 
 export async function runInHerdr(o: HerdrRun, run: Exec): Promise<ClaudeResult> {
-  await mkdir(RUNS_DIR, { recursive: true });
+  await mkdir(RUNS_DIR, { recursive: true, mode: 0o700 });
+  await chmod(RUNS_DIR, 0o700);
   const settings = join(RUNS_DIR, `${o.sessionId}.settings.json`);
-  await Bun.write(settings, JSON.stringify(claudeSettings(o), null, 2));
+  await writeFile(settings, JSON.stringify(claudeSettings(o), null, 2), { mode: 0o600 });
 
   const workspace = await wakeWorkspace(run, o.cwd);
   const tab = await herdr(run, [
@@ -172,8 +173,8 @@ export async function runInHerdr(o: HerdrRun, run: Exec): Promise<ClaudeResult> 
     workspace,
     "--cwd",
     o.cwd,
-    "--label",
-    o.ref,
+    // One argument, so a ref can never be read as an option.
+    `--label=${o.ref}`,
     "--no-focus",
   ]);
   const pane = findString(tab, ["pane_id"]);

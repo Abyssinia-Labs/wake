@@ -1,19 +1,19 @@
 // One summons, from a won claim to an outcome: find the clone, prepare the
 // worktree (or a room, when there is no repository), start Claude Code.
 import { mkdir } from "node:fs/promises";
-import { join } from "node:path";
+import { join, relative } from "node:path";
 import { type ClaudeResult, type ClaudeRun, runClaude } from "./claude";
 import type { Config, PairedApp, Paths, RunMode } from "./config";
 import type { AgentTool, Outcome, Run, Summons } from "./contract";
 import type { Exec } from "./exec";
 import { herdrRunning, runInHerdr } from "./herdr";
 import { installDependencies } from "./install";
-import { rememberWorktree } from "./made";
+import { madeWorktrees, rememberWorktree } from "./made";
 import { findClone } from "./repos";
 import { runCodex } from "./runners/codex";
 import { runCursor } from "./runners/cursor";
 import { toolOf } from "./tools";
-import { prepareWorktree, worktreeRoot } from "./worktree";
+import { isMade, prepareWorktree, worktreeRoot } from "./worktree";
 
 /** A run under way; `sessionId` is empty until a tool that picks its own has said it. */
 export type Started = { sessionId: string; cwd: string; tool: AgentTool };
@@ -52,7 +52,44 @@ export function composePrompt(run: Run, summons: Summons, sessionId: string | nu
   ].join("\n");
 }
 
+// One run per branch at a time: two would share a worktree, and each would
+// commit over the other's work. A second waits for the first.
+const branches = new Map<string, Promise<unknown>>();
+
+export async function oneAtATime<T>(key: string, work: () => Promise<T>): Promise<T> {
+  const before = branches.get(key) ?? Promise.resolve();
+  const mine = before.catch(() => undefined).then(work);
+  branches.set(key, mine);
+  try {
+    return await mine;
+  } finally {
+    if (branches.get(key) === mine) branches.delete(key);
+  }
+}
+
+/** A room for runs without a repository: the app's own folder, never outside `rooms`. */
+export function roomOf(rooms: string, app: string): string {
+  const room = join(rooms, app);
+  const inside = relative(rooms, room);
+  if (!inside || inside.startsWith("..") || inside.includes("/")) {
+    throw new Error(`No room for an app named ${JSON.stringify(app)}.`);
+  }
+  return room;
+}
+
 export async function runSummons(
+  summons: Summons,
+  run: Run,
+  app: PairedApp,
+  o: Parameters<typeof runOne>[3],
+): Promise<Outcome> {
+  if (!summons.repo || !summons.branch) return await runOne(summons, run, app, o);
+  return await oneAtATime(`${summons.repo.toLowerCase()}#${summons.branch}`, () =>
+    runOne(summons, run, app, o),
+  );
+}
+
+async function runOne(
   summons: Summons,
   run: Run,
   app: PairedApp,
@@ -83,6 +120,7 @@ export async function runSummons(
       clone,
       branch: summons.branch,
       root: worktreeRoot(toolOf(app) ?? "claude", clone),
+      ours: async (path) => isMade(await madeWorktrees(o.paths.made), path),
     });
     cwd = prepared.cwd;
     await rememberWorktree(o.paths.made, cwd);
@@ -90,7 +128,7 @@ export async function runSummons(
     defaultBranch = prepared.defaultBranch;
   } else {
     // No repository: an empty folder per app, with the app's tools only.
-    cwd = join(o.paths.rooms, app.app);
+    cwd = roomOf(o.paths.rooms, app.app);
     await mkdir(cwd, { recursive: true });
   }
 

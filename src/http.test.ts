@@ -7,6 +7,8 @@ describe("appOrigin", () => {
     expect(appOrigin("localhost:3005")).toBe("http://localhost:3005");
     expect(appOrigin("https://gatherd.dev/")).toBe("https://gatherd.dev");
     expect(appOrigin("localhost.evil.com")).toBe("https://localhost.evil.com");
+    expect(appOrigin("http://localhost:3005")).toBe("http://localhost:3005");
+    expect(() => appOrigin("http://gatherd.dev")).toThrow("https only");
   });
 });
 
@@ -15,7 +17,7 @@ describe("routes", () => {
     const seen: Array<{ url: string; init?: RequestInit }> = [];
     const fetcher: Fetch = async (url, init) => {
       seen.push({ url, init });
-      return Response.json({ version: "wake/v1", convexUrl: "wss://c", httpBase: "https://h" });
+      return Response.json({ version: "wake/v1", convexUrl: "https://c", httpBase: "https://h" });
     };
     const d = await discover("gatherd.dev", fetcher);
     expect(d.httpBase).toBe("https://h");

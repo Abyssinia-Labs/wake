@@ -27,7 +27,12 @@ const LOCAL = /^(localhost|127\.0\.0\.1|\[::1\])(:\d+)?$/;
 /** https for an app's domain; http only for a dev server on this machine. */
 export function appOrigin(domain: string): string {
   const trimmed = domain.trim().replace(/\/+$/, "");
-  if (/^https?:\/\//.test(trimmed)) return trimmed;
+  if (trimmed.startsWith("https://")) return trimmed;
+  if (trimmed.startsWith("http://")) {
+    // The pair code and the place key would cross the network in the clear.
+    if (LOCAL.test(trimmed.slice("http://".length))) return trimmed;
+    throw new Error(`Wake pairs over https only; http is for a dev server on this machine.`);
+  }
   return LOCAL.test(trimmed) ? `http://${trimmed}` : `https://${trimmed}`;
 }
 

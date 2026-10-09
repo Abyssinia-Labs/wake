@@ -1,5 +1,14 @@
 import { describe, expect, test } from "bun:test";
-import { asClaim, asDiscovery, asSummonses, ContractError, isBranch, isRepo } from "./contract";
+import {
+  asClaim,
+  asDiscovery,
+  asPaired,
+  asSummonses,
+  ContractError,
+  isBranch,
+  isRepo,
+  MAX_PROMPT,
+} from "./contract";
 
 const summons = {
   id: "s1",
@@ -13,11 +22,8 @@ const summons = {
 
 describe("discovery", () => {
   test("reads wake/v1", () => {
-    expect(asDiscovery({ version: "wake/v1", convexUrl: "c", httpBase: "h" })).toEqual({
-      version: "wake/v1",
-      convexUrl: "c",
-      httpBase: "h",
-    });
+    const urls = { convexUrl: "https://c.convex.cloud", httpBase: "https://api.gatherd.dev" };
+    expect(asDiscovery({ version: "wake/v1", ...urls })).toEqual({ version: "wake/v1", ...urls });
   });
   test("says which version an app speaks when it is not ours", () => {
     expect(() => asDiscovery({ version: "wake/v2", convexUrl: "c", httpBase: "h" })).toThrow(
@@ -65,5 +71,54 @@ describe("claims", () => {
   });
   test("a won claim must say what to run", () => {
     expect(() => asClaim({ claimed: true, run: {} })).toThrow(ContractError);
+  });
+});
+
+describe("what an app may send (the security pass)", () => {
+  test("discovery URLs are https, or http on this machine only", () => {
+    const at =
+      (convexUrl: string, httpBase = "https://api.gatherd.dev") =>
+      () =>
+        asDiscovery({ version: "wake/v1", convexUrl, httpBase });
+    expect(at("http://c.convex.cloud")).toThrow(ContractError);
+    expect(at("https://c.convex.cloud", "http://api.gatherd.dev")).toThrow(ContractError);
+    expect(at("file:///etc/passwd")).toThrow(ContractError);
+    expect(at("https://user:pw@c.convex.cloud")).toThrow(ContractError);
+    expect(at("http://127.0.0.1:3210", "http://localhost:3211")()).toMatchObject({
+      httpBase: "http://localhost:3211",
+    });
+  });
+
+  test("a pairing's app is a plain name, never a path or a tool list", () => {
+    const pair = (app: string, name = "Claude") =>
+      asPaired({ placeKey: `gwk_${"a".repeat(64)}`, app, agent: { id: "a1", name } });
+    expect(pair("gatherd").app).toBe("gatherd");
+    for (const bad of ["../../..", "gatherd Bash", "Gatherd", "a/b", ""]) {
+      expect(() => pair(bad)).toThrow(ContractError);
+    }
+    expect(() => pair("gatherd", "Claude\u001b[2J")).toThrow(ContractError);
+    expect(() => pair("gatherd", "x".repeat(65))).toThrow(ContractError);
+  });
+
+  test("summons fields are bounded", () => {
+    const bad = [
+      { ...summons, id: "s 1" },
+      { ...summons, app: "../x" },
+      { ...summons, target: { ...summons.target, ref: "GAT-1\u001b]0;pwned\u0007" } },
+      { ...summons, target: { ...summons.target, ref: "x".repeat(65) } },
+      { ...summons, target: { ...summons.target, url: "javascript:alert(1)" } },
+    ];
+    expect(asSummonses(bad).rejected).toBe(bad.length);
+    const page = {
+      ...summons,
+      target: { kind: "page", ref: "Launch plan", url: summons.target.url },
+    };
+    expect(asSummonses([page]).summonses).toHaveLength(1);
+  });
+
+  test("a prompt is bounded", () => {
+    const run = (prompt: string) => () => asClaim({ claimed: true, run: { prompt } });
+    expect(run("x".repeat(MAX_PROMPT))()).toMatchObject({ claimed: true });
+    expect(run("x".repeat(MAX_PROMPT + 1))).toThrow(ContractError);
   });
 });

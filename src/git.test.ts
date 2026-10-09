@@ -6,7 +6,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { exec, git } from "./exec";
 import { findClone, repoFromRemote } from "./repos";
-import { prepareWorktree } from "./worktree";
+import { isMade, prepareWorktree } from "./worktree";
 
 let dir = "";
 let clone = "";
@@ -131,6 +131,47 @@ describe("each tool's own place", () => {
     });
     expect(fresh.cwd).toBe(join(dir, "cursor-root", "gat-72-gone"));
     expect(await git(exec, ["rev-parse", "--abbrev-ref", "HEAD"], fresh.cwd)).toBe("gat-72-gone");
+  });
+
+  test("the clone's hooks don't run when Wake makes a worktree", async () => {
+    const hooks = join(dir, "hooks");
+    const marker = join(dir, "hook-ran");
+    await Bun.write(join(hooks, "post-checkout"), `#!/bin/sh\ntouch '${marker}'\n`);
+    await Bun.$`chmod +x ${join(hooks, "post-checkout")}`.quiet();
+    await git(exec, ["config", "core.hooksPath", hooks], clone);
+    try {
+      await prepareWorktree(exec, { clone, branch: "gat-74-hooks", root: join(dir, "wt-74") });
+      expect(await Bun.file(marker).exists()).toBe(false);
+    } finally {
+      await git(exec, ["config", "--unset", "core.hooksPath"], clone);
+    }
+  });
+
+  test("never the default branch", async () => {
+    await expect(
+      prepareWorktree(exec, { clone, branch: "main", root: join(dir, "wt-main") }),
+    ).rejects.toThrow("default branch");
+  });
+
+  test("never a worktree Wake didn't make, the person's own included", async () => {
+    const theirs = join(dir, "their-own");
+    await git(exec, ["worktree", "add", "--quiet", "-b", "gat-73-mine", theirs, "main"], clone);
+    await expect(
+      prepareWorktree(exec, {
+        clone,
+        branch: "gat-73-mine",
+        root: join(dir, "wt-73"),
+        ours: async (path) => isMade([], path),
+      }),
+    ).rejects.toThrow("didn't make");
+    const carried = await prepareWorktree(exec, {
+      clone,
+      branch: "gat-73-mine",
+      root: join(dir, "wt-73"),
+      ours: async (path) => isMade([theirs], path),
+    });
+    const { realpath } = await import("node:fs/promises");
+    expect(await realpath(carried.cwd)).toBe(await realpath(theirs));
   });
 
   test("Claude Code in the clone, Cursor and Codex in their own homes", async () => {

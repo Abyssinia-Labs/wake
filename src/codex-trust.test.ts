@@ -1,8 +1,8 @@
 import { afterAll, expect, test } from "bun:test";
-import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { lstat, mkdtemp, readFile, rm, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { trustCodexFolder, untrustCodexFolder } from "./codex-trust";
+import { tomlString, trustCodexFolder, untrustCodexFolder } from "./codex-trust";
 
 const dir = await mkdtemp(join(tmpdir(), "wake-codex-"));
 afterAll(() => rm(dir, { recursive: true, force: true }));
@@ -28,4 +28,19 @@ test("never takes out an entry the person added", async () => {
   await writeFile(file, own);
   expect(await untrustCodexFolder("/Users/m/x", file)).toBe(false);
   expect(await readFile(file, "utf8")).toBe(own);
+});
+
+test("a folder name can't break out of its TOML string", () => {
+  expect(tomlString('a"b\\c\nd')).toBe('"a\\"b\\\\c\\u000ad"');
+});
+
+test("runs starting together each keep their entry, and a linked config stays linked", async () => {
+  const real = join(dir, "dotfiles-config.toml");
+  const link = join(dir, "linked.toml");
+  await writeFile(real, 'model = "gpt"\n');
+  await symlink(real, link);
+  await Promise.all(["/w/a", "/w/b", "/w/c"].map((one) => trustCodexFolder(one, link)));
+  expect((await lstat(link)).isSymbolicLink()).toBe(true);
+  const text = await readFile(real, "utf8");
+  for (const one of ["/w/a", "/w/b", "/w/c"]) expect(text).toContain(`[projects."${one}"]`);
 });

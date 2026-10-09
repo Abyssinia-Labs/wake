@@ -3,6 +3,7 @@
 // place of the same agent (the pattern's third principle); a lost race is
 // not an error, it is someone else's run.
 import type { Claim, Outcome, Run, Summons } from "./contract";
+import { reasonFor } from "./errors";
 import { messageOf } from "./log";
 
 export type Place = {
@@ -100,11 +101,11 @@ export class Scheduler {
       }
       this.retryAt.delete(key);
       this.o.note(`Claimed ${summons.target.ref} on ${place.domain} (${summons.kind}).`);
-      const outcome = await this.o
-        .work(place, summons, claim.run)
-        .catch(
-          (error): Outcome => ({ id: summons.id, outcome: "failed", reason: messageOf(error) }),
-        );
+      const outcome = await this.o.work(place, summons, claim.run).catch((error): Outcome => {
+        // The detail stays here; the app is told only what is safe to show.
+        this.o.note(`${summons.target.ref} failed: ${messageOf(error)}`);
+        return { id: summons.id, outcome: "failed", reason: reasonFor(error) };
+      });
       this.passed.add(key);
       await this.finish(place, outcome, summons.target.ref);
     } finally {

@@ -9,6 +9,7 @@ import { access, appendFile, readFile, realpath } from "node:fs/promises";
 import { homedir } from "node:os";
 import { basename, join } from "node:path";
 import type { AgentTool } from "./contract";
+import { Shareable } from "./errors";
 import { type Exec, git, gitOk } from "./exec";
 
 export type Prepared = { cwd: string; defaultBranch: string };
@@ -23,6 +24,10 @@ async function exists(path: string): Promise<boolean> {
 }
 
 export const WORKTREES_DIR = join(".claude", "worktrees");
+
+// `worktree add` runs the clone's post-checkout hook, which a repository with
+// a committed hooks folder (husky) controls: Wake starts the agent, not that.
+const NO_HOOKS = ["-c", "core.hooksPath=/dev/null"];
 
 /**
  * Where each tool keeps its worktrees, so a run's sits with the tool's own:
@@ -106,23 +111,51 @@ async function defaultBranchOf(run: Exec, clone: string): Promise<string> {
   }
 }
 
+function notOurs(): Shareable {
+  return new Shareable(
+    "The branch is checked out in a folder Wake didn't make, so Wake won't work in it.",
+  );
+}
+
+/** Whether `path` is one of `made`, however either is spelled. */
+export async function isMade(made: readonly string[], path: string): Promise<boolean> {
+  for (const one of made) if (await sameFolder(one, path)) return true;
+  return false;
+}
+
 export async function prepareWorktree(
   run: Exec,
-  o: { clone: string; branch: string; root: string },
+  o: {
+    clone: string;
+    branch: string;
+    root: string;
+    /** Whether Wake made this folder: a run carries on only in one it did. */
+    ours?: (path: string) => Promise<boolean>;
+  },
 ): Promise<Prepared> {
+  const ours = o.ours ?? (async () => true);
   await git(run, ["fetch", "origin", "--prune", "--quiet"], o.clone);
   // Forget worktrees whose folders were deleted by hand, so their branches
   // can be checked out again. Only folders already gone; never a locked one.
   await git(run, ["worktree", "prune"], o.clone);
   if (o.root.startsWith(`${o.clone}/`)) await excludeWorktrees(run, o.clone);
   const defaultBranch = await defaultBranchOf(run, o.clone);
+  // A run pushes its branch; on the default branch that is a push to it.
+  if (o.branch === defaultBranch) {
+    throw new Shareable(
+      `Wake won't run on ${defaultBranch}, the default branch; a run needs a branch of its own.`,
+    );
+  }
   const cwd = worktreePath(o.root, o.branch);
 
   if (await exists(cwd)) {
     const current = await git(run, ["rev-parse", "--abbrev-ref", "HEAD"], cwd);
     if (current !== o.branch) {
-      throw new Error(`${cwd} is on ${current}, not ${o.branch}; remove it with wakectl prune.`);
+      throw new Shareable(
+        `The run's worktree is on another branch, not ${o.branch}; wakectl prune removes it.`,
+      );
     }
+    if (!(await ours(cwd))) throw notOurs();
     return { cwd, defaultBranch };
   }
 
@@ -130,8 +163,11 @@ export async function prepareWorktree(
   // already has it, carry on there rather than fail. Not the person's own
   // checkout: that git refuses below, and the run fails saying why.
   const elsewhere = await checkedOutAt(run, o.clone, o.branch);
-  if (elsewhere && !(await sameFolder(elsewhere, o.clone)))
+  if (elsewhere && !(await sameFolder(elsewhere, o.clone))) {
+    // The person's own worktree, uncommitted work and all, is theirs.
+    if (!(await ours(elsewhere))) throw notOurs();
     return { cwd: elsewhere, defaultBranch };
+  }
 
   const local = await gitOk(
     run,
@@ -145,17 +181,37 @@ export async function prepareWorktree(
   );
   if (local) {
     // Work an earlier run left on this branch carries on from where it was.
-    await git(run, ["worktree", "add", "--quiet", cwd, o.branch], o.clone);
+    await git(run, [...NO_HOOKS, "worktree", "add", "--quiet", cwd, o.branch], o.clone);
   } else if (remote) {
     await git(
       run,
-      ["worktree", "add", "--quiet", "--track", "-b", o.branch, cwd, `origin/${o.branch}`],
+      [
+        ...NO_HOOKS,
+        "worktree",
+        "add",
+        "--quiet",
+        "--track",
+        "-b",
+        o.branch,
+        cwd,
+        `origin/${o.branch}`,
+      ],
       o.clone,
     );
   } else {
     await git(
       run,
-      ["worktree", "add", "--quiet", "--no-track", "-b", o.branch, cwd, `origin/${defaultBranch}`],
+      [
+        ...NO_HOOKS,
+        "worktree",
+        "add",
+        "--quiet",
+        "--no-track",
+        "-b",
+        o.branch,
+        cwd,
+        `origin/${defaultBranch}`,
+      ],
       o.clone,
     );
   }

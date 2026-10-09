@@ -3,7 +3,7 @@
 // half minute, so a `wakectl pair` or `forget` takes effect without a
 // restart.
 import { existsSync } from "node:fs";
-import { type Config, loadConfig, paths } from "./config";
+import { type Config, keepPrivate, loadConfig, paths } from "./config";
 import { exec } from "./exec";
 import { messageOf, note } from "./log";
 import { connectPlace, type LivePlace } from "./place";
@@ -17,6 +17,7 @@ const RECONCILE_MS = 30_000;
 
 export async function listen(): Promise<void> {
   const p = paths();
+  await keepPrivate(p);
   const deps = realDeps(exec);
   const startedAt = Date.now();
   const live = new Map<string, LivePlace>();

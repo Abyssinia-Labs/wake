@@ -6,10 +6,11 @@
 // its classifier runs what it judges safe and asks about the rest, as Claude
 // Code's auto mode does. The prompt is an argument, not a shell string: Bun
 // hands it to cursor-agent as one argv entry.
-import { access, mkdir } from "node:fs/promises";
+import { lstat, mkdir } from "node:fs/promises";
 import { join } from "node:path";
 import { type ClaudeResult, type ClaudeRun, rules, type Spawn, spawnClaude } from "../claude";
 import { describeEvent, resultOf } from "../claude-events";
+import { Shareable } from "../errors";
 import type { Exec } from "../exec";
 import { gitOk } from "../exec";
 import { excludeFromGit } from "../worktree";
@@ -57,23 +58,9 @@ export function cursorPermissions(o: ClaudeRun): { allow: string[]; deny: string
   };
 }
 
-async function exists(path: string): Promise<boolean> {
+async function isLink(path: string): Promise<boolean> {
   try {
-    await access(path);
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-/**
- * A project file with a top-level `version`, which Wake wrote before
- * 2026-10-08 and Cursor will not start with: replaced rather than kept.
- */
-async function refusedByCursor(file: string): Promise<boolean> {
-  try {
-    const parsed: unknown = JSON.parse(await Bun.file(file).text());
-    return isRecord(parsed) && "version" in parsed;
+    return (await lstat(path)).isSymbolicLink();
   } catch {
     return false;
   }
@@ -85,13 +72,22 @@ export async function writeCursorPermissions(run: Exec, o: ClaudeRun): Promise<b
   const tracked =
     o.defaultBranch !== undefined &&
     (await gitOk(run, ["ls-files", "--error-unmatch", ".cursor/cli.json"], o.cwd));
+  // The branch's own file would be Cursor's whole fence, and the branch is
+  // the app's to name: refused, not deferred to (the security pass).
   if (tracked) {
-    o.onEvent?.(
-      "the repository keeps its own .cursor/cli.json; Wake's permissions are not written",
+    throw new Shareable(
+      "The repository keeps its own .cursor/cli.json, which would replace Wake's limits for Cursor, so Wake won't start Cursor on it.",
     );
-    return false;
   }
-  if ((await exists(file)) && !(await refusedByCursor(file))) return false;
+  for (const path of [join(o.cwd, ".cursor"), file]) {
+    if (await isLink(path)) {
+      throw new Shareable(
+        "The branch makes .cursor a link, so Wake won't write Cursor's limits there.",
+      );
+    }
+  }
+  // Written at every run, over whatever is there: an agent with Write(**)
+  // could have widened the last run's file for the next one.
   await mkdir(join(o.cwd, ".cursor"), { recursive: true });
   // `permissions` only: a project file with any other key, `version` say, is
   // refused outright and cursor-agent exits before it starts (GAT-31).

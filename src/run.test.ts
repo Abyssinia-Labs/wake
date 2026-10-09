@@ -6,7 +6,7 @@ import type { ClaudeRun } from "./claude";
 import { defaults, type PairedApp, type Paths } from "./config";
 import type { Summons } from "./contract";
 import { exec } from "./exec";
-import { composePrompt, type RunDeps, runSummons } from "./run";
+import { composePrompt, oneAtATime, type RunDeps, roomOf, runSummons } from "./run";
 
 const home = await mkdtemp(join(tmpdir(), "wake-run-"));
 afterAll(() => rm(home, { recursive: true, force: true }));
@@ -95,5 +95,42 @@ describe("runSummons", () => {
     expect(prompt.startsWith("Read the thread.\n")).toBe(true);
     expect(prompt).toContain("Summons s1: mentioned, Launch plan");
     expect(prompt.endsWith("Session sess.")).toBe(true);
+  });
+});
+
+describe("the security pass", () => {
+  test("a room never leaves Wake's rooms folder", () => {
+    expect(roomOf("/w/rooms", "gatherd")).toBe("/w/rooms/gatherd");
+    for (const bad of ["..", "../..", "a/b", ""]) expect(() => roomOf("/w/rooms", bad)).toThrow();
+  });
+
+  test("two runs on one branch take turns; other branches don't wait", async () => {
+    let inside = 0;
+    let most = 0;
+    const work = async (): Promise<void> => {
+      inside += 1;
+      most = Math.max(most, inside);
+      await Bun.sleep(5);
+      inside -= 1;
+    };
+    await Promise.all([
+      oneAtATime("a#x", work),
+      oneAtATime("a#x", async () => {
+        throw new Error("a failed run frees the branch too");
+      }).catch(() => undefined),
+      oneAtATime("a#x", work),
+    ]);
+    expect(most).toBe(1);
+    const order: string[] = [];
+    await Promise.all([
+      oneAtATime("a#y", async () => {
+        await Bun.sleep(10);
+        order.push("y");
+      }),
+      oneAtATime("a#z", async () => {
+        order.push("z");
+      }),
+    ]);
+    expect(order).toEqual(["z", "y"]);
   });
 });

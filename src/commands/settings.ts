@@ -34,7 +34,7 @@ export async function mode(next: string | undefined): Promise<void> {
   );
 }
 
-const MEANS: Record<PermissionMode, string> = {
+export const MEANS: Record<PermissionMode, string> = {
   acceptEdits:
     "edits and the allowed tools go ahead; anything else asks. Headless, an ask is denied; in herdr it waits for you.",
   auto: "Claude Code's auto mode, or Cursor's Auto-review, decides what is safe to run, so a run rarely waits on you.",

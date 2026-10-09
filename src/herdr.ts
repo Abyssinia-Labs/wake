@@ -169,6 +169,11 @@ async function exists(path: string): Promise<boolean> {
   }
 }
 
+/** A ref as a tab's label: never starting with a dash, never empty. */
+export function tabLabel(ref: string): string {
+  return ref.replace(/^-+/, "").trim() || "Wake run";
+}
+
 export type HerdrRun = ClaudeRun & { ref: string };
 
 export async function runInHerdr(o: HerdrRun, run: Exec): Promise<ClaudeResult> {
@@ -185,8 +190,11 @@ export async function runInHerdr(o: HerdrRun, run: Exec): Promise<ClaudeResult> 
     workspace,
     "--cwd",
     o.cwd,
-    // One argument, so a ref can never be read as an option.
-    `--label=${o.ref}`,
+    // herdr takes the value as its own argument (it refuses `--label=…`,
+    // which broke every herdr run, 2026-10-09), so a ref may not start
+    // with a dash and be read as an option instead.
+    "--label",
+    tabLabel(o.ref),
     "--no-focus",
   ]);
   const pane = findString(tab, ["pane_id"]);

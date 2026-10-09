@@ -13,6 +13,7 @@ import {
   nativeArgs,
   openingPrompt,
   runInHerdr,
+  tabLabel,
 } from "./herdr";
 import { writeCursorPermissions } from "./runners/cursor";
 
@@ -86,6 +87,10 @@ describe("runInHerdr", () => {
       "w2:p5",
     ]);
     expect(start.join(" ")).not.toContain("rm -rf");
+    // The label is its own argument: herdr refuses `--label=…`.
+    const tab = calls.find((cmd) => cmd[1] === "tab") ?? [];
+    expect(tab[tab.indexOf("--label") + 1]).toBe("GAT-37");
+    expect(tab.some((arg) => arg.startsWith("--label="))).toBe(false);
     expect(start).toContain("GAT-37·Wake");
     const prompt = calls.find((cmd) => cmd[2] === "prompt") ?? [];
     expect(prompt[4]).toContain("rm -rf");
@@ -239,4 +244,10 @@ describe("a turn that ended", () => {
     };
     expect(await runInHerdr({ ...base, tool: "codex", ref: "GAT-31" }, exec)).toEqual({ ok: true });
   });
+});
+
+test("a tab's label never reads as an option", () => {
+  expect(tabLabel("Antescript — core docs")).toBe("Antescript — core docs");
+  expect(tabLabel("--workspace evil")).toBe("workspace evil");
+  expect(tabLabel("--")).toBe("Wake run");
 });

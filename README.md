@@ -1,29 +1,42 @@
 # Wake
 
-Wake starts your agent when someone hands it work. Mention your agent in a
-Gatherd or Antescript comment, or assign it a ticket, and Wake, running on
-your machine, starts it in the right repository to do the work: reply,
-claim, write code and open a pull request.
+Wake starts your coding agent when someone hands it work. Mention your
+agent in a comment, or assign it a ticket, in an app that speaks
+`wake/v1` ([Gatherd](https://gatherd.dev) today,
+[Antescript](https://antescript.app) next), and Wake, running on your Mac,
+starts it in the right repository: Claude Code, Codex or Cursor, in the
+background or in a [herdr](https://herdr.dev) tab you can watch. The agent
+replies, claims the work, writes code and opens a pull request, inside a
+sandbox and on its own branch.
 
-Status: the client is written and tested on its own. Neither Gatherd nor
-Antescript serves `wake/v1` yet, so there is nothing to pair with.
+Status: early. It runs every day against Gatherd. macOS only, from source
+until the npm package is published. Docs are coming to
+[wakectl.dev](https://wakectl.dev).
 
 ## How it works
 
 - Wake keeps a Convex subscription open to each app you pair it with. An
   idle subscription costs nothing, and nothing polls.
-- When the app has a summons for your agent, Wake claims it and starts
-  `claude -p` in a fresh git worktree on the ticket's branch.
+- When the app has a summons for your agent, Wake claims it, makes a git
+  worktree on the ticket's branch, and starts the agent there.
 - The summons carries no text. The agent reads what it was asked over its
-  own connection to the app.
+  own connection to the app, so the app checks access as on any call.
 - Your agent pairs Wake itself: it asks the app for a code and runs
   `wakectl pair gatherd.dev <code>`, so Wake serves exactly that agent.
+
+## Requirements
+
+macOS, [Bun](https://bun.sh) 1.3.3 or later, git, and at least one of
+Claude Code (`claude`), Codex (`codex`) or Cursor (`cursor-agent`), signed
+in to the app's MCP server. `gh` for pull requests.
 
 ## Using it
 
 ```bash
+git clone https://github.com/Abyssinia-Labs/wake.git && cd wake
 bun install
-bun run wakectl help
+bun link            # puts wakectl on your PATH
+wakectl help
 ```
 
 1. In a Claude Code session on your Mac, ask your agent to pair Wake. It
@@ -130,12 +143,21 @@ Wake knows each app only through `wake/v1`: discovery at
 `/.well-known/wake`, two HTTP routes (`pair`, `forget`) and three Convex
 functions (`wake:pending`, `wake:claim`, `wake:finish`), each called with
 the place key as an argument. The key is the whole credential: nobody
-signs in. The
-full contract and the rules around it are the Wake pattern, kept word for
-word in each app as `docs/product/wake-pattern.md`.
+signs in. Every answer is checked against `src/contract.ts` before Wake
+reads it. The full specification, for an app that wants to serve it, is
+coming to wakectl.dev with a drop-in Convex component.
 
 ## Names
 
 - Package: `@abyssinia-labs/wake` on npm
 - Command: `wakectl` (`install`, `status`, `logs`, `pause`, `pair`, `forget`)
 - Homebrew, later: `brew install abyssinia-labs/tap/wake`
+
+## Contributing and security
+
+See [CONTRIBUTING.md](CONTRIBUTING.md). Report a vulnerability privately,
+as [SECURITY.md](SECURITY.md) says, never in an issue.
+
+## License
+
+[MIT](LICENSE) © Abyssinia Labs LLC

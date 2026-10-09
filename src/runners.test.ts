@@ -143,8 +143,8 @@ describe("Cursor", () => {
 
 describe("pairings and sessions", () => {
   test("a pairing is keyed by its domain and its agent", () => {
-    expect(pairingKey("gatherd.dev", { id: "j974w1ceam6q", name: "Codex (Michael)" })).toBe(
-      "gatherd.dev/codex-michael-j974w1",
+    expect(pairingKey("gatherd.dev", { id: "j974w1ceam6q", name: "Codex (Ada)" })).toBe(
+      "gatherd.dev/codex-ada-j974w1",
     );
   });
   test("each tool resumes its own way", () => {
@@ -160,7 +160,7 @@ describe("no tool, no run", () => {
     const agent = (name: string) => ({ agent: { id: "a", name } });
     expect(toolOf({ ...agent("ChatGPT"), tool: "codex" })).toBe("codex");
     expect(toolOf(agent("Claude"))).toBe("claude");
-    expect(toolOf(agent("Codex (Michael)"))).toBe("codex");
+    expect(toolOf(agent("Codex (Ada)"))).toBe("codex");
     expect(toolOf(agent("Cursor"))).toBe("cursor");
     expect(toolOf(agent("ChatGPT"))).toBeNull();
     expect(toolOf(agent("nightly-script"))).toBeNull();

@@ -36,8 +36,10 @@ description: Every wakectl command.
 | `wakectl pause` / `wakectl resume` | Stop, or go on, claiming new work. A run already going finishes. |
 | `wakectl prune [--days 14]` | Remove run worktrees untouched that long; never one with uncommitted work. |
 | `wakectl forget <domain>` | Unpair an app's agents, here and on the app. |
+| `wakectl update` | Install the newest Wake from npm, and restart the listener onto it. |
 | `wakectl uninstall` | Stop, and don't start at login. |
 | `wakectl check <domain>` | Test an app against the [wake/v1 spec](/spec/wake-v1/). Pairs nothing, changes nothing. |
 
+`wake` is the same command, shorter to type: `wake status`, `wake logs -f`.
 `wakectl help` prints this list; `wakectl --version` the version. Colour is
 off when `NO_COLOR` is set or the output isn't a terminal.

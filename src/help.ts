@@ -40,6 +40,7 @@ const GROUPS: readonly { title: string; entries: readonly Entry[] }[] = [
       { use: "pause | resume", what: "Stop or go on claiming new work" },
       { use: "prune [--days 14]", what: "Remove run worktrees untouched for a while" },
       { use: "forget <domain>", what: "Unpair its agents, here and on the app" },
+      { use: "update", what: "The latest Wake from npm, and the listener onto it" },
       { use: "uninstall", what: "Stop, and do not start at login" },
       { use: "check <domain>", what: "Test an app against the wake/v1 spec" },
     ],
@@ -50,6 +51,7 @@ export const COMMANDS = [
   "setup",
   "doctor",
   "check",
+  "update",
   "pair",
   "forget",
   "install",
@@ -89,6 +91,7 @@ export function help(): string {
     `  ${dim("$")} wakectl mode herdr`,
     `  ${dim("$")} wakectl allow "Bash(npm test:*)"`,
     "",
+    dim("wake is the same command, shorter to type: wake status, wake logs -f."),
     dim("Colour is off when NO_COLOR is set or the output is not a terminal."),
   );
   return lines.join("\n");

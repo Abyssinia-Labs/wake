@@ -10,6 +10,7 @@ import { repos } from "./commands/repos";
 import { install, logs, pause, resume, uninstall } from "./commands/service";
 import { allow, mode, permissions, trust } from "./commands/settings";
 import { status } from "./commands/status";
+import { update } from "./commands/update";
 import { COMMANDS, help } from "./help";
 import { listen } from "./listener";
 import { messageOf, say, warn } from "./log";
@@ -62,6 +63,8 @@ async function main(argv: string[]): Promise<void> {
     }
     case "install":
       return install();
+    case "update":
+      return update();
     case "uninstall":
       return uninstall();
     case "status":

@@ -4,10 +4,25 @@ description: Wake starts your coding agent (Claude Code, Codex or Cursor) on you
 template: splash
 hero:
   title: Rise and ship.
+  # Inline, not an <img>, so the page's inks colour it and it can ring (riso.css).
   image:
-    light: ../../assets/hero-light.svg
-    dark: ../../assets/hero-dark.svg
-    alt: An alarm clock printed in two inks over a halftone circle
+    html: |
+      <svg class="wake-clock" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 480" role="img" aria-label="An alarm clock printed in two inks over a halftone circle">
+        <defs><pattern id="wake-dots" width="12" height="12" patternUnits="userSpaceOnUse"><circle class="dot" cx="6" cy="6" r="3.4"/></pattern></defs>
+        <circle cx="240" cy="240" r="226" fill="url(#wake-dots)"/>
+        <g transform="translate(36 30) scale(12.6)" fill="none" stroke-width="1.6" stroke-linecap="round">
+          <path class="ring ring-l" d="M2.6 6.6l-1.7-1.3M4.6 3.7l-.9-1.9M1.8 9.8l-2-.2"/>
+          <path class="ring ring-r" d="M29.4 6.6l1.7-1.3M27.4 3.7l.9-1.9M30.2 9.8l2-.2"/>
+          <g class="body">
+            <circle class="paper" cx="16" cy="18" r="9.6"/>
+            <circle class="shadow" cx="17.2" cy="19.2" r="9.6"/>
+            <circle class="rim" cx="16" cy="18" r="9.6"/>
+            <path class="bell bell-l" d="M5.2 9.6a4.6 4.6 0 0 1 6.4-3.4"/>
+            <path class="bell bell-r" d="M26.8 9.6a4.6 4.6 0 0 0-6.4-3.4"/>
+            <path class="hands" d="M16 18v-5.5M16 18l4 2.4M9.6 26.6l-1.9 2.6M22.4 26.6l1.9 2.6"/>
+          </g>
+        </g>
+      </svg>
   tagline: Assign your coding agent a ticket, or mention it in a comment, and Wake gets it out of bed on your Mac, in the right repository, on its own branch, inside a sandbox. No session to open, no "check your mentions".
   actions:
     - text: Get started
@@ -19,6 +34,7 @@ hero:
 ---
 
 import { Card, CardGrid } from "@astrojs/starlight/components";
+import RingClock from "../../components/RingClock.astro";
 
 ```bash
 bun add -g @abyssinia-labs/wake
@@ -62,3 +78,5 @@ half, and `wakectl check <your domain>` tells you when Wake can pair with you.
 
 **Apps that support Wake:** [Gatherd](https://gatherd.dev), with
 [Antescript](https://antescript.app) next.
+
+<RingClock />

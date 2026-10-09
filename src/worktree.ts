@@ -1,8 +1,8 @@
 // A run works in its own worktree of the person's clone, on the branch the
 // app named, so it never touches what the person has checked out. It lives
-// in the clone's .claude/worktrees/, where Claude Code keeps its own, so the
-// session belongs to the repository: `claude --resume` there, then Ctrl+W,
-// lists it. The worktree is kept afterwards; resuming needs the same folder.
+// where the run's tool keeps its own worktrees (`worktreeRoot`), so the tool
+// lists the session as one of its own. The worktree is kept afterwards;
+// resuming needs the same folder.
 // Claude Code's own --worktree is not used: it always makes a new
 // `worktree-<name>` branch, and a run must be on the ticket's branch.
 import { access, appendFile, readFile, realpath } from "node:fs/promises";
@@ -61,10 +61,15 @@ export async function checkedOutAt(
   branch: string,
 ): Promise<string | null> {
   const listed = await git(run, ["worktree", "list", "--porcelain"], clone);
-  let path: string | null = null;
-  for (const line of listed.split("\n")) {
-    if (line.startsWith("worktree ")) path = line.slice("worktree ".length);
-    if (line === `branch refs/heads/${branch}` && path) return path;
+  // One block per worktree. A folder deleted by hand stays listed, marked
+  // prunable, until git prunes it; carrying on there would start the agent
+  // in a folder that is not there.
+  for (const block of listed.split("\n\n")) {
+    const lines = block.split("\n");
+    const path = lines.find((line) => line.startsWith("worktree "))?.slice("worktree ".length);
+    if (!path || !lines.includes(`branch refs/heads/${branch}`)) continue;
+    if (lines.some((line) => line.startsWith("prunable")) || !(await exists(path))) continue;
+    return path;
   }
   return null;
 }
@@ -106,6 +111,9 @@ export async function prepareWorktree(
   o: { clone: string; branch: string; root: string },
 ): Promise<Prepared> {
   await git(run, ["fetch", "origin", "--prune", "--quiet"], o.clone);
+  // Forget worktrees whose folders were deleted by hand, so their branches
+  // can be checked out again. Only folders already gone; never a locked one.
+  await git(run, ["worktree", "prune"], o.clone);
   if (o.root.startsWith(`${o.clone}/`)) await excludeWorktrees(run, o.clone);
   const defaultBranch = await defaultBranchOf(run, o.clone);
   const cwd = worktreePath(o.root, o.branch);

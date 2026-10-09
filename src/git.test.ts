@@ -115,6 +115,24 @@ describe("each tool's own place", () => {
     expect(await realpath(again.cwd)).toBe(await realpath(first.cwd));
   });
 
+  test("a worktree whose folder was deleted by hand is not carried on in", async () => {
+    const gone = await prepareWorktree(exec, {
+      clone,
+      branch: "gat-72-gone",
+      root: join(clone, ".claude", "worktrees"),
+    });
+    await rm(gone.cwd, { recursive: true, force: true });
+    const { checkedOutAt } = await import("./worktree");
+    expect(await checkedOutAt(exec, clone, "gat-72-gone")).toBeNull();
+    const fresh = await prepareWorktree(exec, {
+      clone,
+      branch: "gat-72-gone",
+      root: join(dir, "cursor-root"),
+    });
+    expect(fresh.cwd).toBe(join(dir, "cursor-root", "gat-72-gone"));
+    expect(await git(exec, ["rev-parse", "--abbrev-ref", "HEAD"], fresh.cwd)).toBe("gat-72-gone");
+  });
+
   test("Claude Code in the clone, Cursor and Codex in their own homes", async () => {
     const { worktreeRoot } = await import("./worktree");
     expect(worktreeRoot("claude", "/p/gatherd", "/h")).toBe("/p/gatherd/.claude/worktrees");

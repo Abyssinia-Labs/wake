@@ -49,7 +49,10 @@ Claude Code, Codex or Cursor (`wakectl pair … --tool codex` when the app
 cannot tell; the Codex CLI reaches Gatherd as ChatGPT). Each run's worktree
 sits where its tool keeps its own: Claude Code's in the clone's
 `.claude/worktrees`, Cursor's in `~/.cursor/worktrees/<repo>`, Codex's in
-`~/.codex/worktrees/wake/<repo>`. Interactive Codex asks whether to trust
+`~/.codex/worktrees/wake/<repo>`. A branch an earlier run already has
+checked out is carried on in that folder, whichever tool made it, since git
+checks a branch out once; a worktree folder you deleted by hand is forgotten
+and made again. Interactive Codex asks whether to trust
 each new folder; `wakectl trust codex on` has Wake add the run's worktree to
 `~/.codex/config.toml` first, marked as Wake's, and `wakectl prune` takes it
 out again. Cursor is started with `--trust` for the run's worktree, in herdr

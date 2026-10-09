@@ -41,21 +41,12 @@ describe("claudeArgs", () => {
     expect(rules).not.toContain("Then do the work");
   });
 
-  test("a repository run gets code tools and fences on the default branch", () => {
-    const args = claudeArgs(base);
-    expect(args).toContain("Bash(git:*)");
-    expect(args).toContain("mcp__gatherd");
-    expect(args).toContain("Bash(gh pr merge:*)");
-    expect(args).toContain("Bash(git push origin main:*)");
-  });
-
-  test("a room run gets the app's tools and nothing else", () => {
-    const args = claudeArgs({ ...base, defaultBranch: undefined, mcpServer: "antescript" });
-    const allowed = args.slice(
-      args.indexOf("--allowedTools") + 1,
-      args.indexOf("--disallowedTools"),
-    );
-    expect(allowed).toEqual(["mcp__antescript"]);
+  test("the branch's settings are left out; Wake's own come as one --settings", () => {
+    const args = claudeArgs({ ...base, branch: "gat-70-x" });
+    expect(args[args.indexOf("--setting-sources") + 1]).toBe("user");
+    const settings: unknown = JSON.parse(args[args.indexOf("--settings") + 1] ?? "{}");
+    expect(settings).toMatchObject({ sandbox: { enabled: true, failIfUnavailable: true } });
+    expect(args).not.toContain("--allowedTools");
   });
 });
 

@@ -23,7 +23,7 @@ test("a Bun repository without node_modules is installed from its lockfile", asy
   await writeFile(join(cwd, "bun.lock"), "{}");
   const { calls, exec } = recorder();
   expect(await installDependencies(exec, cwd, () => {})).toBe(true);
-  expect(calls).toEqual([["bun", "install", "--frozen-lockfile"]]);
+  expect(calls).toEqual([["bun", "install", "--frozen-lockfile", "--ignore-scripts"]]);
 });
 
 test("nothing is run without a Bun lockfile, or with node_modules already there", async () => {

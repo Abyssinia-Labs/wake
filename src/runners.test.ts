@@ -1,8 +1,9 @@
 import { describe, expect, test } from "bun:test";
 import type { ClaudeRun, Spawn } from "./claude";
 import { pairingKey } from "./commands/pair";
+import { asCursorRule, cursorPermissions } from "./fence";
 import { codexArgs, codexPrompt, describeCodexEvent, runCodex } from "./runners/codex";
-import { asCursorRule, cursorArgs, cursorPermissions, describeCursorEvent } from "./runners/cursor";
+import { cursorArgs, describeCursorEvent } from "./runners/cursor";
 import { resumeLine } from "./tools";
 
 const base: ClaudeRun = {
@@ -73,10 +74,20 @@ describe("Codex", () => {
 
 describe("Cursor", () => {
   test("the same fences as Claude Code, in Cursor's spelling", () => {
-    const { allow, deny } = cursorPermissions(base);
+    const { allow, deny } = cursorPermissions({ ...base, branch: "gat-9-x" });
     expect(allow).toEqual(
-      expect.arrayContaining(["Shell(git)", "Shell(gh)", "Mcp(gatherd:*)", "Shell(npm:test*)"]),
+      expect.arrayContaining([
+        "Shell(git:push -u origin gat-9-x)",
+        "Shell(gh:pr create*)",
+        "Mcp(gatherd:*)",
+        "Shell(npm:test*)",
+      ]),
     );
+    // On the list means outside Cursor's sandbox: nothing broad is.
+    for (const wide of ["Shell(git)", "Shell(gh)", "Shell(bun)", "Shell(bunx)", "Shell(*)"]) {
+      expect(allow).not.toContain(wide);
+    }
+    expect(deny).toEqual(expect.arrayContaining(["Shell(gh:api*)", "Read(~/.ssh/**)"]));
     expect(deny).toEqual(
       expect.arrayContaining([
         "Shell(gh:pr merge*)",
@@ -102,9 +113,14 @@ describe("Cursor", () => {
     expect(args.slice(0, 4)).toEqual(["cursor-agent", "-p", "--output-format", "stream-json"]);
     expect(args).toContain("--trust");
     expect(args).toContain("--approve-mcps");
+    expect(args.join(" ")).toContain("--sandbox enabled");
     expect(args).not.toContain("--force");
     expect(args).not.toContain("--auto-review");
     expect(args.at(-1)?.endsWith(base.prompt)).toBe(true);
+  });
+
+  test("a branch's own MCP servers are never approved", () => {
+    expect(cursorArgs(base, false)).not.toContain("--approve-mcps");
   });
 
   test("auto is Cursor's Auto-review; nothing ever runs everything", () => {

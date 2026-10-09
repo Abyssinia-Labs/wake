@@ -28,10 +28,13 @@ bun run wakectl help
 
 1. In a Claude Code session on your Mac, ask your agent to pair Wake. It
    asks the app for a code and runs `wakectl pair gatherd.dev <code>`.
-2. `wakectl install` starts the listener now and at every login, as a
+2. `wakectl repos allow abyssinia-labs/gatherd` lets the app run in that
+   repository on this machine. A summons for a repository you haven't
+   approved is refused, and the ticket says the command to approve it.
+3. `wakectl install` starts the listener now and at every login, as a
    LaunchAgent (`dev.abyssinia.wake`), with the PATH of the shell you ran it
    from, so it finds `claude`, `git` and `gh`.
-3. `wakectl status` shows what is paired, connected and running, with the
+4. `wakectl status` shows what is paired, connected and running, with the
    `claude --resume` line for each run. `wakectl logs -f` follows the log.
 
 **How runs start, and what they may do.** `wakectl mode herdr` opens each
@@ -89,8 +92,25 @@ What stops a push to your default branch, or a merge, is GitHub: a ruleset
 on the default branch that requires a pull request and lets nobody bypass
 it, admins included.
 
+**What a run can reach.** Claude Code runs with Wake's settings only
+(`--setting-sources user`): the branch's `.claude` settings and hooks are
+not loaded, and the agent is told to read the repository's CLAUDE.md
+itself. Its shell runs in Claude Code's sandbox: it writes only in the
+worktree, connects only to GitHub and npm, and cannot read `~/.ssh`,
+`~/.config/gh`, `~/.aws` or your other tools' credentials. `git push` for
+the run's branch, `git fetch` and gh's pull request commands run outside
+the sandbox; `gh api`, `gh auth`, `git -c`, `git config` and `bunx` are
+denied. Cursor runs with `--sandbox enabled`: a command runs sandboxed
+with no network, except the same short list that runs outside it. Cursor's
+sandbox does not hide your credentials from a shell command, and Codex's
+`workspace-write` sandbox reads anywhere and has network on, so for a
+repository where that matters, pair Claude Code. Wake installs
+dependencies with `--ignore-scripts`, and approves a Cursor run's MCP
+servers only when the branch lists none of its own.
+
 What Wake refuses on its own:
 
+- A repository you haven't approved for the app (`wakectl repos`).
 - A summons for the default branch, or for a branch checked out in a
   folder Wake didn't make (your own worktree, say).
 - Anything from an app that isn't the shape `wake/v1` allows: discovery

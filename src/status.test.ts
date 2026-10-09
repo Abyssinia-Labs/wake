@@ -60,3 +60,17 @@ test("not running, and nothing paired: says what to do", () => {
   expect(lines).toContain("wakectl pair <domain> <code>");
   delete process.env.NO_COLOR;
 });
+
+test("says which repositories each app may run in, or that runs are refused", () => {
+  process.env.NO_COLOR = "1";
+  const none = statusLines({ config, paused: false, now: 0, state: null }).join("\n");
+  expect(none).toContain("none approved");
+  const some = statusLines({
+    config: { ...config, repos: { "gatherd.dev": ["abyssinia-labs/gatherd"] } },
+    paused: false,
+    now: 0,
+    state: null,
+  }).join("\n");
+  expect(some).toContain("abyssinia-labs/gatherd");
+  expect(some).not.toContain("none approved");
+});

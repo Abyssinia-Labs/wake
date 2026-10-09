@@ -4,6 +4,7 @@ import { parseArgs } from "node:util";
 import pkg from "../package.json";
 import { forget, pair } from "./commands/pair";
 import { prune } from "./commands/prune";
+import { repos } from "./commands/repos";
 import { install, logs, pause, resume, uninstall } from "./commands/service";
 import { allow, mode, permissions, trust } from "./commands/settings";
 import { status } from "./commands/status";
@@ -27,6 +28,7 @@ async function main(argv: string[]): Promise<void> {
       follow: { type: "boolean", short: "f", default: false },
       remove: { type: "boolean", default: false },
       tool: { type: "string" },
+      app: { type: "string" },
       days: { type: "string", default: "14" },
       help: { type: "boolean", short: "h", default: false },
       version: { type: "boolean", short: "v", default: false },
@@ -65,6 +67,8 @@ async function main(argv: string[]): Promise<void> {
       return permissions(rest[0]);
     case "allow":
       return allow(rest[0], values.remove);
+    case "repos":
+      return repos(rest[0], rest[1], values.app);
     case "trust":
       return trust(rest[0], rest[1]);
     case "prune": {

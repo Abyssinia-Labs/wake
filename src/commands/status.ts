@@ -68,6 +68,19 @@ export function statusLines({ config, state, paused, now }: StatusInput): string
     );
   }
 
+  if (apps.length > 0) {
+    lines.push("", bold("Repositories"));
+    const approved = Object.entries(config.repos);
+    if (approved.length === 0) {
+      lines.push(
+        `  ${mark.warn()} ${yellow("none approved")}: runs are refused ${dim("·")} ${cyan("wakectl repos allow <owner/name>")}`,
+      );
+    }
+    for (const [domain, repos] of approved) {
+      lines.push(`  ${pad(bold(domain), 18)}${repos.join(", ")}`);
+    }
+  }
+
   const runs = state?.runs ?? [];
   if (runs.length > 0) {
     lines.push("", bold("Running now"));

@@ -68,7 +68,11 @@ describe("runSummons", () => {
   test("a missing clone fails without starting anything or naming local folders", async () => {
     const seen: ClaudeRun[] = [];
     const ticket = { ...page, repo: "abyssinia-labs/nowhere", branch: "gat-1-x" };
-    const config = { ...defaults(), roots: [join(home, "empty")] };
+    const config = {
+      ...defaults(),
+      roots: [join(home, "empty")],
+      repos: { "antescript.dev": ["abyssinia-labs/nowhere"] },
+    };
     const outcome = await runSummons(ticket, { prompt: "x" }, app, {
       config,
       paths: p,
@@ -99,6 +103,23 @@ describe("runSummons", () => {
 });
 
 describe("the security pass", () => {
+  test("a repository this machine hasn't approved for the app is refused, with the fix", async () => {
+    const seen: ClaudeRun[] = [];
+    const ticket = { ...page, repo: "Abyssinia-Labs/Gatherd", branch: "gat-1-x" };
+    const config = { ...defaults(), repos: { "other.dev": ["abyssinia-labs/gatherd"] } };
+    const outcome = await runSummons(ticket, { prompt: "x" }, app, {
+      config,
+      paths: p,
+      deps: deps(seen),
+      onStart: () => {},
+    });
+    expect(outcome.outcome).toBe("failed");
+    expect(outcome.reason).toContain(
+      "wakectl repos allow abyssinia-labs/gatherd --app antescript.dev",
+    );
+    expect(seen).toEqual([]);
+  });
+
   test("a room never leaves Wake's rooms folder", () => {
     expect(roomOf("/w/rooms", "gatherd")).toBe("/w/rooms/gatherd");
     for (const bad of ["..", "../..", "a/b", ""]) expect(() => roomOf("/w/rooms", bad)).toThrow();

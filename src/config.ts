@@ -3,7 +3,7 @@
 import { chmod, mkdir, rename, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
-import type { Agent, AgentTool } from "./contract";
+import { type Agent, type AgentTool, isRepo } from "./contract";
 
 export type PairedApp = {
   /** As the person typed it to `wakectl pair`, and the Keychain's name for its key. */
@@ -31,6 +31,12 @@ export type Config = {
   permissionMode: PermissionMode;
   /** Trust a Codex run's worktree in Codex's config first, so herdr runs are not asked (codex-trust.ts). */
   trustCodexWorktrees: boolean;
+  /**
+   * The repositories each app's domain may run in, `owner/name` in lower
+   * case: a summons for any other is refused, so an app can't aim a run at
+   * an unrelated clone (the security pass, 2026-10-08).
+   */
+  repos: Record<string, string[]>;
   apps: Record<string, PairedApp>;
 };
 
@@ -84,8 +90,26 @@ export function defaults(): Config {
     run: "headless",
     permissionMode: "acceptEdits",
     trustCodexWorktrees: false,
+    repos: {},
     apps: {},
   };
+}
+
+function approvedRepos(v: unknown): Record<string, string[]> {
+  if (typeof v !== "object" || v === null || Array.isArray(v)) return {};
+  const out: Record<string, string[]> = {};
+  for (const [domain, list] of Object.entries(v)) {
+    // Each entry on its own: one bad line drops itself, not the app's list.
+    const listed: unknown[] = Array.isArray(list) ? list : [];
+    const repos = listed.filter(isRepo).map((one) => one.toLowerCase());
+    if (repos.length > 0) out[domainKey(domain)] = [...new Set(repos)];
+  }
+  return out;
+}
+
+/** Whether `domain` may run in `repo` on this machine. */
+export function repoApproved(config: Config, domain: string, repo: string): boolean {
+  return config.repos[domainKey(domain)]?.includes(repo.toLowerCase()) ?? false;
 }
 
 /** The domain as the config and the Keychain name it. */
@@ -120,6 +144,7 @@ export async function loadConfig(): Promise<Config> {
     extraAllowedTools: strings(v.extraAllowedTools) ?? base.extraAllowedTools,
     run: RUN_MODES.find((mode) => mode === v.run) ?? base.run,
     trustCodexWorktrees: v.trustCodexWorktrees === true,
+    repos: approvedRepos(v.repos),
     // Anything else in the file, bypassPermissions included, is read as the default.
     permissionMode:
       PERMISSION_MODES.find((mode) => mode === v.permissionMode) ?? base.permissionMode,

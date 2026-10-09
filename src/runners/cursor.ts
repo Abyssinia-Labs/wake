@@ -13,49 +13,11 @@ import { describeEvent, resultOf } from "../claude-events";
 import { Shareable } from "../errors";
 import type { Exec } from "../exec";
 import { gitOk } from "../exec";
+import { cursorPermissions } from "../fence";
 import { excludeFromGit } from "../worktree";
 
 function isRecord(v: unknown): v is Record<string, unknown> {
   return typeof v === "object" && v !== null && !Array.isArray(v);
-}
-
-/** `Bash(npm test:*)`, as `wakectl allow` keeps it, in Cursor's spelling. */
-export function asCursorRule(rule: string): string | null {
-  // Cursor matches the command's first word, then its arguments after a colon:
-  // Bash(npm test:*) allows `npm test …` and is Shell(npm:test*), not all of npm.
-  const bash = rule.match(/^Bash\(([^\s:()]+)((?:\s+[^:()]+)?)(?::\*)?\)$/);
-  if (bash?.[1]) {
-    const rest = (bash[2] ?? "").trim();
-    return rest ? `Shell(${bash[1]}:${rest}*)` : `Shell(${bash[1]})`;
-  }
-  return /^(Shell|Read|Write|Mcp|WebFetch)\(.+\)$/.test(rule) ? rule : null;
-}
-
-export function cursorPermissions(o: ClaudeRun): { allow: string[]; deny: string[] } {
-  const own = `Mcp(${o.mcpServer}:*)`;
-  if (!o.defaultBranch) return { allow: [own], deny: ["Shell(*)", "Write(**)"] };
-  const extra = o.extraAllowedTools.map(asCursorRule).filter((one): one is string => one !== null);
-  return {
-    allow: [
-      "Read(**)",
-      "Write(**)",
-      "Shell(git)",
-      "Shell(gh)",
-      "Shell(bun)",
-      "Shell(bunx)",
-      own,
-      ...extra,
-    ],
-    deny: [
-      "Shell(gh:pr merge*)",
-      "Shell(git:push --force*)",
-      "Shell(git:push -f*)",
-      "Shell(git:push --force-with-lease*)",
-      `Shell(git:push origin ${o.defaultBranch}*)`,
-      `Shell(git:push origin HEAD:${o.defaultBranch}*)`,
-      `Shell(git:push -u origin ${o.defaultBranch}*)`,
-    ],
-  };
 }
 
 async function isLink(path: string): Promise<boolean> {
@@ -101,14 +63,32 @@ export function cursorModeArgs(o: Pick<ClaudeRun, "permissionMode">): string[] {
   return o.permissionMode === "auto" ? ["--auto-review"] : [];
 }
 
-export function cursorArgs(o: ClaudeRun): string[] {
+/**
+ * Whether the branch lists MCP servers of its own. `--approve-mcps` would
+ * start them, and a stdio server is a command the branch chose, so a run
+ * on such a branch approves none (the security pass). The person's own
+ * servers, the app's among them, are theirs and stay approved otherwise.
+ */
+export async function branchListsMcps(cwd: string): Promise<boolean> {
+  try {
+    await lstat(join(cwd, ".cursor", "mcp.json"));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export function cursorArgs(o: ClaudeRun, approveMcps = true): string[] {
   return [
     "cursor-agent",
     "-p",
     "--output-format",
     "stream-json",
     "--trust",
-    "--approve-mcps",
+    // Commands off the allow list run sandboxed (fence.ts).
+    "--sandbox",
+    "enabled",
+    ...(approveMcps ? ["--approve-mcps"] : []),
     ...cursorModeArgs(o),
     "--workspace",
     o.cwd,
@@ -144,7 +124,9 @@ export async function runCursor(
   await writeCursorPermissions(run, o);
   let result: Record<string, unknown> | null = null;
   let session = false;
-  const done = await spawn(cursorArgs(o), {
+  const approve = !(await branchListsMcps(o.cwd));
+  if (!approve) o.onEvent?.("the branch lists its own MCP servers; none are approved for this run");
+  const done = await spawn(cursorArgs(o, approve), {
     cwd: o.cwd,
     stdin: "",
     timeoutMs: o.timeoutMs,

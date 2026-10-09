@@ -2,6 +2,9 @@
 // package its tests never touched (GAT-20, 2026-10-08). Where the repository
 // is a Bun one, Wake installs from its lockfile before the agent starts;
 // anything else is left to the agent. A failed install is said, not fatal.
+// Without the repository's install scripts: they are the branch's code,
+// and this runs before any agent and outside every fence (the security
+// pass). A build that needs them gets them when the agent runs it.
 import { access } from "node:fs/promises";
 import { join } from "node:path";
 import type { Exec } from "./exec";
@@ -23,9 +26,9 @@ export async function installDependencies(
 ): Promise<boolean> {
   if (!(await has(cwd, "bun.lock")) && !(await has(cwd, "bun.lockb"))) return false;
   if (await has(cwd, "node_modules")) return false;
-  const result = await run(["bun", "install", "--frozen-lockfile"], { cwd });
+  const result = await run(["bun", "install", "--frozen-lockfile", "--ignore-scripts"], { cwd });
   if (result.code === 0) {
-    say("installed dependencies (bun install --frozen-lockfile)");
+    say("installed dependencies (bun install --frozen-lockfile --ignore-scripts)");
     return true;
   }
   const why = result.stderr.trim().split("\n").at(-1) ?? "";

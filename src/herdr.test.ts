@@ -4,9 +4,9 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { ClaudeRun } from "./claude";
 import type { Exec } from "./exec";
+import { claudeSettings } from "./fence";
 import {
   agentName,
-  claudeSettings,
   findString,
   findWorkspace,
   herdrRunning,
@@ -31,15 +31,6 @@ describe("shapes herdr accepts", () => {
   test("an agent name is lower case, short, and unique per run", () => {
     expect(agentName("GAT-37", base.sessionId)).toBe("wake-gat-37-0b0e6a");
     expect(agentName("GAT-37", base.sessionId)).toMatch(/^[a-z][a-z0-9_-]{0,31}$/);
-  });
-  test("the settings carry the same permissions -p gets as flags", () => {
-    expect(claudeSettings(base)).toEqual({
-      permissions: {
-        defaultMode: "acceptEdits",
-        allow: expect.arrayContaining(["Bash(git:*)", "mcp__gatherd"]),
-        deny: expect.arrayContaining(["Bash(gh pr merge:*)", "Bash(git push origin main:*)"]),
-      },
-    });
   });
   test("the settings carry the chosen permission mode", () => {
     const settings = claudeSettings({ ...base, permissionMode: "dontAsk" });
@@ -194,7 +185,12 @@ describe("a start herdr timed out on", () => {
   });
 
   test("Cursor is told the worktree is trusted", () => {
-    expect(nativeArgs(cursor, "unused")).toEqual(["--trust", "--approve-mcps"]);
+    expect(nativeArgs(cursor, "unused")).toEqual([
+      "--trust",
+      "--sandbox",
+      "enabled",
+      "--approve-mcps",
+    ]);
     expect(nativeArgs({ ...cursor, permissionMode: "auto" }, "unused")).toContain("--auto-review");
   });
   test("Cursor's project file has only the keys Cursor accepts, and an old one is replaced", async () => {

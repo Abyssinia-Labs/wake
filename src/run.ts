@@ -3,7 +3,8 @@
 import { mkdir } from "node:fs/promises";
 import { join, relative } from "node:path";
 import { type ClaudeResult, type ClaudeRun, runClaude } from "./claude";
-import type { Config, PairedApp, Paths, RunMode } from "./config";
+import { approveLine } from "./commands/repos";
+import { type Config, type PairedApp, type Paths, type RunMode, repoApproved } from "./config";
 import type { AgentTool, Outcome, Run, Summons } from "./contract";
 import type { Exec } from "./exec";
 import { herdrRunning, runInHerdr } from "./herdr";
@@ -107,6 +108,13 @@ async function runOne(
   let defaultBranch: string | undefined;
 
   if (summons.repo && summons.branch) {
+    if (!repoApproved(o.config, app.domain, summons.repo)) {
+      return {
+        id: summons.id,
+        outcome: "failed",
+        reason: `This machine hasn't approved ${summons.repo.toLowerCase()} for ${app.domain}. To let runs work there: ${approveLine(app.domain, summons.repo)}`,
+      };
+    }
     const clone = await findClone(o.deps.exec, summons.repo, o.config.roots);
     if (!clone) {
       return {
@@ -146,6 +154,7 @@ async function runOne(
       prompt: composePrompt(run, summons, ours ? sessionId : null),
       mcpServer: app.mcpServer ?? app.app,
       defaultBranch,
+      ...(summons.branch ? { branch: summons.branch } : {}),
       extraAllowedTools: o.config.extraAllowedTools,
       timeoutMs: o.config.runTimeoutMinutes * 60_000,
       name: `${summons.target.ref} · Wake`,

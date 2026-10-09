@@ -14,6 +14,7 @@ const GROUPS: readonly { title: string; entries: readonly Entry[] }[] = [
         use: "  --tool claude|codex|cursor",
         what: "Which tool runs it, when the app could not tell",
       },
+      { use: "repos allow <owner/name>", what: "Let an app run in one of your repositories" },
       { use: "install", what: "Start listening now and at every login" },
       { use: "status", what: "What is paired, connected and running" },
     ],
@@ -55,6 +56,7 @@ export const COMMANDS = [
   "permissions",
   "allow",
   "trust",
+  "repos",
   "prune",
   "listen",
   "help",
@@ -76,6 +78,7 @@ export function help(): string {
   lines.push(
     bold("Examples"),
     `  ${dim("$")} wakectl pair gatherd.dev K7QD-2M9X`,
+    `  ${dim("$")} wakectl repos allow abyssinia-labs/gatherd`,
     `  ${dim("$")} wakectl mode herdr`,
     `  ${dim("$")} wakectl allow "Bash(npm test:*)"`,
     "",

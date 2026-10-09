@@ -8,13 +8,14 @@
 // settings file path); everything with words in it, Wake's rules and the
 // app's prompt, is submitted with `herdr agent prompt`, which pastes into
 // Claude Code's input, not into a shell.
-import { chmod, mkdir, writeFile } from "node:fs/promises";
+import { chmod, lstat, mkdir, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { join } from "node:path";
-import { allowedTools, type ClaudeResult, type ClaudeRun, disallowedTools, rules } from "./claude";
+import { type ClaudeResult, type ClaudeRun, rules } from "./claude";
 import { trustCodexFolder } from "./codex-trust";
 import type { Exec } from "./exec";
-import { cursorModeArgs, writeCursorPermissions } from "./runners/cursor";
+import { claudeSettings } from "./fence";
+import { branchListsMcps, cursorModeArgs, writeCursorPermissions } from "./runners/cursor";
 
 const WORKSPACE = "Wake";
 /** No spaces in it, unlike Application Support, so a path is one plain argument. */
@@ -48,17 +49,6 @@ export function agentName(ref: string, salt: string): string {
   return `${base}-${salt.replace(/[^a-z0-9]/g, "").slice(0, 6)}`;
 }
 
-/** Claude Code settings carrying what `-p` gets as flags: edits accepted, the tool lists. */
-export function claudeSettings(o: ClaudeRun): Record<string, unknown> {
-  return {
-    permissions: {
-      defaultMode: o.permissionMode ?? "acceptEdits",
-      allow: allowedTools(o),
-      deny: disallowedTools(o.defaultBranch),
-    },
-  };
-}
-
 /** What is submitted into the session: the rules, then the app's prompt. */
 export function openingPrompt(o: ClaudeRun): string {
   return `${rules({ ...o, live: true })}\n\n---\n\n${o.prompt}`;
@@ -72,14 +62,27 @@ export function openingPrompt(o: ClaudeRun): string {
  * every worktree is a folder it has not seen, and its trust question is one
  * herdr does not report as blocked, so a start waits out its timeout (GAT-31).
  */
-export function nativeArgs(o: ClaudeRun, settings: string): string[] {
+export function nativeArgs(o: ClaudeRun, settings: string, approveMcps = true): string[] {
   switch (o.tool ?? "claude") {
     case "codex":
       return ["--sandbox", "workspace-write", "-c", "sandbox_workspace_write.network_access=true"];
     case "cursor":
-      return ["--trust", "--approve-mcps", ...cursorModeArgs(o)];
+      return [
+        "--trust",
+        "--sandbox",
+        "enabled",
+        ...(approveMcps ? ["--approve-mcps"] : []),
+        ...cursorModeArgs(o),
+      ];
     default: {
-      const args = ["--session-id", o.sessionId, "--settings", settings];
+      const args = [
+        "--session-id",
+        o.sessionId,
+        "--setting-sources",
+        "user",
+        "--settings",
+        settings,
+      ];
       if (o.name) args.push("--name", o.name.replace(/[^A-Za-z0-9·_-]/g, ""));
       return args;
     }
@@ -157,6 +160,15 @@ export function startBlocked(error: unknown): boolean {
   );
 }
 
+async function exists(path: string): Promise<boolean> {
+  try {
+    await lstat(path);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export type HerdrRun = ClaudeRun & { ref: string };
 
 export async function runInHerdr(o: HerdrRun, run: Exec): Promise<ClaudeResult> {
@@ -182,9 +194,21 @@ export async function runInHerdr(o: HerdrRun, run: Exec): Promise<ClaudeResult> 
 
   const name = agentName(o.ref, o.sessionId);
   const tool = o.tool ?? "claude";
-  if (tool === "cursor") await writeCursorPermissions(run, o);
-  if (tool === "codex" && o.trustFolder && (await trustCodexFolder(o.cwd))) {
-    o.onEvent?.("trusted the worktree in Codex's config (wakectl trust codex)");
+  let approveMcps = true;
+  if (tool === "cursor") {
+    await writeCursorPermissions(run, o);
+    approveMcps = !(await branchListsMcps(o.cwd));
+  }
+  if (tool === "codex" && o.trustFolder) {
+    // A trusted folder's own .codex/config.toml is loaded, and it can set
+    // the sandbox and approvals: a branch that ships one is asked about.
+    if (await exists(join(o.cwd, ".codex"))) {
+      o.onEvent?.(
+        "the branch has its own .codex settings, so Codex asks you to trust it in the tab",
+      );
+    } else if (await trustCodexFolder(o.cwd)) {
+      o.onEvent?.("trusted the worktree in Codex's config (wakectl trust codex)");
+    }
   }
   try {
     await herdr(run, [
@@ -196,7 +220,7 @@ export async function runInHerdr(o: HerdrRun, run: Exec): Promise<ClaudeResult> 
       "--pane",
       pane,
       "--",
-      ...nativeArgs(o, settings),
+      ...nativeArgs(o, settings, approveMcps),
     ]);
     o.onEvent?.(`in herdr: workspace ${WORKSPACE}, tab ${o.ref}, agent ${name}`);
   } catch (error) {

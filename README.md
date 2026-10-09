@@ -49,7 +49,10 @@ also has its own command:
    `wakectl pair <app domain> <code>`.
 2. **Approve repositories.** `wakectl repos allow your-org/your-repo` lets
    the app run there on this machine. A summons for a repository you
-   haven't approved is refused, and the ticket says the command.
+   haven't approved is refused, and the ticket says the command. Setup
+   lists first the repositories the app has asked for before, and asks you
+   to confirm before approving more than ten at once: approve only what the
+   app should work in.
 3. **Listen.** `wakectl install` starts the listener now and at every
    login, as a LaunchAgent (`dev.abyssinia.wake`), with the PATH of the
    shell you ran it from, so it finds your agents, `git` and `gh`.

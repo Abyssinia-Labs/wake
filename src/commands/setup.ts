@@ -3,16 +3,18 @@
 // commands change; run it again any time to revisit an answer.
 import { homedir } from "node:os";
 import { join } from "node:path";
+import { readAsked } from "../asked";
 import {
   type Config,
   loadConfig,
   PERMISSION_MODES,
   type PermissionMode,
+  paths,
   saveConfig,
 } from "../config";
 import { type Check, type Level, machineChecks, type Probe, wakeChecks } from "../doctor";
 import type { Exec } from "../exec";
-import { choose, chooseMany, confirm, type Io, text } from "../prompt";
+import { choose, chooseMany, confirm, type Io, type Option, text } from "../prompt";
 import { listClones } from "../repos";
 import { bold, cyan, dim, mark, tildify } from "../ui";
 import { MEANS } from "./settings";
@@ -23,6 +25,8 @@ export type SetupDeps = {
   probe: () => Promise<Probe>;
   pair: (domain: string, code: string, tool?: string) => Promise<void>;
   install: () => Promise<void>;
+  /** Where the listener records the repositories each app asked for; the real one when absent. */
+  askedPath?: string;
   home?: string;
 };
 
@@ -126,17 +130,57 @@ async function repositories(d: SetupDeps, config: Config): Promise<Config> {
     return config;
   }
   const repos = { ...config.repos };
+  const asked = await readAsked(d.askedPath ?? paths().asked);
   for (const domain of domains) {
-    const chosen = await chooseMany(
-      d.io,
-      `Which repositories may ${domain} run in on this machine?`,
-      clones.map((clone) => ({ value: clone.repo, label: clone.repo, hint: tildify(clone.path) })),
-      repos[domain] ?? [],
-    );
+    const options = repoOptions(clones, asked[domain] ?? []);
+    const chosen = await chooseRepos(d, domain, options, repos[domain] ?? []);
     if (chosen.length > 0) repos[domain] = chosen;
     else delete repos[domain];
   }
   return { ...config, repos };
+}
+
+/** More than this at once is confirmed: an approval is a fence, and "all" opened every clone. */
+export const MANY_REPOS = 10;
+
+/** The clones, the ones the app has asked for first and saying so. */
+export function repoOptions(
+  clones: { repo: string; path: string }[],
+  asked: readonly string[],
+): Option<string>[] {
+  const wanted = new Set(asked);
+  const option = (clone: { repo: string; path: string }, note: string): Option<string> => ({
+    value: clone.repo,
+    label: clone.repo,
+    hint: `${tildify(clone.path)}${note}`,
+  });
+  return [
+    ...clones.filter((c) => wanted.has(c.repo)).map((c) => option(c, " · asked for before")),
+    ...clones.filter((c) => !wanted.has(c.repo)).map((c) => option(c, "")),
+  ];
+}
+
+async function chooseRepos(
+  d: SetupDeps,
+  domain: string,
+  options: Option<string>[],
+  approved: string[],
+): Promise<string[]> {
+  for (;;) {
+    const chosen = await chooseMany(
+      d.io,
+      `Which repositories may ${domain} run in on this machine? ${dim("Only what it should work in.")}`,
+      options,
+      approved,
+    );
+    if (chosen.length <= MANY_REPOS) return chosen;
+    const sure = await confirm(
+      d.io,
+      `Approve all ${chosen.length}? ${domain} could then start an agent in any of them.`,
+      false,
+    );
+    if (sure) return chosen;
+  }
 }
 
 async function howRunsWork(d: SetupDeps, config: Config, herdr: boolean): Promise<Config> {

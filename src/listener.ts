@@ -3,6 +3,7 @@
 // half minute, so a `wakectl pair` or `forget` takes effect without a
 // restart.
 import { existsSync } from "node:fs";
+import { recordAsked } from "./asked";
 import { type Config, keepPrivate, loadConfig, paths } from "./config";
 import { exec } from "./exec";
 import { messageOf, note } from "./log";
@@ -147,7 +148,14 @@ export async function listen(): Promise<void> {
           app,
           key,
           {
-            onList: (place, summonses) => scheduler.offer(place, summonses),
+            onList: (place, summonses) => {
+              // What the app asks for, so setup offers those repositories first.
+              const repos = summonses.flatMap((s) => (s.repo ? [s.repo] : []));
+              void recordAsked(p.asked, app.domain, repos).catch((e) =>
+                note(`Could not record the repositories asked for: ${messageOf(e)}`),
+              );
+              scheduler.offer(place, summonses);
+            },
             onUnpaired: (d) => {
               unpaired.set(d, app.pairedAt);
               note(`${d} refused this place: it was forgotten or ${app.agent.name} was stopped.`);

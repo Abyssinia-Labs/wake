@@ -62,6 +62,8 @@ export type Paths = {
   worktrees: string;
   /** The list of worktrees Wake made (made.ts). */
   made: string;
+  /** The repositories each app has named in a summons (asked.ts). */
+  asked: string;
   rooms: string;
   log: string;
 };
@@ -76,6 +78,7 @@ export function paths(): Paths {
     paused: join(home, "paused"),
     worktrees: join(home, "worktrees"),
     made: join(home, "worktrees.json"),
+    asked: join(home, "asked-repos.json"),
     rooms: join(home, "rooms"),
     log: override ? join(home, "wake.log") : join(homedir(), "Library", "Logs", "Wake", "wake.log"),
   };

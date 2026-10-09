@@ -42,3 +42,9 @@ jobs:
           if [ -n "$over" ]; then echo "$over"; exit 1; fi
       - name: What the package would ship
         run: bun pm pack --dry-run
+      # The Convex component (packages/convex), tested in the edge runtime
+      # with convex-test. Its _generated code is committed: codegen needs a
+      # deployment.
+      - run: bun run --cwd packages/convex typecheck
+      - run: bun run --cwd packages/convex test
+      - run: bun run --cwd packages/convex build

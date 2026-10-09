@@ -1,0 +1,69 @@
+{
+  "name": "@abyssinia-labs/wake-convex",
+  "version": "0.1.0",
+  "description": "The server half of wake/v1 as a Convex component: let Wake start your users' agents",
+  "keywords": [
+    "convex",
+    "component",
+    "agents",
+    "wake"
+  ],
+  "homepage": "https://wakectl.dev",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Abyssinia-Labs/wake.git",
+    "directory": "packages/convex"
+  },
+  "bugs": "https://github.com/Abyssinia-Labs/wake/issues",
+  "author": "Abyssinia Labs LLC",
+  "license": "MIT",
+  "private": true,
+  "type": "module",
+  "files": [
+    "dist",
+    "src",
+    "!src/**/*.test.ts",
+    "LICENSE",
+    "README.md"
+  ],
+  "exports": {
+    "./package.json": "./package.json",
+    ".": {
+      "types": "./dist/client/index.d.ts",
+      "default": "./dist/client/index.js"
+    },
+    "./test": "./src/test.ts",
+    "./_generated/component.js": {
+      "types": "./dist/component/_generated/component.d.ts"
+    },
+    "./_generated/component": {
+      "types": "./dist/component/_generated/component.d.ts"
+    },
+    "./convex.config.js": {
+      "types": "./dist/component/convex.config.d.ts",
+      "default": "./dist/component/convex.config.js"
+    },
+    "./convex.config": {
+      "types": "./dist/component/convex.config.d.ts",
+      "default": "./dist/component/convex.config.js"
+    }
+  },
+  "types": "./dist/client/index.d.ts",
+  "module": "./dist/client/index.js",
+  "scripts": {
+    "codegen": "convex codegen --component-dir ./src/component",
+    "build": "rm -rf dist && tsc --project ./tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "peerDependencies": {
+    "convex": "^1.45.0"
+  },
+  "devDependencies": {
+    "@edge-runtime/vm": "5.0.0",
+    "convex": "1.45.0",
+    "convex-test": "0.0.56",
+    "vite": "8.3.4",
+    "vitest": "5.0.0"
+  }
+}

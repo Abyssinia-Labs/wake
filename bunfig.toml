@@ -1,0 +1,3 @@
+# The CLI's tests only: packages/* run their own (the Convex component uses vitest).
+[test]
+root = "./src"

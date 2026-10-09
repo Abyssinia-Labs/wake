@@ -144,19 +144,23 @@ Two runs on one branch take turns. When a run fails, the ticket says why
 only in words written to be shared; paths and command output stay in
 `wakectl logs`. Wake's config, state and log are readable by you alone.
 
-## The contract
+## For apps: serve wake/v1
 
-Wake knows each app only through `wake/v1`: discovery at
-`/.well-known/wake`, two HTTP routes (`pair`, `forget`) and three Convex
-functions (`wake:pending`, `wake:claim`, `wake:finish`), each called with
-the place key as an argument. The key is the whole credential: nobody
-signs in. Every answer is checked against `src/contract.ts` before Wake
-reads it. The full specification, for an app that wants to serve it, is
-coming to wakectl.dev with a drop-in Convex component.
+Any app can let Wake start its users' agents by serving `wake/v1`:
+discovery at `/.well-known/wake`, two HTTP routes (`pair`, `forget`) and
+three Convex functions (`wake:pending`, `wake:claim`, `wake:finish`), each
+called with the place key as an argument.
+
+- **The spec**: [docs/spec/wake-v1.md](docs/spec/wake-v1.md).
+- **On Convex**: [`@abyssinia-labs/wake-convex`](packages/convex) is the
+  whole server half as a component. You decide what summons an agent and
+  write the prompt.
+- **Check it**: `wakectl check <your domain>` probes an app the way Wake
+  will, with inputs it must refuse, so it pairs nothing and changes nothing.
 
 ## Names
 
-- Package: `@abyssinia-labs/wake` on npm
+- Packages: `@abyssinia-labs/wake` (the command) and `@abyssinia-labs/wake-convex` (the Convex component), on npm
 - Command: `wakectl` (`install`, `status`, `logs`, `pause`, `pair`, `forget`)
 - Homebrew, later: `brew install abyssinia-labs/tap/wake`
 

@@ -6,7 +6,12 @@ import { makeFunctionReference } from "convex/server";
 
 export const CONTRACT = "wake/v1";
 
-export type Discovery = { version: typeof CONTRACT; convexUrl: string; httpBase: string };
+/** How Wake reaches an app's summonses (the spec's Discovery): Convex functions, or HTTP routes. */
+export const TRANSPORTS = ["convex", "http"] as const;
+export type Transport = (typeof TRANSPORTS)[number];
+export type Discovery =
+  | { version: typeof CONTRACT; transport: "convex"; convexUrl: string; httpBase: string }
+  | { version: typeof CONTRACT; transport: "http"; httpBase: string };
 /** The agent tools Wake can start; the pairing names which one paired (GAT-68). */
 export const AGENT_TOOLS = ["claude", "codex", "cursor"] as const;
 export type AgentTool = (typeof AGENT_TOOLS)[number];
@@ -125,11 +130,16 @@ export function asDiscovery(v: unknown): Discovery {
     const theirs = typeof v.version === "string" ? v.version : "an unknown version";
     throw new ContractError("discovery", `it speaks ${theirs}; update Wake`);
   }
-  // The pair code, the place key and every summons travel over these.
-  if (!isAppUrl(v.convexUrl) || !isAppUrl(v.httpBase)) {
-    throw new ContractError("discovery", "its URLs must be https");
+  const transport = v.transport ?? "convex";
+  if (!TRANSPORTS.some((one) => one === transport)) {
+    const named = typeof transport === "string" ? transport.slice(0, 40) : "an unknown one";
+    throw new ContractError("discovery", `it is reached over ${named}; update Wake`);
   }
-  return { version: CONTRACT, convexUrl: v.convexUrl, httpBase: v.httpBase };
+  // The pair code, the place key and every summons travel over these.
+  if (!isAppUrl(v.httpBase)) throw new ContractError("discovery", "its URLs must be https");
+  if (transport === "http") return { version: CONTRACT, transport: "http", httpBase: v.httpBase };
+  if (!isAppUrl(v.convexUrl)) throw new ContractError("discovery", "its URLs must be https");
+  return { version: CONTRACT, transport: "convex", convexUrl: v.convexUrl, httpBase: v.httpBase };
 }
 
 export function asPaired(v: unknown): Paired {

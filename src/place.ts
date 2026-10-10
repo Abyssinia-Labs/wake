@@ -18,6 +18,7 @@ import {
   startedRef,
   UNPAIRED,
 } from "./contract";
+import { connectHttpPlace } from "./http-place";
 import { messageOf } from "./log";
 import type { Place } from "./scheduler";
 
@@ -47,6 +48,9 @@ export function connectPlace(
   events: PlaceEvents,
   id: string = app.domain,
 ): LivePlace {
+  // The transport the app named at pairing (the spec's Discovery).
+  if (app.transport === "http") return connectHttpPlace(app, key, events, id);
+  if (!app.convexUrl) throw new Error(`${app.domain} has no Convex deployment; pair again.`);
   const client = new ConvexClient(app.convexUrl);
   let unpaired = false;
 

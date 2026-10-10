@@ -8,6 +8,7 @@ import { appOrigin, discover, HttpError, pairPlace } from "../http";
 import { messageOf, say } from "../log";
 import { isUnpairedError } from "../place";
 import { bold, dim, mark } from "../ui";
+import { httpProbes } from "./check-http";
 
 export type Probe = { what: string; ok: boolean; detail?: string };
 
@@ -108,6 +109,10 @@ export async function checkApp(domain: string, fetcher: typeof fetch = fetch): P
       401,
     ),
   );
+  if (found.transport === "http") {
+    probes.push(...(await httpProbes(found.httpBase, NOBODY, fetcher)));
+    return probes;
+  }
   const client = new ConvexHttpClient(found.convexUrl);
   probes.push(
     await expectUnpaired("wake:pending throws UNPAIRED for a key that opens nothing", () =>

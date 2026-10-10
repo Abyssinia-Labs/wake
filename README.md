@@ -163,10 +163,12 @@ only in words written to be shared; paths and command output stay in
 ## For apps: serve wake/v1
 
 Any app can let Wake start its users' agents by serving `wake/v1`:
-discovery at `/.well-known/wake`, two HTTP routes (`pair`, `forget`) and
-three Convex functions (`wake:pending`, `wake:claim`, `wake:finish`), plus
-an optional fourth (`wake:started`), each called with the place key as an
-argument.
+discovery at `/.well-known/wake`, two HTTP routes (`pair`, `forget`), and
+the summonses one of two ways. On Convex, three functions (`wake:pending`,
+`wake:claim`, `wake:finish`) plus an optional fourth (`wake:started`), each
+called with the place key as an argument. Anywhere else, the same four as
+HTTP routes, with the pending list as server-sent events and the place key
+as a bearer token (`transport: "http"` in discovery). Wake speaks both.
 
 - **The spec**: [docs/spec/wake-v1.md](docs/spec/wake-v1.md).
 - **On Convex**: [`@abyssinia-labs/wake-convex`](packages/convex) is the

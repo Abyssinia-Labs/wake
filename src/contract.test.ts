@@ -21,9 +21,26 @@ const summons = {
 };
 
 describe("discovery", () => {
-  test("reads wake/v1", () => {
+  test("reads wake/v1: Convex when no transport is named", () => {
     const urls = { convexUrl: "https://c.convex.cloud", httpBase: "https://api.gatherd.dev" };
-    expect(asDiscovery({ version: "wake/v1", ...urls })).toEqual({ version: "wake/v1", ...urls });
+    expect(asDiscovery({ version: "wake/v1", ...urls })).toEqual({
+      version: "wake/v1",
+      transport: "convex",
+      ...urls,
+    });
+  });
+  test("reads the HTTP transport, which needs no Convex deployment", () => {
+    expect(
+      asDiscovery({ version: "wake/v1", transport: "http", httpBase: "https://api.acme.dev" }),
+    ).toEqual({ version: "wake/v1", transport: "http", httpBase: "https://api.acme.dev" });
+    expect(() =>
+      asDiscovery({ version: "wake/v1", transport: "http", httpBase: "http://acme.dev" }),
+    ).toThrow(/https/);
+  });
+  test("a transport Wake doesn't speak asks for an update", () => {
+    expect(() =>
+      asDiscovery({ version: "wake/v1", transport: "grpc", httpBase: "https://a.dev" }),
+    ).toThrow(/grpc; update Wake/);
   });
   test("says which version an app speaks when it is not ours", () => {
     expect(() => asDiscovery({ version: "wake/v2", convexUrl: "c", httpBase: "h" })).toThrow(

@@ -3,14 +3,17 @@
 import { chmod, mkdir, rename, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
-import { type Agent, type AgentTool, isRepo } from "./contract";
+import { type Agent, type AgentTool, isRepo, type Transport } from "./contract";
 
 export type PairedApp = {
   /** As the person typed it to `wakectl pair`, and the Keychain's name for its key. */
   domain: string;
   app: string;
   agent: Agent;
-  convexUrl: string;
+  /** How Wake reaches its summonses; Convex when absent, as every pairing before HTTP was. */
+  transport?: Transport;
+  /** The Convex deployment, for the convex transport. */
+  convexUrl?: string;
   httpBase: string;
   pairedAt: number;
   /** The name of the app's MCP server in the agent tool, when it is not the app's own. */

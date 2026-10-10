@@ -6,7 +6,8 @@ hands it work. This document is what an app implements; Wake implements the
 other side. The words MUST, MUST NOT, SHOULD and MAY are as in RFC 2119.
 
 An app built on Convex can take the server half whole from
-[`@abyssinia-labs/wake-convex`](../../packages/convex), and
+[`@abyssinia-labs/wake-convex`](../../packages/convex); any other app serves
+the same protocol over plain HTTP ([The HTTP transport](#the-http-transport)).
 `wakectl check <domain>` tests an app against this document.
 
 ## Terms
@@ -37,16 +38,25 @@ An app built on Convex can take the server half whole from
 
 ## Discovery
 
-`GET https://<domain>/.well-known/wake` MUST answer `200` with:
+`GET https://<domain>/.well-known/wake` MUST answer `200` with one of:
 
 ```json
 { "version": "wake/v1", "convexUrl": "https://….convex.cloud", "httpBase": "https://…" }
 ```
 
-- `convexUrl` is the Convex deployment Wake subscribes to; `httpBase` is
-  where the two HTTP routes live (often the deployment's `.convex.site`
-  address or the app's own API host).
-- Both MUST be `https:` URLs without credentials. `http:` is allowed only
+```json
+{ "version": "wake/v1", "transport": "http", "httpBase": "https://…" }
+```
+
+- `transport` is how Wake reaches the summonses: `convex` (the functions
+  below, on `convexUrl`) or `http` ([The HTTP transport](#the-http-transport),
+  under `httpBase`). Absent means `convex`. Wake refuses a transport it
+  does not speak, and says to update Wake.
+- `convexUrl` is the Convex deployment Wake subscribes to, required for
+  `convex` and left out for `http`; `httpBase` is where the HTTP routes
+  live (often the deployment's `.convex.site` address or the app's own API
+  host).
+- Each MUST be an `https:` URL without credentials. `http:` is allowed only
   for `localhost`, `127.0.0.1` and `[::1]`, for development.
 - The route MUST NOT redirect: Wake refuses redirects on every route.
 - A future version changes `version`; Wake refuses one it does not speak.
@@ -113,7 +123,7 @@ nothing already. After it, the key MUST open nothing.
 
 ## The functions
 
-Public Convex functions on `convexUrl`'s deployment, called by name, each
+For the `convex` transport: public Convex functions on `convexUrl`'s deployment, called by name, each
 with the place key as its `key` argument. Each MUST find the place by the
 key's SHA-256 hash, and MUST throw `ConvexError("UNPAIRED")` when the key
 was never issued, its place was forgotten, or its agent was revoked. They
@@ -194,6 +204,54 @@ claimed; any other call does nothing.
 When the deployment has no `wake:started`, Wake asks the agent to say it
 is on it in a comment instead, as it did before the function existed.
 
+## The HTTP transport
+
+For an app whose discovery says `transport: "http"`: the same four calls
+as the functions, as routes under `httpBase`, with the same arguments and
+answers. Each takes the place key as `Authorization: Bearer <placeKey>`,
+finds the place by its hash as the functions do, and answers `401` with
+`error: "unpaired"` where a function throws `UNPAIRED`. Bodies are JSON;
+no route redirects. A body of the wrong shape is `400` with
+`error: "invalid_body"`.
+
+### `GET {httpBase}/wake/v1/pending`
+
+With `Accept: text/event-stream`, a stream of
+[server-sent events](https://html.spec.whatwg.org/multipage/server-sent-events.html):
+
+```
+event: pending
+data: [{"id":"pd77…","app":"acme","kind":"assigned","target":{…},"at":1791421810141}]
+
+: ping
+```
+
+- On connect, and whenever the list changes, an event `pending` whose
+  `data` is the whole list, exactly as `wake:pending` answers it. An app
+  MAY send an unchanged list again.
+- A comment line (`: ping`) at least every 30 seconds while nothing
+  changes, so Wake can tell a quiet stream from a dead one.
+- The app MAY end the stream at any time (a serverless time limit, a
+  deploy); Wake connects again, sooner after a clean end than after an
+  error, and honours a `retry:` field.
+- Without that `Accept` header, the route MUST answer `200` with the list
+  as JSON. Wake falls back to asking for it every 30 seconds when the
+  stream keeps failing (a proxy that buffers it, say).
+
+### `POST {httpBase}/wake/v1/claim`
+
+`{ "id": "…" }` → `200` with `wake:claim`'s answer.
+
+### `POST {httpBase}/wake/v1/started` (optional)
+
+`{ "id": "…", "run": { "name", "tool", "session"? } }` → `204`. An app
+that does not serve it answers `404`, and Wake does without it, as it does
+for a deployment without `wake:started`.
+
+### `POST {httpBase}/wake/v1/finish`
+
+`{ "id": "…", "outcome": "done" | "failed", "reason"?: "…" }` → `204`.
+
 ## A summons's life
 
 ```
@@ -225,7 +283,9 @@ README's Security section has the detail.
 
 ## Versions
 
-A new field, or a new function Wake can do without (`wake:started`), is
-additive and stays `wake/v1`. Anything else (a field's
+A new field, a new function Wake can do without (`wake:started`), or a new
+transport named in discovery (`http`) is additive and stays `wake/v1`: an
+app that served `wake/v1` before serves it unchanged, and a Wake too old
+for a transport refuses to pair with that app rather than misread it. Anything else (a field's
 meaning, a rule, a route) is `wake/v2`, announced in discovery's `version`;
 an app serves both until Wake's installed versions have moved.

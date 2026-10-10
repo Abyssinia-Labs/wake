@@ -32,10 +32,11 @@ rest is the same in every app.
    [the component](/apps/convex/). It is the whole server half: keys,
    places, the summons's life, the functions, the two routes, run names
    and a person's runs list. You write the summon calls and the prompt.
-2. **Anything else:** implement the [spec](/spec/wake-v1/). The functions
-   are Convex functions because Wake subscribes to `wake:pending`; an app
-   off Convex needs a Convex deployment for them, or a future version of
-   the protocol.
+2. **Anything else:** serve the [HTTP transport](/spec/wake-v1/#the-http-transport):
+   say `"transport": "http"` in discovery, and serve `pending` as
+   server-sent events and `claim`, `started` and `finish` as POSTs, the
+   place key as a bearer token. No Convex needed. A TypeScript package for
+   it, with Drizzle on Postgres, is on the way.
 3. **Either way**, run [`wake check`](/apps/check/) against your domain
    until it passes.
 

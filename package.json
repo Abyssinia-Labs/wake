@@ -1,6 +1,6 @@
 {
   "name": "@abyssinia-labs/wake",
-  "version": "0.1.7",
+  "version": "0.2.0",
   "description": "Starts your coding agent when an app hands it work",
   "keywords": [
     "agents",

@@ -84,7 +84,9 @@ export async function pair(domain: string, code: string, toolFlag?: string): Pro
     domain: host,
     app: paired.app,
     agent: paired.agent,
-    convexUrl: discovery.convexUrl,
+    ...(discovery.transport === "convex"
+      ? { convexUrl: discovery.convexUrl }
+      : { transport: discovery.transport }),
     httpBase: discovery.httpBase,
     pairedAt: Date.now(),
     ...(tool ? { tool } : {}),

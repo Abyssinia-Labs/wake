@@ -6,7 +6,7 @@ import { v } from "convex/values";
 import { internal } from "./_generated/api.js";
 import type { Doc, Id } from "./_generated/dataModel.js";
 import { internalMutation, type MutationCtx, mutation, query } from "./_generated/server.js";
-import { state, target } from "./schema.js";
+import { target } from "./schema.js";
 import { checkSummons } from "./shape.js";
 import { summonsView, viewOf } from "./views.js";
 

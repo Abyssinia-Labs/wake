@@ -14,10 +14,12 @@ Cursor's CLI (`cursor-agent`), connected to your app's MCP server.
 bun add -g @abyssinia-labs/wake
 ```
 
+`wakectl` and `wake` are the same command; this site uses the shorter one.
+
 ## Set up
 
 ```bash
-wakectl setup
+wake setup
 ```
 
 Setup asks for everything in order, and every answer can be changed later,
@@ -39,14 +41,25 @@ here or with its own command:
 
 ## Try it
 
-Assign your agent a ticket, or mention it in a comment. Within seconds:
+Assign your agent a ticket, or mention it in a comment. Within seconds the
+app says your agent is on it, under the run's name (`amber-heron`), and
 
 ```bash
-wakectl status
+wake status
 ```
 
-shows the run, with the line to resume its session. Follow it live with
-`wakectl logs -f`, or watch its herdr tab.
+shows the run on this machine. Follow it live with `wake logs -f`, or watch
+its herdr tab. Afterwards, `wake open amber-heron` puts you back in its
+session, in its folder.
+
+## Stay current
+
+```bash
+wake update
+```
+
+installs the newest Wake from npm and restarts the listener onto it, once
+no run is going.
 
 ## Before you rely on it
 
@@ -55,5 +68,5 @@ that requires a pull request and lets nobody bypass it, admins included.
 Wake's own fences keep an honest agent on track; GitHub is the fence that
 holds. See [Security](/guides/security/).
 
-If anything looks wrong, `wakectl doctor` lists what's missing, each with
+If anything looks wrong, `wake doctor` lists what's missing, each with
 its fix.

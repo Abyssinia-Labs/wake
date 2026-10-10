@@ -17,7 +17,9 @@ starts on its person's machine, does it, and answers in your app.
   single-use code and the `wakectl pair` command, and a route that trades
   the code for a place key.
 - **Three Convex functions**, `wake:pending`, `wake:claim` and
-  `wake:finish`, which Wake calls with its place key.
+  `wake:finish`, which Wake calls with its place key, and an optional
+  fourth, `wake:started`, by which Wake says a run is under way, under a
+  two-word name, with its tool and session.
 - **Summonses**: a row whenever a person assigns or mentions an agent.
 
 You decide **what** summons an agent and write the **prompt** (which of your
@@ -26,14 +28,15 @@ rest is the same in every app.
 
 ## Three ways in
 
-1. **On Convex:** add [the component](/apps/convex/). It is the whole
-   server half: keys, places, the summons's life, the functions and
-   the two routes. You write the summon calls and the prompt.
+1. **On Convex:** `bun add @abyssinia-labs/wake-convex` and add
+   [the component](/apps/convex/). It is the whole server half: keys,
+   places, the summons's life, the functions, the two routes, run names
+   and a person's runs list. You write the summon calls and the prompt.
 2. **Anything else:** implement the [spec](/spec/wake-v1/). The functions
    are Convex functions because Wake subscribes to `wake:pending`; an app
    off Convex needs a Convex deployment for them, or a future version of
    the protocol.
-3. **Either way**, run [`wakectl check`](/apps/check/) against your domain
+3. **Either way**, run [`wake check`](/apps/check/) against your domain
    until it passes.
 
 ## What your users get
@@ -42,6 +45,9 @@ rest is the same in every app.
   already has.
 - Their agent starts within seconds, on their machine, in the right
   repository, and answers where it was asked.
+- The run's status where they asked, by its name ("Claude is on it as
+  amber-heron"), not as a comment from the agent; its session for its
+  owner, and `wake open <name>` to get back into it.
 - Fences they can rely on: only repositories they approved, never the
   default branch, a sandboxed shell. See [Security](/guides/security/).
 

@@ -1,10 +1,10 @@
 ---
 title: Check your app
-description: wakectl check tests an app against the wake/v1 spec without pairing or changing anything.
+description: wake check tests an app against the wake/v1 spec without pairing or changing anything.
 ---
 
 ```bash
-wakectl check acme.dev
+wake check acme.dev
 ```
 
 ```
@@ -16,6 +16,7 @@ wake/v1 at https://acme.dev · docs/spec/wake-v1.md
   ✓ wake:pending throws UNPAIRED for a key that opens nothing
   ✓ wake:claim throws UNPAIRED
   ✓ wake:finish throws UNPAIRED
+  ✓ wake:started (optional) throws UNPAIRED
 
 ✓ Wake can pair with it.
 ```
@@ -24,5 +25,8 @@ Every probe is one your app must refuse (a code nobody issued, a key that
 opens nothing), so it pairs nothing and changes nothing; it is safe against
 production. It exits non-zero when a probe fails, so it fits in CI.
 
-For a dev server, pass its address: `wakectl check localhost:3000`. Plain
+`wake:started` is optional: an app without it passes, with "isn't served"
+beside it, and its users' agents comment that they started instead.
+
+For a dev server, pass its address: `wake check localhost:3000`. Plain
 http is allowed only on this machine.

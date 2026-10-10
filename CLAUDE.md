@@ -9,11 +9,13 @@ kept word for word in both. Wake knows the apps only through `wake/v1`,
 whose text is `docs/spec/wake-v1.md`; it imports no app's code.
 
 The repository holds both halves: the command (`src/`, published as
-`@abyssinia-labs/wake`) and the server half as a Convex component
+`@abyssinia-labs/wake`) and the server half twice, as a Convex component
 (`packages/convex`, `@abyssinia-labs/wake-convex`, tested with vitest and
-convex-test). A change to the contract is a change to the spec first, then
-to `src/contract.ts`, `packages/convex/src/component/shape.ts` and the
-pattern in each app, together. `wakectl check <domain>` tests an app
+convex-test) and over HTTP for any TypeScript app (`packages/server`,
+`@abyssinia-labs/wake-server`, Drizzle on Postgres, tested on PGlite). A
+change to the contract is a change to the spec first, then to
+`src/contract.ts`, both packages' `shape.ts` and the pattern in each app,
+together. `wakectl check <domain>` tests an app
 against the spec.
 
 ## Toolchain

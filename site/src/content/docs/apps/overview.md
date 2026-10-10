@@ -35,8 +35,9 @@ rest is the same in every app.
 2. **Anything else:** serve the [HTTP transport](/spec/wake-v1/#the-http-transport):
    say `"transport": "http"` in discovery, and serve `pending` as
    server-sent events and `claim`, `started` and `finish` as POSTs, the
-   place key as a bearer token. No Convex needed. A TypeScript package for
-   it, with Drizzle on Postgres, is on the way.
+   place key as a bearer token. No Convex needed. In TypeScript, take it
+   whole from [`@abyssinia-labs/wake-server`](/apps/postgres/), on
+   Postgres with Drizzle.
 3. **Either way**, run [`wake check`](/apps/check/) against your domain
    until it passes.
 

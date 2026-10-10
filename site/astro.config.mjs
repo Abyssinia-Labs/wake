@@ -63,6 +63,7 @@ export default defineConfig({
           items: [
             { label: "Serve wake/v1", slug: "apps/overview" },
             { label: "The Convex component", slug: "apps/convex" },
+            { label: "On Postgres", slug: "apps/postgres" },
             { label: "Examples", slug: "apps/examples" },
             { label: "Check your app", slug: "apps/check" },
             { label: "The wake/v1 spec", slug: "spec/wake-v1" },

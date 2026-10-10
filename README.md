@@ -174,6 +174,9 @@ as a bearer token (`transport: "http"` in discovery). Wake speaks both.
 - **On Convex**: [`@abyssinia-labs/wake-convex`](packages/convex) is the
   whole server half as a component. You decide what summons an agent and
   write the prompt.
+- **On Postgres, or anything with the Fetch API**:
+  [`@abyssinia-labs/wake-server`](packages/server) is the same server half
+  over the HTTP transport, with Drizzle.
 - **Check it**: `wakectl check <your domain>` probes an app the way Wake
   will, with inputs it must refuse, so it pairs nothing and changes nothing.
 

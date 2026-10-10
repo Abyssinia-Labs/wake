@@ -1,6 +1,6 @@
 {
   "name": "@abyssinia-labs/wake-convex",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "The server half of wake/v1 as a Convex component: let Wake start your users' agents",
   "keywords": [
     "convex",

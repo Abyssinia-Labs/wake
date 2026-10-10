@@ -86,5 +86,6 @@ export default defineSchema({
     .index("by_subject_agent", ["subject", "agent", "state"])
     .index("by_agent_state", ["agent", "state", "at"])
     .index("by_owner_state", ["owner", "state", "at"])
+    .index("by_owner_updated", ["owner", "updatedAt"])
     .index("by_scope", ["scope"]),
 });

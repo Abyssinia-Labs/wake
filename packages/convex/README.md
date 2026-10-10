@@ -112,6 +112,7 @@ branch: Wake refuses to run on it.
 | --- | --- |
 | `wake.settle(ctx, { subject, agent?, kind?, state, reason })` | It stopped being wanted: unassigned, closed, answered from a live session. |
 | `wake.forSubject(ctx, subject)` | Show each agent's latest summons where it was made: state, reason, `unclaimed` after thirty minutes, and `run` once Wake says it started (`name`, `tool`, `machine`, `startedAt`, and `session`, which only the agent's owner should see). |
+| `wake.forOwner(ctx, { owner, scope?, limit? })` | A person's runs list, outside the comments: their agents' summonses, newest first, without the dropped, each with its `target` and `run`. Check the caller is `owner`. |
 | `wake.places(ctx, agent)` / `wake.forgetPlace(ctx, { agent, place })` | An agent's machines, on your agents screen. |
 | `wake.revokeAgent(ctx, agent)` | In the same mutation that revokes an agent: its keys, codes and waiting summonses end. |
 | `wake.deleteScope(ctx, scope)` | A tenant (workspace) is deleted: one batch of its rows; call again until `done`. Pass `scope` when you pair and summon. |

@@ -82,6 +82,7 @@ export const wake = new Wake(components.wake, { app: "acme" });
 | `wake.answer(ctx, { id, yes })` | The owner answered a summons someone else made. |
 | `wake.settle(ctx, { subject, agent?, kind?, state, reason })` | It stopped being wanted: unassigned, closed, answered. |
 | `wake.forSubject(ctx, subject)` | Show each agent's latest summons where it was made, with its `run` (name, tool, machine, and the session, for the owner's eyes) once it started. |
+| `wake.forOwner(ctx, { owner, scope?, limit? })` | A person's runs list, outside the comments: their agents' summonses, newest first, without the dropped, each with its `target` and `run`. Check the caller is `owner`. |
 | `wake.places(ctx, agent)`, `wake.forgetPlace(ctx, { agent, place })` | An agent's machines, on your agents screen. |
 | `wake.revokeAgent(ctx, agent)` | In the mutation that revokes an agent. |
 | `wake.deleteScope(ctx, scope)` | A workspace is deleted; call until `done`. |

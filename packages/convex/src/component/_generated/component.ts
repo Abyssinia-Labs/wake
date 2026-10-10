@@ -91,6 +91,36 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
         Name
       >;
     };
+    runs: {
+      forOwner: FunctionReference<
+        "query",
+        "internal",
+        { limit?: number; owner: string; scope?: string },
+        Array<{
+          agent: string;
+          askedBy: string;
+          at: number;
+          id: string;
+          kind: string;
+          owner: string;
+          reason?: string;
+          run?: {
+            machine: string;
+            name: string;
+            session?: string;
+            startedAt: number;
+            tool: "claude" | "codex" | "cursor";
+          };
+          scope?: string;
+          state: "asking" | "open" | "claimed" | "done" | "failed" | "dropped";
+          subject: string;
+          target: { kind: string; ref: string; url: string };
+          unclaimed: boolean;
+          updatedAt: number;
+        }>,
+        Name
+      >;
+    };
     scopes: {
       deleteScope: FunctionReference<
         "mutation",
@@ -127,7 +157,10 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
             startedAt: number;
             tool: "claude" | "codex" | "cursor";
           };
+          scope?: string;
           state: "asking" | "open" | "claimed" | "done" | "failed" | "dropped";
+          subject: string;
+          target: { kind: string; ref: string; url: string };
           unclaimed: boolean;
           updatedAt: number;
         }>,

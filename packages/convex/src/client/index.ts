@@ -120,6 +120,15 @@ export class Wake {
     return await ctx.runQuery(this.component.summonses.forSubject, { subject });
   }
 
+  /**
+   * What a person's agents were asked and did, newest first, without the
+   * dropped: for a runs list outside the comments. Check the caller is
+   * `owner` first; `session` in each `run` is theirs alone.
+   */
+  async forOwner(ctx: RunQuery, o: { owner: string; scope?: string; limit?: number }) {
+    return await ctx.runQuery(this.component.runs.forOwner, o);
+  }
+
   /** An agent's paired machines. */
   async places(ctx: RunQuery, agent: string) {
     return await ctx.runQuery(this.component.places.list, { agent });

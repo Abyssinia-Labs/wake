@@ -6,8 +6,9 @@ import { v } from "convex/values";
 import { internal } from "./_generated/api.js";
 import type { Doc, Id } from "./_generated/dataModel.js";
 import { internalMutation, type MutationCtx, mutation, query } from "./_generated/server.js";
-import { run, state, target } from "./schema.js";
+import { target } from "./schema.js";
 import { checkSummons } from "./shape.js";
+import { summonsView, viewOf } from "./views.js";
 
 /** The spec's "nothing has claimed it in thirty minutes". */
 export const UNCLAIMED_MS = 30 * 60_000;
@@ -123,21 +124,6 @@ export const settle = mutation({
   },
 });
 
-const summonsView = v.object({
-  id: v.string(),
-  agent: v.string(),
-  owner: v.string(),
-  askedBy: v.string(),
-  kind: v.string(),
-  state,
-  at: v.number(),
-  updatedAt: v.number(),
-  reason: v.optional(v.string()),
-  unclaimed: v.boolean(),
-  /** Its run once Wake said it started. `session` is the owner's to see. */
-  run: v.optional(run),
-});
-
 /** Each agent's latest summons about `subject`, for the host to show where it was made. */
 export const forSubject = query({
   args: { subject: v.string() },
@@ -152,19 +138,7 @@ export const forSubject = query({
       const seen = latest.get(row.agent);
       if (!seen || row.updatedAt > seen.updatedAt) latest.set(row.agent, row);
     }
-    return [...latest.values()].map((row) => ({
-      id: row._id,
-      agent: row.agent,
-      owner: row.owner,
-      askedBy: row.askedBy,
-      kind: row.kind,
-      state: row.state,
-      at: row.at,
-      updatedAt: row.updatedAt,
-      ...(row.reason === undefined ? {} : { reason: row.reason }),
-      unclaimed: row.state === "open" && row.noticedAt !== undefined,
-      ...(row.run === undefined ? {} : { run: row.run }),
-    }));
+    return [...latest.values()].map(viewOf);
   },
 });
 

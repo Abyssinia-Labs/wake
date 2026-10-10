@@ -1,0 +1,22 @@
+{
+  "name": "Wake",
+  "url": "https://github.wakectl.dev",
+  "description": "Label an issue `wake`, or write `/wake` in a comment or review, and your coding agent starts on your machine.",
+  "hook_attributes": { "url": "https://github.wakectl.dev/github/webhook", "active": true },
+  "redirect_url": "https://github.wakectl.dev/auth/callback",
+  "callback_urls": ["https://github.wakectl.dev/auth/callback"],
+  "public": true,
+  "request_oauth_on_install": false,
+  "default_permissions": {
+    "issues": "write",
+    "pull_requests": "read",
+    "metadata": "read"
+  },
+  "default_events": [
+    "issues",
+    "issue_comment",
+    "pull_request",
+    "pull_request_review",
+    "pull_request_review_comment"
+  ]
+}

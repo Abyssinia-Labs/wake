@@ -6,10 +6,38 @@ import type { Changes } from "./changes";
 import { WakeError } from "./errors";
 import { hashSecret, KEY_SHAPE } from "./keys";
 import { isRunReport } from "./shape";
-import type { PlaceRow, Tool, WakeStore } from "./store";
+import type { PlaceRow, SummonsRow, Tool, WakeStore } from "./store";
 import { type PendingSummons, pendingOf } from "./views";
 
-export type WakeContext = { app: string; store: WakeStore; changes: Changes; now: () => number };
+/**
+ * What the host hears as a run goes, to show it where it was asked (a
+ * comment on a GitHub issue, say). Called after the change is kept, and
+ * awaited; a hook that throws is ignored, so Wake's call still succeeds.
+ */
+export type WakeHooks = {
+  started?: (summons: SummonsRow) => void | Promise<void>;
+  finished?: (summons: SummonsRow) => void | Promise<void>;
+};
+
+export type WakeContext = {
+  app: string;
+  store: WakeStore;
+  changes: Changes;
+  now: () => number;
+  hooks?: WakeHooks;
+};
+
+async function tell(
+  hook: ((row: SummonsRow) => void | Promise<void>) | undefined,
+  row: SummonsRow | null,
+): Promise<void> {
+  if (!hook || !row) return;
+  try {
+    await hook(row);
+  } catch {
+    // The host's own trouble; the run's record is already kept.
+  }
+}
 export type ClaimResult = { claimed: true; run: { prompt: string } } | { claimed: false };
 export type RunReport = { name: string; tool: Tool; session?: string };
 
@@ -60,7 +88,7 @@ export async function started(
   const row = await c.store.summonsById(id);
   if (!row || row.place !== place.id || row.state !== "claimed") return;
   const now = c.now();
-  await c.store.moveSummons(
+  const moved = await c.store.moveSummons(
     id,
     ["claimed"],
     {
@@ -76,6 +104,7 @@ export async function started(
     place.id,
   );
   await c.store.patchPlace(place.id, { lastSeenAt: now });
+  await tell(c.hooks?.started, moved);
 }
 
 /** What became of a run this place claimed; another place's, or a finished one, is left. */
@@ -88,7 +117,7 @@ export async function finish(
 ): Promise<void> {
   const place = await placeOf(c, key);
   const now = c.now();
-  await c.store.moveSummons(
+  const ended = await c.store.moveSummons(
     id,
     ["claimed"],
     {
@@ -100,4 +129,5 @@ export async function finish(
     place.id,
   );
   await c.store.patchPlace(place.id, { lastSeenAt: now });
+  await tell(c.hooks?.finished, ended);
 }

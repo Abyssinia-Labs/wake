@@ -4,8 +4,11 @@ import { PGlite } from "@electric-sql/pglite";
 import { drizzle } from "drizzle-orm/pglite";
 import { drizzleStore, WAKE_TABLES_SQL } from "./drizzle";
 import { Wake } from "./wake";
+import type { WakeHooks } from "./wire";
 
-export async function testWake(): Promise<{ wake: Wake; advance: (ms: number) => void }> {
+export async function testWake(
+  hooks?: WakeHooks,
+): Promise<{ wake: Wake; advance: (ms: number) => void }> {
   const client = new PGlite();
   await client.exec(WAKE_TABLES_SQL);
   let now = 1_800_000_000_000;
@@ -14,6 +17,7 @@ export async function testWake(): Promise<{ wake: Wake; advance: (ms: number) =>
     store: drizzleStore(drizzle(client)),
     keyPrefix: "ak_",
     now: () => now,
+    ...(hooks ? { hooks } : {}),
   });
   return { wake, advance: (ms) => (now += ms) };
 }

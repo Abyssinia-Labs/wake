@@ -135,3 +135,22 @@ test("a person's runs, newest first, in a scope; a deleted scope keeps nothing",
   await expect(wake.pending(key)).rejects.toThrow("UNPAIRED");
   expect(await wake.forOwner({ owner: "ada" })).toHaveLength(1);
 });
+
+test("the host hears a run start and end, and a hook that throws changes nothing", async () => {
+  const heard: string[] = [];
+  const { wake } = await testWake({
+    started: (row) => {
+      heard.push(`started ${row.run?.name}`);
+      throw new Error("GitHub is down");
+    },
+    finished: (row) => {
+      heard.push(`finished ${row.state}`);
+    },
+  });
+  const key = await pairedKey(wake);
+  const id = await wake.summon(ask());
+  await wake.claim(key, id);
+  await wake.started(key, id, { name: "amber-heron", tool: "claude" });
+  await wake.finish(key, id, "done");
+  expect(heard).toEqual(["started amber-heron", "finished done"]);
+});

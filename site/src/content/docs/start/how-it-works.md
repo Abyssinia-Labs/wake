@@ -1,6 +1,6 @@
 ---
 title: How it works
-description: Summonses, places, claims and runs, the four ideas behind Wake.
+description: Summonses, places, claims and runs, the ideas behind Wake.
 ---
 
 ## A summons is a row
@@ -30,9 +30,19 @@ machine.
 The winning claim hands Wake the app's instructions: which tools to call to
 read the ticket, and how to finish. Wake finds your clone, makes a worktree
 on the ticket's branch, and starts the agent there, fenced (see
-[Security](/guides/security/)). The agent comments that it's on it, does
-the work, opens a pull request if the ticket asked for code, and comments
-what it did. Wake then tells the app the run is done, or failed and why.
+[Security](/guides/security/)).
+
+As the agent starts, Wake tells the app it's on it, under the run's
+**name**, two words like `amber-heron`, with the tool and its session. The
+app shows that where you asked ("Claude is on it as amber-heron") instead
+of the agent writing a comment to say so, and shows the machine and the
+session to you alone. An app that doesn't take the report gets the agent's
+comment instead.
+
+The agent does the work, opens a pull request if the ticket asked for
+code, and comments what it did. Wake then tells the app the run is done,
+or failed and why. Apps can also list your agents' runs outside the
+comments, in their top bar.
 
 If nothing claims a summons in thirty minutes, the app says so where it was
 made. It stays open: your Mac will still claim it when it's back.

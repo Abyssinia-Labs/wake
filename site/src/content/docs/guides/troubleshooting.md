@@ -6,15 +6,15 @@ description: The usual reasons a run doesn't start, and how to see why.
 Start with these two:
 
 ```bash
-wakectl doctor     # what's missing, each with its fix
-wakectl logs -f    # what the listener is doing right now
+wake doctor     # what's missing, each with its fix
+wake logs -f    # what the listener is doing right now
 ```
 
 ## Nothing happens when I assign my agent
 
-- **Not listening.** `wakectl status` should show the app as *listening*.
-  If it isn't installed, `wakectl install`.
-- **Paused.** `wakectl resume`.
+- **Not listening.** `wake status` should show the app as *listening*.
+  If it isn't installed, `wake install`.
+- **Paused.** `wake resume`.
 - **The tool isn't installed** on this machine: status says so. Wake
   doesn't claim work it can't run, so another machine can.
 - **Someone else asked.** A summons a teammate makes waits for your yes in
@@ -26,18 +26,18 @@ The ticket's repository isn't approved for that app here. The message has
 the command; it looks like:
 
 ```bash
-wakectl repos allow your-org/your-repo --app app.example.com
+wake repos allow your-org/your-repo --app app.example.com
 ```
 
 ## "No clone of … in the folders Wake looks in"
 
-Clone the repository under one of your clone folders (`wakectl status`
-lists them), or add its folder with `wakectl setup`.
+Clone the repository under one of your clone folders (`wake status`
+lists them), or add its folder with `wake setup`.
 
 ## A herdr tab opens but nothing starts
 
 Look at the tab. The agent may be asking something before it starts (Codex
-asks to trust each new folder: answer it, or `wakectl trust codex on`), or
+asks to trust each new folder: answer it, or `wake trust codex on`), or
 it may have exited with an error herdr didn't pass on.
 
 ## Cursor can't reach the app
@@ -50,4 +50,4 @@ Claude Code and Codex sign in once.
 ## The ticket says it couldn't finish
 
 The reason on the ticket is the shareable part. The detail (paths,
-command output) is in `wakectl logs`.
+command output) is in `wake logs`.

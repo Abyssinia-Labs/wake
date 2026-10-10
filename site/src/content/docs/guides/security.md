@@ -44,7 +44,7 @@ For a repository where that difference matters, pair Claude Code.
 
 ## What Wake refuses
 
-- A repository you haven't approved for that app (`wakectl repos`).
+- A repository you haven't approved for that app (`wake repos`).
 - The default branch, and any branch checked out in a folder Wake didn't
   make (your own worktree, say).
 - Anything from an app that isn't the shape [wake/v1](/spec/wake-v1/)
@@ -61,7 +61,7 @@ For a repository where that difference matters, pair Claude Code.
 Place keys live in the macOS Keychain, never in a file. Wake's config,
 state and log are readable by you alone. When a run fails, the ticket says
 why only in words written to be shared; paths and command output stay in
-`wakectl logs`.
+`wake logs`.
 
 ## Reporting a vulnerability
 

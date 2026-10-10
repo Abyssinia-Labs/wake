@@ -7,6 +7,32 @@ description: "@abyssinia-labs/wake-convex: the whole server half of wake/v1 as a
 bun add @abyssinia-labs/wake-convex
 ```
 
+The whole server half of [wake/v1](/spec/wake-v1/) in one Convex
+component, its own tables beside yours. Gatherd and Antescript run on it.
+
+## What's in it
+
+- **Pairing.** One-use, ten-minute codes for your "pair Wake" tool, traded
+  for a place key; only SHA-256 hashes are kept. Which tool asked (Claude
+  Code, Codex, Cursor) travels with the code.
+- **Places.** Each agent's machines, when each was last seen, forgetting
+  one, and revoking an agent with all its keys, codes and waiting asks.
+- **The summons's life.** Asking (waits for the owner's yes when someone
+  else asked), open, claimed, done, failed, dropped. One live summons per
+  agent per subject: a second ask joins the first.
+- **The race.** The first machine to claim wins; every other is told it
+  lost.
+- **Nobody picked it up.** After thirty minutes an open summons is marked
+  `unclaimed`, so you can say so where it was asked.
+- **Run names and sessions.** Wake reports each run's two-word name, tool,
+  machine and session (`wake:started`); you show it where it was asked, the
+  session to the owner only.
+- **A person's runs list.** Their agents' summonses across everything,
+  newest first, for a top bar or a phone.
+- **The rules, enforced.** A summons Wake would refuse is refused when you
+  make it, and every function checks the key itself.
+- **Deletion.** Everything kept for a workspace goes, in batches.
+
 ## Install
 
 `convex/convex.config.ts`:
@@ -91,6 +117,35 @@ The component has no `ctx.auth`: check who may do what before you call it.
 A summons Wake would refuse (a control character in `ref`, a non-https
 `url`, a branch like `../main`) is refused at `summon` with
 `INVALID_SUMMONS`.
+
+## Show the run
+
+Once Wake starts a run, `forSubject` returns it with a `run`: its `name`
+(`amber-heron`), `tool`, `machine`, `startedAt` and `session`. Show the
+name to everyone where the summons was made ("Claude is on it as
+amber-heron"); show the machine, the session and `wake open amber-heron` to
+the agent's owner only.
+
+```ts
+const rows = await wake.forSubject(ctx, ticketId);
+return rows.map((row) => ({
+  state: row.state,
+  ...(row.run && {
+    run: {
+      name: row.run.name,
+      ...(row.owner === viewerId && { machine: row.run.machine, session: row.run.session }),
+    },
+  }),
+}));
+```
+
+For a runs list outside the comments, `wake.forOwner(ctx, { owner: viewerId,
+scope: workspaceId })` gives the viewer's own agents' runs, each with its
+`target` to link to.
+
+Serve `started` from `convex/wake.ts` (above) and Wake tells your app every
+run's start, so the agent never has to comment that it's on it. Leave it
+out and the agent does.
 
 ## Test with it
 

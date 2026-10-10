@@ -1,0 +1,20 @@
+{
+  "name": "@abyssinia-labs/wake-github",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Wake's GitHub bridge: a label or /wake on an issue or a review starts your agent on your machine",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "dev": "bun src/dev.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "bun test"
+  },
+  "dependencies": {
+    "@abyssinia-labs/wake-server": "workspace:*",
+    "drizzle-orm": "0.45.4"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "0.5.8"
+  }
+}

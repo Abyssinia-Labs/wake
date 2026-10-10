@@ -13,6 +13,17 @@
         "typescript": "7.0.2",
       },
     },
+    "apps/github": {
+      "name": "@abyssinia-labs/wake-github",
+      "version": "0.1.0",
+      "dependencies": {
+        "@abyssinia-labs/wake-server": "workspace:*",
+        "drizzle-orm": "0.45.4",
+      },
+      "devDependencies": {
+        "@electric-sql/pglite": "0.5.8",
+      },
+    },
     "packages/convex": {
       "name": "@abyssinia-labs/wake-convex",
       "version": "0.3.0",
@@ -29,7 +40,7 @@
     },
     "packages/server": {
       "name": "@abyssinia-labs/wake-server",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "devDependencies": {
         "@electric-sql/pglite": "0.5.8",
         "drizzle-orm": "0.45.4",
@@ -55,6 +66,8 @@
   },
   "packages": {
     "@abyssinia-labs/wake-convex": ["@abyssinia-labs/wake-convex@workspace:packages/convex"],
+
+    "@abyssinia-labs/wake-github": ["@abyssinia-labs/wake-github@workspace:apps/github"],
 
     "@abyssinia-labs/wake-server": ["@abyssinia-labs/wake-server@workspace:packages/server"],
 

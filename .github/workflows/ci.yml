@@ -53,5 +53,8 @@ jobs:
       - run: bun run --cwd packages/server typecheck
       - run: bun run --cwd packages/server test
       - run: bun run --cwd packages/server build
+      # The GitHub bridge (apps/github), on the server package just built.
+      - run: bun run --cwd apps/github typecheck
+      - run: bun run --cwd apps/github test
       # wakectl.dev: the site builds, with the spec copied in from docs/spec.
       - run: bun run --cwd site build

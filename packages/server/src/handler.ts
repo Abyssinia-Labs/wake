@@ -13,6 +13,11 @@ export type HandlerOptions = StreamOptions;
 
 const TOOLS: readonly string[] = ["claude", "codex", "cursor"];
 
+/** What the agent tells its person to run. */
+export function pairCommand(domain: string, code: string): string {
+  return `wakectl pair ${domain} ${code}`;
+}
+
 /** The discovery document, for `GET https://<domain>/.well-known/wake`. */
 export function discovery(o: { httpBase: string }): {
   version: "wake/v1";

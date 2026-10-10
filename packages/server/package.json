@@ -1,6 +1,6 @@
 {
   "name": "@abyssinia-labs/wake-server",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "The server half of wake/v1 for any TypeScript app: let Wake start your users' agents, on Postgres with Drizzle",
   "keywords": [
     "agents",

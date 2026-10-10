@@ -24,6 +24,7 @@ import {
   type RunReport,
   started,
   type WakeContext,
+  type WakeHooks,
 } from "./wire";
 
 export type WakeOptions = {
@@ -34,6 +35,8 @@ export type WakeOptions = {
   keyPrefix?: string;
   changes?: Changes;
   now?: () => number;
+  /** Told when a run starts and when it ends, after the change is kept. */
+  hooks?: WakeHooks;
 };
 
 export type Paired = {
@@ -52,9 +55,16 @@ export class Wake {
   private readonly store: WakeStore;
   private readonly keyPrefix: string;
   private readonly now: () => number;
+  private readonly hooks: WakeHooks | undefined;
 
   private get context(): WakeContext {
-    return { app: this.app, store: this.store, changes: this.changes, now: this.now };
+    return {
+      app: this.app,
+      store: this.store,
+      changes: this.changes,
+      now: this.now,
+      ...(this.hooks ? { hooks: this.hooks } : {}),
+    };
   }
 
   constructor(o: WakeOptions) {
@@ -64,6 +74,7 @@ export class Wake {
     this.keyPrefix = o.keyPrefix ?? "wk_";
     this.changes = o.changes ?? localChanges();
     this.now = o.now ?? Date.now;
+    this.hooks = o.hooks;
   }
 
   // Pairing (the spec's "Pairing").
@@ -231,7 +242,6 @@ export class Wake {
   }
 
   // Places.
-
   async places(agent: string): Promise<PlaceView[]> {
     return (await this.store.placesOf(agent))
       .filter((place) => place.forgottenAt === undefined)
@@ -287,9 +297,4 @@ export class Wake {
   finish(key: string, id: string, outcome: "done" | "failed", reason?: string): Promise<void> {
     return finish(this.context, key, id, outcome, reason);
   }
-}
-
-/** What the agent tells its person to run. */
-export function pairCommand(domain: string, code: string): string {
-  return `wakectl pair ${domain} ${code}`;
 }

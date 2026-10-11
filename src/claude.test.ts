@@ -48,6 +48,12 @@ describe("claudeArgs", () => {
     expect(rules).not.toContain("comment where you were asked that you are on it");
   });
 
+  test("a repository run is told to run gh on its own, never chained into the sandbox", () => {
+    const args = claudeArgs({ ...base, defaultBranch: "main" });
+    const rules = args[args.indexOf("--append-system-prompt") + 1] ?? "";
+    expect(rules).toContain("Run each git push, git fetch and gh command on its own.");
+  });
+
   test("the branch's settings are left out; Wake's own come as one --settings", () => {
     const args = claudeArgs({ ...base, branch: "gat-70-x" });
     expect(args[args.indexOf("--setting-sources") + 1]).toBe("user");

@@ -64,6 +64,8 @@ function outsideAllowed(branch: string | undefined): string[] {
     "Bash(gh pr create *)",
     "Bash(gh pr comment *)",
     "Bash(gh pr edit *)",
+    // An issue's answer is a comment on it, as a pull request's is (the GitHub bridge, WAK-17).
+    "Bash(gh issue comment *)",
   ];
 }
 
@@ -167,6 +169,7 @@ export function cursorPermissions(o: ClaudeRun): { allow: string[]; deny: string
       "Shell(gh:pr create*)",
       "Shell(gh:pr comment*)",
       "Shell(gh:pr edit*)",
+      "Shell(gh:issue comment*)",
       own,
       ...extra,
     ],

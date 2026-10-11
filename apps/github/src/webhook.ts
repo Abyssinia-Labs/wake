@@ -114,9 +114,9 @@ function pick(issue: { number: number; title: string; url: string }) {
   return { number: issue.number, title: issue.title, url: issue.url };
 }
 
-type Comment = { id: number; url: string; api: string; body: string; react: string };
+type Comment = { id: number; url: string; line?: string; body: string; react: string };
 
-/** A new comment, review or review comment with its body, and the paths to read and react to it. */
+/** A new comment, review or review comment with its body, where it is, and the path to react to it. */
 function commentOf(
   event: string,
   action: string | null,
@@ -133,23 +133,23 @@ function commentOf(
   const url = str(o?.html_url);
   const body = str(o?.body);
   if (id === null || !url || body === null) return null;
-  if (event === "issue_comment") {
-    const path = `/repos/${repo}/issues/comments/${id}`;
-    return { id, url, body, api: path.slice(1), react: path };
-  }
+  if (event === "issue_comment")
+    return { id, url, body, react: `/repos/${repo}/issues/comments/${id}` };
   if (event === "pull_request_review_comment") {
-    const path = `/repos/${repo}/pulls/comments/${id}`;
-    return { id, url, body, api: path.slice(1), react: path };
+    const path = str(o?.path);
+    const at = num(o?.line) ?? num(o?.original_line);
+    const line = path ? (at === null ? path : `${path}:${at}`) : undefined;
+    return {
+      id,
+      url,
+      body,
+      react: `/repos/${repo}/pulls/comments/${id}`,
+      ...(line ? { line } : {}),
+    };
   }
   const number = num(obj(payload.pull_request)?.number);
   // A review takes no reaction; its pull request does.
-  return {
-    id,
-    url,
-    body,
-    api: `repos/${repo}/pulls/${number}/reviews/${id}`,
-    react: `/repos/${repo}/issues/${number}`,
-  };
+  return { id, url, body, react: `/repos/${repo}/issues/${number}` };
 }
 
 /** The tool asked for, or the first the person has paired. */

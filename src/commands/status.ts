@@ -31,6 +31,8 @@ export function statusLines({ config, state, paused, now }: StatusInput): string
 
   lines.push("", bold("Paired"));
   const apps = Object.entries(config.apps);
+  // As wide as the longest domain, so `github.wakectl.dev` doesn't run into its agent.
+  const wide = Math.max(18, ...apps.map(([, app]) => app.domain.length + 2));
   if (apps.length === 0) {
     lines.push(
       `  ${dim("nothing yet: ask your agent to pair Wake, or")} ${cyan("wakectl pair <domain> <code>")}`,
@@ -57,7 +59,7 @@ export function statusLines({ config, state, paused, now }: StatusInput): string
     const known = toolOf(app);
     const tool = dim(known ? TOOL_NAMES[known] : "?");
     lines.push(
-      `  ${dot} ${pad(bold(app.domain), 18)}${pad(app.agent.name, 18)}${pad(tool, 14)}${words}`,
+      `  ${dot} ${pad(bold(app.domain), wide)}${pad(app.agent.name, 18)}${pad(tool, 14)}${words}`,
     );
   }
 
@@ -70,7 +72,7 @@ export function statusLines({ config, state, paused, now }: StatusInput): string
       );
     }
     for (const [domain, repos] of approved) {
-      lines.push(`  ${pad(bold(domain), 18)}${someOf(repos, "repositories")}`);
+      lines.push(`  ${pad(bold(domain), wide)}${someOf(repos, "repositories")}`);
     }
   }
 

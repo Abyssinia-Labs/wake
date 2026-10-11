@@ -1,5 +1,5 @@
 {
-  "name": "wakectl",
+  "name": "Wake for GitHub",
   "url": "https://github.wakectl.dev",
   "description": "Label an issue `wake`, or write `/wake` in a comment or review, and your coding agent starts on your machine.",
   "hook_attributes": {

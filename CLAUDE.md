@@ -1,6 +1,6 @@
 # CLAUDE.md — working standards
 
-Wake is the client half of the Wake pattern: a listener on a person's Mac
+Wake is the client half of the Wake pattern: a listener on a person's Mac or Linux machine
 that starts their agent when an app that serves `wake/v1` summons it. It
 names no app: the README, help and examples stay product-neutral. The
 pattern began with Abyssinia Labs' Gatherd and Antescript, as

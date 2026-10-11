@@ -10,9 +10,9 @@ import { access } from "node:fs/promises";
 import { hostname } from "node:os";
 import { type Config, domainKey, loadConfig, type PairedApp, saveConfig } from "../config";
 import { AGENT_TOOLS, type AgentTool } from "../contract";
+import { daemonFor } from "../daemon";
 import { exec } from "../exec";
 import { discover, forgetPlace, isUnpaired, pairPlace } from "../http";
-import { plistPath } from "../launchd";
 import { say } from "../log";
 import { keychain } from "../secrets";
 import { programOf, TOOL_NAMES, toolInstalled, toolOf } from "../tools";
@@ -103,7 +103,7 @@ export async function pair(domain: string, code: string, toolFlag?: string): Pro
     );
   }
   try {
-    await access(plistPath());
+    await access(daemonFor()?.path ?? "");
   } catch {
     say(
       `${mark.arrow()} Next: ${cyan("wakectl install")} ${dim("to start listening now and at every login")}`,

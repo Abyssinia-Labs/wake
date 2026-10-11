@@ -2,14 +2,14 @@
 
 Wake starts your coding agent when someone hands it work. Mention your
 agent in a comment, or assign it a ticket, in an app that speaks
-`wake/v1`, and Wake, running on your Mac,
+`wake/v1`, and Wake, running on your Mac or Linux machine,
 starts it in the right repository: Claude Code, Codex or Cursor, in the
 background or in a [herdr](https://herdr.dev) tab you can watch. The agent
 replies, claims the work, writes code and opens a pull request, inside a
 sandbox and on its own branch.
 
-Status: early, and in daily use. macOS only. Docs, and the apps that support Wake, are coming to
-[wakectl.dev](https://wakectl.dev).
+Status: early, and in daily use, on macOS and Linux. Docs, and the apps
+that support Wake, are at [wakectl.dev](https://wakectl.dev).
 
 ## How it works
 
@@ -24,9 +24,12 @@ Status: early, and in daily use. macOS only. Docs, and the apps that support Wak
 
 ## Requirements
 
-macOS, [Bun](https://bun.sh) 1.3.3 or later, git, and at least one of
-Claude Code (`claude`), Codex (`codex`) or Cursor (`cursor-agent`), signed
-in to the app's MCP server. `gh` for pull requests.
+macOS or Linux, [Bun](https://bun.sh) 1.3.3 or later, git, and at least
+one of Claude Code (`claude`), Codex (`codex`) or Cursor (`cursor-agent`),
+signed in to the app's MCP server. `gh` for pull requests. On Linux, also
+`bubblewrap` and `socat` for Claude Code's sandbox, and a systemd user
+session (`loginctl enable-linger $USER` keeps Wake running after you log
+out); `wakectl doctor` checks each.
 
 ## Using it
 
@@ -58,8 +61,9 @@ also has its own command:
    to confirm before approving more than ten at once: approve only what the
    app should work in.
 3. **Listen.** `wakectl install` starts the listener now and at every
-   login, as a LaunchAgent (`dev.abyssinia.wake`), with the PATH of the
-   shell you ran it from, so it finds your agents, `git` and `gh`.
+   login, as a LaunchAgent on macOS (`dev.abyssinia.wake`) or a systemd
+   user service on Linux (`wake.service`), with the PATH of the shell you
+   ran it from, so it finds your agents, `git` and `gh`.
 4. **Check.** `wakectl status` shows what is paired, connected and
    running, with the resume line for each run; `wakectl logs -f` follows
    the log; `wakectl doctor` lists anything missing, with its fix.
@@ -104,8 +108,11 @@ Wake waits for you to answer it in the tab rather than failing the run.
 `wakectl resume` goes on. `wakectl prune` removes run worktrees untouched
 for 14 days, and keeps any with uncommitted work.
 
-Place keys live in the macOS Keychain (`dev.abyssinia.wake`), never in the
-config at `~/Library/Application Support/Wake/config.json`. Its settings:
+Place keys live in the macOS Keychain or Linux's Secret Service
+(`dev.abyssinia.wake`), never in the config at
+`~/Library/Application Support/Wake/config.json` (`~/.config/wake` on
+Linux). A Linux machine with no Secret Service (a server, a container)
+keeps them in `~/.config/wake/keys.json`, readable by you alone. Its settings:
 `roots` (where to look for clones, `~/Projects` by default), `maxRuns` (2),
 `runTimeoutMinutes` (120), and `extraAllowedTools` for a run.
 

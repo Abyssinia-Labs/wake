@@ -58,7 +58,9 @@ For a repository where that difference matters, pair Claude Code.
 
 ## What stays on your machine
 
-Place keys live in the macOS Keychain, never in a file. Wake's config,
+Place keys live in the macOS Keychain or Linux's Secret Service. A Linux
+machine with none running keeps them in a file only you can read
+(`~/.config/wake/keys.json`, 0600). Wake's config,
 state and log are readable by you alone. When a run fails, the ticket says
 why only in words written to be shared; paths and command output stay in
 `wake logs`.

@@ -3,10 +3,12 @@ title: Getting started
 description: Install Wake, pair your agent, approve a repository and start the listener, in about five minutes.
 ---
 
-Wake runs on macOS. You need [Bun](https://bun.sh) 1.3.3 or later, git, the
+Wake runs on macOS and Linux. You need [Bun](https://bun.sh) 1.3.3 or later, git, the
 GitHub CLI (`gh`, signed in) for pull requests, and at least one agent:
 [Claude Code](https://claude.com/claude-code) (`claude`), Codex (`codex`) or
-Cursor's CLI (`cursor-agent`), connected to your app's MCP server.
+Cursor's CLI (`cursor-agent`), connected to your app's MCP server. On
+Linux, also `bubblewrap` and `socat` (Claude Code's sandbox needs them) and
+a systemd user session; `wake doctor` checks each, with the fix.
 
 ## Install
 

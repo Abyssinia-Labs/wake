@@ -1,34 +1,46 @@
-// The LaunchAgent and the pause switch: `install`, `uninstall`, `pause`,
-// `resume` and `logs`.
+// The listener's service (a LaunchAgent on macOS, a systemd user service on
+// Linux) and the pause switch: `install`, `uninstall`, `pause`, `resume`
+// and `logs`.
 import { mkdir, rm } from "node:fs/promises";
 import { homedir } from "node:os";
 import { dirname } from "node:path";
 import { keepPrivate, paths } from "../config";
+import { daemonFor, programArguments } from "../daemon";
 import { exec } from "../exec";
-import { load, plist, plistPath, programArguments, unload } from "../launchd";
 import { say } from "../log";
 import { colorLogLine } from "../log-colors";
 import { colorOn, cyan, dim, mark, spin, tildify } from "../ui";
 
+function service() {
+  const daemon = daemonFor();
+  if (!daemon) throw new Error(`Wake runs on macOS and Linux, not ${process.platform}.`);
+  return daemon;
+}
+
 export async function install(): Promise<void> {
   const p = paths();
+  const daemon = service();
   await keepPrivate(p);
-  const path = plistPath();
-  await mkdir(dirname(path), { recursive: true });
+  await mkdir(dirname(daemon.path), { recursive: true });
   const env: Record<string, string> = { PATH: process.env.PATH ?? "", HOME: homedir() };
-  if (process.env.WAKE_HOME) env.WAKE_HOME = process.env.WAKE_HOME;
+  for (const name of ["WAKE_HOME", "XDG_CONFIG_HOME", "XDG_STATE_HOME"]) {
+    const value = process.env[name];
+    if (value) env[name] = value;
+  }
   await Bun.write(
-    path,
-    plist({ args: programArguments(process.execPath, process.argv[1]), env, log: p.log }),
+    daemon.path,
+    daemon.file({ args: programArguments(process.execPath, process.argv[1]), env, log: p.log }),
   );
-  await spin("Starting the listener", () => load(exec, path));
+  await spin("Starting the listener", () => daemon.start(exec));
   say(`${mark.ok()} Wake is listening, and will start at every login`);
+  say(dim(`  Its ${daemon.name}: ${tildify(daemon.path)}`));
   say(dim(`  Its log: ${tildify(p.log)}. Follow it with wakectl logs -f.`));
 }
 
 export async function uninstall(): Promise<void> {
-  const stopped = await spin("Stopping the listener", () => unload(exec));
-  await rm(plistPath(), { force: true });
+  const daemon = service();
+  const stopped = await spin("Stopping the listener", () => daemon.stop(exec));
+  await rm(daemon.path, { force: true });
   say(
     stopped
       ? `${mark.ok()} Wake stopped, and won't start at login`

@@ -1,6 +1,6 @@
 {
   "name": "@abyssinia-labs/wake",
-  "version": "0.2.2",
+  "version": "0.3.0",
   "description": "Starts your coding agent when an app hands it work",
   "keywords": [
     "agents",
@@ -39,7 +39,8 @@
     "bun": ">=1.3.3"
   },
   "os": [
-    "darwin"
+    "darwin",
+    "linux"
   ],
   "scripts": {
     "wakectl": "bun src/cli.ts",

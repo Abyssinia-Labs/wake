@@ -158,7 +158,7 @@ export async function listen(): Promise<void> {
       missing.delete(domain);
       const key = await keychain.get(domain);
       if (!key) {
-        note(`No key for ${domain} in the Keychain; pair it again.`);
+        note(`No key for ${domain} on this machine; pair it again.`);
         unpaired.set(domain, app.pairedAt);
         continue;
       }

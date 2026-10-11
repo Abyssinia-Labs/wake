@@ -73,9 +73,23 @@ export type Paths = {
   log: string;
 };
 
-export function paths(): Paths {
-  const override = process.env.WAKE_HOME;
-  const home = override ?? join(homedir(), "Library", "Application Support", "Wake");
+/** Wake's folder and its log: macOS's Application Support and Logs, or Linux's XDG folders (WAK-6). */
+function homeAndLog(env: NodeJS.ProcessEnv, platform: string): { home: string; log: string } {
+  const override = env.WAKE_HOME;
+  if (override) return { home: override, log: join(override, "wake.log") };
+  if (platform === "darwin") {
+    return {
+      home: join(homedir(), "Library", "Application Support", "Wake"),
+      log: join(homedir(), "Library", "Logs", "Wake", "wake.log"),
+    };
+  }
+  const config = env.XDG_CONFIG_HOME || join(homedir(), ".config");
+  const state = env.XDG_STATE_HOME || join(homedir(), ".local", "state");
+  return { home: join(config, "wake"), log: join(state, "wake", "wake.log") };
+}
+
+export function paths(env: NodeJS.ProcessEnv = process.env, platform = process.platform): Paths {
+  const { home, log } = homeAndLog(env, platform);
   return {
     home,
     config: join(home, "config.json"),
@@ -86,7 +100,7 @@ export function paths(): Paths {
     asked: join(home, "asked-repos.json"),
     history: join(home, "runs.json"),
     rooms: join(home, "rooms"),
-    log: override ? join(home, "wake.log") : join(homedir(), "Library", "Logs", "Wake", "wake.log"),
+    log,
   };
 }
 
@@ -188,6 +202,8 @@ export async function keepPrivate(p: Paths): Promise<void> {
   await Promise.all([
     quietly(p.home, 0o700),
     quietly(dirname(p.log), 0o700),
-    ...[p.log, p.config, p.state, p.made, p.history].map((path) => quietly(path, 0o600)),
+    ...[p.log, p.config, p.state, p.made, p.history, join(p.home, "keys.json")].map((path) =>
+      quietly(path, 0o600),
+    ),
   ]);
 }

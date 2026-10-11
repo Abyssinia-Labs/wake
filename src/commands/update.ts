@@ -4,8 +4,8 @@
 import { readFile } from "node:fs/promises";
 import pkg from "../../package.json";
 import { paths } from "../config";
+import { daemonFor } from "../daemon";
 import { type Exec, exec } from "../exec";
-import { LABEL, plistPath } from "../launchd";
 import { say } from "../log";
 import { isAlive, readState } from "../state";
 import { bold, cyan, dim, mark, spin, tildify } from "../ui";
@@ -44,9 +44,11 @@ export async function latestVersion(fetcher: typeof fetch = fetch): Promise<stri
 
 /** Restarts the listener when it runs this install and nothing is running; says what it did. */
 async function restartListener(run: Exec, script: string): Promise<void> {
+  const daemon = daemonFor();
   let plist = "";
   try {
-    plist = await readFile(plistPath(), "utf8");
+    if (!daemon) throw new Error("no service on this platform");
+    plist = await readFile(daemon.path, "utf8");
   } catch {
     say(dim(`  The listener isn't installed: ${cyan("wakectl install")} starts it.`));
     return;
@@ -69,9 +71,10 @@ async function restartListener(run: Exec, script: string): Promise<void> {
     );
     return;
   }
-  await spin("Restarting the listener", () =>
-    run(["launchctl", "kickstart", "-k", `gui/${process.getuid?.() ?? 0}/${LABEL}`]),
-  );
+  await spin("Restarting the listener", async () => {
+    if (daemon && !(await daemon.restart(run)))
+      throw new Error(`Couldn't restart its ${daemon.name}.`);
+  });
   say(`${mark.ok()} The listener runs the new version`);
 }
 

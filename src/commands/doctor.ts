@@ -2,9 +2,9 @@
 // checks and the flow themselves live in doctor.ts and setup.ts.
 import { existsSync } from "node:fs";
 import { loadConfig, paths } from "../config";
+import { daemonFor } from "../daemon";
 import { machineChecks, type Probe, realProbe, wakeChecks } from "../doctor";
 import { exec } from "../exec";
-import { plistPath } from "../launchd";
 import { say } from "../log";
 import { terminalIo } from "../prompt";
 import { isAlive, readState } from "../state";
@@ -17,7 +17,7 @@ async function probe(): Promise<Probe> {
   const p = paths();
   const state = await readState(p.state);
   return realProbe({
-    plist: plistPath(),
+    plist: daemonFor()?.path ?? "",
     listener: state && isAlive(state.pid) ? state.pid : null,
     paused: existsSync(p.paused),
   });

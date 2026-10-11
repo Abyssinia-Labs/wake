@@ -26,6 +26,10 @@ export const SECRETS = [
   "~/.cursor",
   "~/Library/Keychains",
   "~/Library/Application Support/Wake",
+  // Linux (WAK-6): the keyring, and Wake's own folder and log.
+  "~/.local/share/keyrings",
+  "~/.config/wake",
+  "~/.local/state/wake",
 ];
 
 /** Where sandboxed commands may connect: git hosting and the npm registry. */

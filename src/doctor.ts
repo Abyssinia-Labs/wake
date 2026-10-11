@@ -5,6 +5,7 @@
 import { existsSync } from "node:fs";
 import type { Config } from "./config";
 import { AGENT_TOOLS, type AgentTool } from "./contract";
+import { linuxChecks } from "./doctor-linux";
 import type { Exec } from "./exec";
 import { programOf, TOOL_NAMES, toolInstalled } from "./tools";
 import { someOf, tildify } from "./ui";
@@ -48,10 +49,13 @@ async function has(run: Exec, program: string): Promise<boolean> {
 
 export async function machineChecks(run: Exec, probe: Probe): Promise<Check[]> {
   const checks: Check[] = [];
+  const linux = probe.platform === "linux";
   checks.push(
     probe.platform === "darwin"
       ? { level: "ok", what: "macOS" }
-      : { level: "fail", what: "macOS", detail: "Wake runs on macOS only, for now." },
+      : linux
+        ? { level: "ok", what: "Linux" }
+        : { level: "fail", what: probe.platform, detail: "Wake runs on macOS and Linux." },
   );
   checks.push(
     bunNewEnough(probe.bunVersion)
@@ -66,14 +70,18 @@ export async function machineChecks(run: Exec, probe: Probe): Promise<Check[]> {
   checks.push(
     (await has(run, "git"))
       ? { level: "ok", what: "git" }
-      : { level: "fail", what: "git", fix: "xcode-select --install" },
+      : {
+          level: "fail",
+          what: "git",
+          fix: linux ? "sudo apt install git" : "xcode-select --install",
+        },
   );
   if (!(await has(run, "gh"))) {
     checks.push({
       level: "warn",
       what: "GitHub CLI",
       detail: "Runs open pull requests with gh.",
-      fix: "brew install gh",
+      fix: linux ? "https://cli.github.com" : "brew install gh",
     });
   } else {
     const auth = await run(["gh", "auth", "status"]);
@@ -100,6 +108,7 @@ export async function machineChecks(run: Exec, probe: Probe): Promise<Check[]> {
       ? { level: "info", what: "herdr", detail: "Runs can open as tabs: wakectl mode herdr" }
       : { level: "info", what: "herdr not installed", detail: "Runs stay in the background." },
   );
+  if (linux) checks.push(...(await linuxChecks(run)));
   return checks;
 }
 

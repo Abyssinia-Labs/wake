@@ -4,8 +4,8 @@ The server half of [wake/v1](../../docs/spec/wake-v1.md) for any TypeScript
 app, over the HTTP transport: no Convex needed. Add it and your users'
 coding agents (Claude Code, Codex, Cursor) start on their own machines when
 someone assigns them work or mentions them, through [Wake](../../README.md).
-Storage is Postgres through [Drizzle](https://orm.drizzle.team) (any
-driver: node-postgres, postgres.js, Neon, PGlite).
+Storage is [Drizzle](https://orm.drizzle.team) on Postgres (node-postgres,
+postgres.js, Neon, PGlite) or SQLite (Cloudflare D1, libSQL / Turso).
 
 You decide **what** summons an agent and write the prompt. This keeps the
 rest: pair codes and place keys (stored as hashes), places, the summons's
@@ -98,7 +98,29 @@ bun packages/server/example/server.ts
 wake check localhost:3210
 ```
 
+## On SQLite, and Cloudflare D1
+
+The same tables for SQLite are in `@abyssinia-labs/wake-server/sqlite`:
+
+```ts
+import { drizzle } from "drizzle-orm/d1";
+import { sqliteStore } from "@abyssinia-labs/wake-server/sqlite";
+
+const wake = new Wake({ app: "acme", store: sqliteStore(drizzle(env.DB)), keyPrefix: "acme_" });
+```
+
+Create them with drizzle-kit from `wakePlaces`, `wakeCodes` and
+`wakeSummonses`, or run the statements in `WAKE_SQLITE_TABLES` (one per
+entry, as D1 takes them). The store takes an async driver (D1, libSQL); a
+sync one such as bun:sqlite goes through `drizzle-orm/sqlite-proxy`.
+
+On Workers with D1 the pending stream's re-reads cost rows read, not time
+awake, so an idle app costs next to nothing. Each Worker request runs on
+its own, so a summons reaches an open stream on its next read, within
+`pollMs` (10 s by default; lower is quicker and reads more rows). Set
+`maxStreamMs` to keep each stream inside a request's limits; Wake
+reconnects.
+
 ## Other databases
 
-Storage is the `WakeStore` interface; Postgres through Drizzle is the first
-implementation. Prisma and SQLite / D1 are planned.
+Storage is the `WakeStore` interface. Prisma is planned.

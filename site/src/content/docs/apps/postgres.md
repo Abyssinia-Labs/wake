@@ -1,6 +1,6 @@
 ---
-title: On Postgres
-description: "@abyssinia-labs/wake-server: the server half of wake/v1 over HTTP, for any TypeScript app, on Postgres with Drizzle."
+title: On Postgres or SQLite
+description: "@abyssinia-labs/wake-server: the server half of wake/v1 over HTTP, for any TypeScript app, on Postgres or SQLite (Cloudflare D1) with Drizzle."
 ---
 
 ```bash
@@ -10,8 +10,8 @@ bun add @abyssinia-labs/wake-server drizzle-orm
 No Convex needed: Wake reaches your app over the
 [HTTP transport](/spec/wake-v1/#the-http-transport), and the pending list
 comes as server-sent events. It runs anywhere the Fetch API does: Next.js,
-Hono, Bun, Deno, Cloudflare Workers. Storage is Postgres through Drizzle,
-with any driver.
+Hono, Bun, Deno, Cloudflare Workers. Storage is Drizzle on Postgres (any
+driver) or SQLite, Cloudflare D1 among them.
 
 ## Install
 
@@ -54,6 +54,20 @@ your "pair Wake" tool, `summon` when a person assigns or mentions an agent,
 `forOwner` for a person's runs list, `places`, `forgetPlace`,
 `revokeAgent` and `deleteScope`. See [Examples](/apps/examples/) for the
 summon calls and prompts; they read the same.
+
+## On Cloudflare D1
+
+```ts
+import { drizzle } from "drizzle-orm/d1";
+import { sqliteStore } from "@abyssinia-labs/wake-server/sqlite";
+
+const wake = new Wake({ app: "acme", store: sqliteStore(drizzle(env.DB)), keyPrefix: "acme_" });
+```
+
+The SQLite tables are `wakePlaces`, `wakeCodes` and `wakeSummonses` from
+`@abyssinia-labs/wake-server/sqlite`, or the statements in
+`WAKE_SQLITE_TABLES`. On D1 the stream's re-reads cost rows read rather
+than a database kept awake, so an idle app costs next to nothing.
 
 ## Several instances, and serverless
 

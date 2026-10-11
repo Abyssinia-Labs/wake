@@ -9,6 +9,8 @@
   "compatibility_flags": ["nodejs_compat"],
   "routes": [{ "pattern": "github.wakectl.dev", "custom_domain": true }],
   "observability": { "enabled": true },
+  // A pending stream re-reads D1 every 10 s for two minutes; give it room. Paid plan only.
+  "limits": { "cpu_ms": 60000 },
   "vars": {
     "ORIGIN": "https://github.wakectl.dev",
     "GITHUB_APP_ID": "5275945",

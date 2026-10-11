@@ -1,11 +1,17 @@
 // The bridge as one Fetch handler (WAK-4), so it runs on Workers, Bun or
 // Node alike: wake/v1 over HTTP for Wake, GitHub's webhook, and the pages
-// to install the app and pair. Storage is any Drizzle Postgres database.
-import { discovery, pairCommand, type Tool, Wake, wakeHandler } from "@abyssinia-labs/wake-server";
-import { drizzleStore } from "@abyssinia-labs/wake-server/drizzle";
-import type { PgDatabase, PgQueryResultHKT } from "drizzle-orm/pg-core";
+// to install the app and pair. Storage is wake-server's store and the
+// bridge's own table, on Postgres (db.ts) or SQLite / D1 (db-sqlite.ts).
+import {
+  discovery,
+  pairCommand,
+  type Tool,
+  Wake,
+  type WakeStore,
+  wakeHandler,
+} from "@abyssinia-labs/wake-server";
 import { agentId, ownerId, TOOL_NAMES, TOOLS } from "./commands";
-import { asksIn } from "./db";
+import type { Asks } from "./db";
 import { gitHub } from "./github";
 import { githubHooks } from "./hooks";
 import { signIn, signInCallback } from "./oauth";
@@ -29,16 +35,16 @@ export type BridgeConfig = {
   maxStreamMs?: number;
 };
 
-export function createBridge<H extends PgQueryResultHKT, S extends Record<string, unknown>>(
-  db: PgDatabase<H, S>,
+export function createBridge(
+  storage: { store: WakeStore; asks: Asks },
   config: BridgeConfig,
   fetcher: typeof fetch = fetch,
 ): (req: Request) => Promise<Response> {
   const github = gitHub({ appId: config.appId, privateKey: config.privateKey }, fetcher);
-  const asks = asksIn(db);
+  const { asks } = storage;
   const wake = new Wake({
     app: "github",
-    store: drizzleStore(db),
+    store: storage.store,
     keyPrefix: "ghw_",
     hooks: githubHooks(asks, github),
   });

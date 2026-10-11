@@ -168,6 +168,7 @@ async function runOne(
       extraAllowedTools: o.config.extraAllowedTools,
       timeoutMs: o.config.runTimeoutMinutes * 60_000,
       name: `${summons.target.ref} · ${name}`,
+      runName: name,
       permissionMode: o.config.permissionMode,
       trustFolder: o.config.trustCodexWorktrees,
       ...(o.onEvent ? { onEvent: o.onEvent } : {}),

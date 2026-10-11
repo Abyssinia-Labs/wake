@@ -48,6 +48,14 @@ describe("claudeArgs", () => {
     expect(rules).not.toContain("comment where you were asked that you are on it");
   });
 
+  test("what it posts under its person's name is signed with its tool, model and run, without a link", () => {
+    const args = claudeArgs({ ...base, runName: "swift-hare" });
+    const rules = args[args.indexOf("--append-system-prompt") + 1] ?? "";
+    expect(rules).toContain("appears under their name");
+    expect(rules).toContain("via Wake · run swift-hare");
+    expect(rules).toContain("Don't add a link.");
+  });
+
   test("a repository run is told to run gh on its own, never chained into the sandbox", () => {
     const args = claudeArgs({ ...base, defaultBranch: "main" });
     const rules = args[args.indexOf("--append-system-prompt") + 1] ?? "";

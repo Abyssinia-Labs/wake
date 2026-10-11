@@ -1,0 +1,26 @@
+{
+  // Wake for GitHub (WAK-17): the bridge as a Worker on D1, at github.wakectl.dev.
+  // Secrets, set with `wrangler secret put`: GITHUB_PRIVATE_KEY,
+  // GITHUB_WEBHOOK_SECRET, GITHUB_CLIENT_SECRET, SESSION_SECRET.
+  "name": "wake-github",
+  "account_id": "4dbe2f5a98e644ac83bf962020b4acca",
+  "main": "src/worker.ts",
+  "compatibility_date": "2026-10-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "routes": [{ "pattern": "github.wakectl.dev", "custom_domain": true }],
+  "observability": { "enabled": true },
+  "vars": {
+    "ORIGIN": "https://github.wakectl.dev",
+    "GITHUB_APP_ID": "5275945",
+    "GITHUB_APP_SLUG": "wake-for-github",
+    "GITHUB_CLIENT_ID": "Iv23liTSszZG3bWXueeD"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "wake-github",
+      "database_id": "0f525296-636f-401c-ac51-f5f4d5a60b16",
+      "migrations_dir": "migrations"
+    }
+  ]
+}

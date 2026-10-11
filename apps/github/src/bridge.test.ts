@@ -3,11 +3,11 @@
 // GitHub that answers from a script.
 import { expect, test } from "bun:test";
 import { generateKeyPairSync } from "node:crypto";
-import { WAKE_TABLES_SQL } from "@abyssinia-labs/wake-server/drizzle";
+import { drizzleStore, WAKE_TABLES_SQL } from "@abyssinia-labs/wake-server/drizzle";
 import { PGlite } from "@electric-sql/pglite";
 import { drizzle } from "drizzle-orm/pglite";
 import { type BridgeConfig, createBridge } from "./app";
-import { GITHUB_TABLES_SQL } from "./db";
+import { asksIn, GITHUB_TABLES_SQL } from "./db";
 import { sessionCookie } from "./session";
 import { signatureOf } from "./signature";
 
@@ -51,7 +51,12 @@ async function bench(permission = "write") {
       return Response.json({ head: { ref: "fix-login", repo: { full_name: "someone/fork" } } });
     return new Response(null, { status: 200 });
   };
-  const bridge = createBridge(drizzle(client), config, fake as typeof fetch);
+  const db = drizzle(client);
+  const bridge = createBridge(
+    { store: drizzleStore(db), asks: asksIn(db) },
+    config,
+    fake as typeof fetch,
+  );
   const signed = await sessionCookie(config.sessionSecret, ada);
   const hook = async (event: string, payload: object) => {
     const body = JSON.stringify({

@@ -8,13 +8,16 @@
   "scripts": {
     "dev": "bun src/dev.ts",
     "typecheck": "tsc --noEmit",
-    "test": "bun test"
+    "test": "bun test",
+    "deploy": "bun run --cwd ../../packages/server build && wrangler deploy"
   },
   "dependencies": {
     "@abyssinia-labs/wake-server": "workspace:*",
     "drizzle-orm": "0.45.4"
   },
   "devDependencies": {
-    "@electric-sql/pglite": "0.5.8"
+    "@electric-sql/pglite": "0.5.8",
+    "@cloudflare/workers-types": "5.20260926.1",
+    "wrangler": "4.141.0"
   }
 }

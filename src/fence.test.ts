@@ -35,6 +35,18 @@ describe("a repository run", () => {
     expect(allowed).toContain("mcp__gatherd");
   });
 
+  test("answers on an issue or a pull request, and reads them, but never with gh api", () => {
+    for (const rule of [
+      "Bash(gh issue view *)",
+      "Bash(gh issue comment *)",
+      "Bash(gh pr comment *)",
+      "Bash(gh pr diff *)",
+    ]) {
+      expect(allowed).toContain(rule);
+    }
+    expect(denied).toContain("Bash(gh api *)");
+  });
+
   test("the ways out it knows of are denied, the person's credentials above all", () => {
     for (const rule of [
       "Bash(gh pr merge *)",

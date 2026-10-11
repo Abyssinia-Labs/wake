@@ -23,6 +23,8 @@ test("an issue: its own branch, the gh commands to read it, and Closes on the PR
   });
   expect(ask.prompt).toContain("gh issue view 12 --repo acme/widgets --comments");
   expect(ask.prompt).toContain("`Closes #12`");
+  expect(ask.prompt).toContain("Run each gh command on its own");
+  expect(ask.prompt).not.toContain("gh api");
   expect(ask.prompt).not.toContain("Login redirects");
 });
 
@@ -37,7 +39,7 @@ test("review feedback works on the pull request's own branch", () => {
     comment: {
       id: 7,
       url: "https://github.com/acme/widgets/pull/13#discussion_r7",
-      api: "repos/acme/widgets/pulls/comments/7",
+      line: "src/login.ts:42",
     },
   });
   expect(ask).toMatchObject({
@@ -45,7 +47,9 @@ test("review feedback works on the pull request's own branch", () => {
     branch: "fix-login",
     target: { kind: "pull_request" },
   });
-  expect(ask.prompt).toContain("gh api repos/acme/widgets/pulls/comments/7");
+  expect(ask.prompt).toContain("gh pr diff 13 --repo acme/widgets");
+  expect(ask.prompt).toContain("a review comment on src/login.ts:42");
+  expect(ask.prompt).not.toContain("gh api");
   expect(ask.prompt).toContain("Never merge, never force-push");
 });
 

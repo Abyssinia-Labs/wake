@@ -62,12 +62,13 @@ export function rules(
     lines.push(
       // --setting-sources user leaves the project's memory out with its settings.
       "Wake doesn't load this repository's CLAUDE.md or .claude/rules for you: read them first, if it has them, and work by them.",
-      "Shell commands run in a sandbox: they write only in this worktree and reach only GitHub and npm. git push, git fetch and gh run outside it.",
+      // The first GitHub run (2026-10-11) chained `gh issue view 1; ls`, which ran sandboxed and couldn't read gh's sign-in.
+      "Shell commands run in a sandbox: they write only in this worktree and reach only GitHub and npm. git push, git fetch and gh run outside it, but only as a command of their own: chained with others (`gh issue view 1; ls`), the whole line runs inside the sandbox, where gh can't read its sign-in. Run each git push, git fetch and gh command on its own.",
     );
   }
   if (o.defaultBranch && o.tool === "cursor") {
     lines.push(
-      "Shell commands run in a sandbox with no network that writes only in this worktree. git push for your branch, git fetch and gh's pull request commands run outside it.",
+      "Shell commands run in a sandbox with no network that writes only in this worktree. git push for your branch, git fetch, and gh's issue and pull request commands run outside it, each only as a command of its own, never chained with others.",
     );
   }
   if (o.defaultBranch) {

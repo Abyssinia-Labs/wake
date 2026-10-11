@@ -47,9 +47,10 @@ installation, so uninstalling the app deletes its summonses.
 
 `github-app.json` is its settings, for GitHub's
 [manifest flow](https://docs.github.com/en/apps/sharing-github-apps/registering-a-github-app-from-a-manifest):
-Issues read and write (reactions and the status comment), Pull requests and
-Metadata read; events: issues, issue comments, pull requests, reviews and
-review comments.
+Issues and Pull requests read and write (reactions, and the status comment
+on an issue or a pull request's conversation), Metadata read; events:
+issues, issue comments, pull requests, reviews and review comments. Its
+logo is `assets/github-app-logo.png` (512 px, on `#F4EFE4`).
 
 | Setting | Where it comes from |
 | --- | --- |

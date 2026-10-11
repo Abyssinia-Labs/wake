@@ -7,9 +7,7 @@
     "active": true
   },
   "redirect_url": "https://github.wakectl.dev/auth/callback",
-  "callback_urls": [
-    "https://github.wakectl.dev/auth/callback"
-  ],
+  "callback_urls": ["https://github.wakectl.dev/auth/callback"],
   "public": true,
   "request_oauth_on_install": false,
   "default_permissions": {

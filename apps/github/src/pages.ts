@@ -3,13 +3,13 @@
 import type { PlaceView, Tool } from "@abyssinia-labs/wake-server";
 import { TOOL_NAMES, TOOLS } from "./commands";
 
-const esc = (text: string): string =>
+export const esc = (text: string): string =>
   text.replace(
     /[&<>"']/g,
     (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c] ?? c,
   );
 
-function page(title: string, body: string): Response {
+export function page(title: string, body: string): Response {
   const html = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>${esc(title)}</title><style>
 :root{--paper:#f4efe4;--card:#fffcf5;--ink:#14213d;--a:#0078bf;--b:#ff7477}

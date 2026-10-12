@@ -89,6 +89,8 @@ export interface WakeStore {
   summonsesOf(agent: string, state: State, limit: number): Promise<SummonsRow[]>;
   /** An owner's, newest change first. */
   summonsesOwnedBy(owner: string, limit: number): Promise<SummonsRow[]>;
+  /** A scope's (a tenant's), newest change first, for its audit. */
+  summonsesInScope(scope: string, limit: number): Promise<SummonsRow[]>;
   /**
    * Patches it only while its state is one of `from` (and, given, its place
    * is `place`), in one statement, so two claims can't both win. Answers

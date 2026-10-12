@@ -13,7 +13,8 @@
   "default_permissions": {
     "issues": "write",
     "pull_requests": "write",
-    "metadata": "read"
+    "metadata": "read",
+    "members": "read"
   },
   "default_events": [
     "issues",

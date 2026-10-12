@@ -8,6 +8,7 @@ import { PGlite } from "@electric-sql/pglite";
 import { drizzle } from "drizzle-orm/pglite";
 import { type BridgeConfig, createBridge } from "./app";
 import { asksIn, GITHUB_TABLES_SQL } from "./db";
+import { GITHUB_KV_SQL, kvInPg } from "./kv";
 import { sessionCookie } from "./session";
 import { signatureOf } from "./signature";
 
@@ -29,7 +30,7 @@ const repository = { id: 42, full_name: "acme/widgets" };
 
 async function bench(permission = "write") {
   const client = new PGlite();
-  await client.exec(WAKE_TABLES_SQL + GITHUB_TABLES_SQL);
+  await client.exec(WAKE_TABLES_SQL + GITHUB_TABLES_SQL + GITHUB_KV_SQL);
   const github: { method: string; path: string; body?: unknown }[] = [];
   const fake = async (input: string | URL | Request, init?: RequestInit): Promise<Response> => {
     const url = new URL(String(input));
@@ -53,7 +54,7 @@ async function bench(permission = "write") {
   };
   const db = drizzle(client);
   const bridge = createBridge(
-    { store: drizzleStore(db), asks: asksIn(db) },
+    { store: drizzleStore(db), asks: asksIn(db), kv: kvInPg(db) },
     config,
     fake as typeof fetch,
   );

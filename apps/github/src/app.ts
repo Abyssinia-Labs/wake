@@ -14,7 +14,9 @@ import { agentId, ownerId, TOOL_NAMES, TOOLS } from "./commands";
 import type { Asks } from "./db";
 import { gitHub } from "./github";
 import { githubHooks } from "./hooks";
+import type { Kv } from "./kv";
 import { signIn, signInCallback } from "./oauth";
+import { orgPage } from "./org";
 import { home, notFound, pairPage } from "./pages";
 import { type Obj, obj } from "./payload";
 import { sessionOf, signedOut } from "./session";
@@ -33,15 +35,17 @@ export type BridgeConfig = {
   sessionSecret: string;
   /** For hosts with a request time limit: end each pending stream sooner. */
   maxStreamMs?: number;
+  /** The Marketplace listing's webhook secret, when it isn't the app's (WAK-22). */
+  marketplaceSecret?: string;
 };
 
 export function createBridge(
-  storage: { store: WakeStore; asks: Asks },
+  storage: { store: WakeStore; asks: Asks; kv: Kv },
   config: BridgeConfig,
   fetcher: typeof fetch = fetch,
 ): (req: Request) => Promise<Response> {
   const github = gitHub({ appId: config.appId, privateKey: config.privateKey }, fetcher);
-  const { asks } = storage;
+  const { asks, kv } = storage;
   const wake = new Wake({
     app: "github",
     store: storage.store,
@@ -59,14 +63,15 @@ export function createBridge(
     }
     if (req.method === "POST" && url.pathname === "/github/webhook") {
       const body = await req.text();
-      if (
-        !(await signedByGitHub(config.webhookSecret, body, req.headers.get("x-hub-signature-256")))
-      ) {
-        return new Response("Bad signature", { status: 401 });
-      }
+      const signature = req.headers.get("x-hub-signature-256");
+      const signed =
+        (await signedByGitHub(config.webhookSecret, body, signature)) ||
+        (config.marketplaceSecret !== undefined &&
+          (await signedByGitHub(config.marketplaceSecret, body, signature)));
+      if (!signed) return new Response("Bad signature", { status: 401 });
       const payload: unknown = JSON.parse(body);
       const handled = await handleEvent(
-        { wake, asks, github, origin: config.origin },
+        { wake, asks, github, kv, origin: config.origin },
         req.headers.get("x-github-event") ?? "",
         obj(payload) ?? ({} as Obj),
       );
@@ -81,6 +86,11 @@ export function createBridge(
       });
     }
     const who = await sessionOf(config.sessionSecret, req);
+    const org = url.pathname.match(/^\/org\/([A-Za-z0-9-]{1,39})\/?$/)?.[1];
+    if (org) {
+      if (!who) return Response.redirect(`${config.origin}/auth/login`, 303);
+      return await orgPage({ wake, asks, github, kv, origin: config.origin }, req, who, org);
+    }
     if (url.pathname === "/pair") {
       if (!who) return Response.redirect(`${config.origin}/auth/login`, 303);
       let code: { tool: Tool; command: string } | undefined;

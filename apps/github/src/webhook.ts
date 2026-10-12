@@ -7,16 +7,32 @@ import { askFor, subjectOf, type Work } from "./asks";
 import { type Asked, agentId, askedByLabel, askedInText, ownerId, TOOLS } from "./commands";
 import type { Asks } from "./db";
 import { canPush, type GitHub } from "./github";
+import type { Kv } from "./kv";
 import { installationOf, issueOf, num, type Obj, obj, personOf, repoOf, str } from "./payload";
+import { handlePurchase, keepAccount, planOf } from "./plans";
+import { policyOf, refusal } from "./policy";
 
-export type Bridge = { wake: Wake; asks: Asks; github: GitHub; origin: string };
+export type Bridge = { wake: Wake; asks: Asks; github: GitHub; kv: Kv; origin: string };
 
 /** What the bridge did with an event, for its log and its tests. */
 export type Handled = { did: string; summons?: string };
 
 export async function handleEvent(b: Bridge, event: string, payload: Obj): Promise<Handled> {
+  // Marketplace's events name the account, not an installation (WAK-22).
+  if (event === "marketplace_purchase") return { did: await handlePurchase(b.kv, payload) };
   const installation = installationOf(payload);
   const action = str(payload.action);
+  const account = obj(obj(payload.installation)?.account);
+  const accountId = num(account?.id);
+  const accountLogin = str(account?.login);
+  if (installation !== null && accountId !== null && accountLogin) {
+    await keepAccount(b.kv, {
+      id: accountId,
+      login: accountLogin,
+      type: str(account?.type) === "User" ? "User" : "Organization",
+      installation,
+    });
+  }
   if (event === "installation" && action === "deleted" && installation !== null) {
     let done = false;
     while (!done) ({ done } = await b.wake.deleteScope(String(installation)));
@@ -25,6 +41,7 @@ export async function handleEvent(b: Bridge, event: string, payload: Obj): Promi
   const repo = repoOf(payload.repository);
   const sender = personOf(payload.sender);
   if (installation === null || !repo) return { did: "ignored" };
+  if (repo.owner) await keepAccount(b.kv, { ...repo.owner, installation });
 
   if ((event === "issues" || event === "pull_request") && action === "closed") {
     const number = num(obj(payload.issue ?? payload.pull_request)?.number);
@@ -64,6 +81,7 @@ export async function handleEvent(b: Bridge, event: string, payload: Obj): Promi
       sender,
       asked,
       `/repos/${repo.fullName}/issues/${issue.number}`,
+      repo.owner?.id,
     );
   }
 
@@ -82,7 +100,15 @@ export async function handleEvent(b: Bridge, event: string, payload: Obj): Promi
     comment,
   };
   if (!issue.isPull) {
-    return await summon(b, installation, { kind: "issue", ...base }, sender, asked, comment.react);
+    return await summon(
+      b,
+      installation,
+      { kind: "issue", ...base },
+      sender,
+      asked,
+      comment.react,
+      repo.owner?.id,
+    );
   }
   // Review feedback is worked on the pull request's own branch, which must be in this repository.
   const pr = obj(payload.pull_request)
@@ -107,6 +133,7 @@ export async function handleEvent(b: Bridge, event: string, payload: Obj): Promi
     sender,
     asked,
     comment.react,
+    repo.owner?.id,
   );
 }
 
@@ -167,10 +194,26 @@ async function summon(
   sender: { id: number; login: string },
   asked: Asked,
   react: string,
+  owner?: number,
 ): Promise<Handled> {
-  if (!canPush(await b.github.permission(installation, work.repo, sender.login))) {
+  const permission = await b.github.permission(installation, work.repo, sender.login);
+  if (!canPush(permission)) {
     await b.github.react(installation, react, "confused");
     return { did: "refused: can't push" };
+  }
+  // On Team, the organisation's policy decides which repositories and who (WAK-23).
+  if (owner !== undefined && (await planOf(b.kv, owner)).name === "team") {
+    const why = refusal(await policyOf(b.kv, owner), work.repo, permission);
+    if (why) {
+      await b.github.react(installation, react, "confused");
+      await b.github.comment(
+        installation,
+        work.repo,
+        work.number,
+        `@${sender.login}: Wake didn't start, because ${why}.`,
+      );
+      return { did: "refused: policy" };
+    }
   }
   const tool = await agentFor(b.wake, sender.id, asked);
   if (!tool) {

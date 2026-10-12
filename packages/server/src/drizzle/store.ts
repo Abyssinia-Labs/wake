@@ -104,6 +104,15 @@ export function drizzleStore<H extends PgQueryResultHKT, S extends Record<string
         .limit(limit);
       return rows.map(summons);
     },
+    async summonsesInScope(scope, limit) {
+      const rows = await db
+        .select()
+        .from(wakeSummonses)
+        .where(eq(wakeSummonses.scope, scope))
+        .orderBy(desc(wakeSummonses.updatedAt))
+        .limit(limit);
+      return rows.map(summons);
+    },
     async moveSummons(id, from: readonly State[], patch: SummonsPatch, placeId?: string) {
       const [row] = await db
         .update(wakeSummonses)

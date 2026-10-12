@@ -128,6 +128,21 @@ for (const kind of STORES) {
       expect((await wake.forSubject("ticket-1"))[0]).toMatchObject({ state: "dropped" });
     });
 
+    test("a scope's summonses, every state, newest first, for its audit", async () => {
+      const { wake, advance } = await testWake(kind);
+      await wake.summon(ask());
+      advance(1000);
+      await wake.summon(ask({ subject: "ticket-2", askedBy: "bo" }));
+      advance(1000);
+      await wake.summon(ask({ subject: "ticket-3", scope: "w2" }));
+      await wake.settle({ subject: "ticket-1", state: "dropped", reason: "Closed." });
+      const audit = await wake.forScope({ scope: "w1" });
+      expect(audit.map((one) => [one.subject, one.state])).toEqual([
+        ["ticket-1", "dropped"],
+        ["ticket-2", "asking"],
+      ]);
+    });
+
     test("a person's runs, newest first, in a scope; a deleted scope keeps nothing", async () => {
       const { wake, advance } = await testWake(kind);
       const key = await pairedKey(wake);

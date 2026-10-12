@@ -8,6 +8,7 @@ import type { D1Database } from "@cloudflare/workers-types";
 import { drizzle } from "drizzle-orm/d1";
 import { createBridge } from "./app";
 import { asksInSqlite } from "./db-sqlite";
+import { kvInSqlite } from "./kv";
 
 type Env = {
   DB: D1Database;
@@ -19,6 +20,8 @@ type Env = {
   GITHUB_WEBHOOK_SECRET: string;
   GITHUB_CLIENT_SECRET: string;
   SESSION_SECRET: string;
+  /** The Marketplace listing's webhook secret, once it has a listing (WAK-22). */
+  MARKETPLACE_WEBHOOK_SECRET?: string;
 };
 
 const SECRETS = [
@@ -39,7 +42,7 @@ export default {
     if (!bridge) {
       const db = drizzle(env.DB);
       bridge = createBridge(
-        { store: sqliteStore(db), asks: asksInSqlite(db) },
+        { store: sqliteStore(db), asks: asksInSqlite(db), kv: kvInSqlite(db) },
         {
           origin: env.ORIGIN,
           appId: env.GITHUB_APP_ID,
@@ -51,6 +54,9 @@ export default {
           sessionSecret: env.SESSION_SECRET,
           // Each stream ends after two minutes; Wake reconnects. Its re-reads are rows read on D1.
           maxStreamMs: 120_000,
+          ...(env.MARKETPLACE_WEBHOOK_SECRET
+            ? { marketplaceSecret: env.MARKETPLACE_WEBHOOK_SECRET }
+            : {}),
         },
       );
     }

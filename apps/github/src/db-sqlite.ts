@@ -34,5 +34,8 @@ export function asksInSqlite<R, S extends Record<string, unknown>>(
         .set({ statusComment: id })
         .where(eq(githubAsksSqlite.summons, summons));
     },
+    async forgetInstallation(installation) {
+      await db.delete(githubAsksSqlite).where(eq(githubAsksSqlite.installation, installation));
+    },
   };
 }

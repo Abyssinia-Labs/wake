@@ -36,6 +36,7 @@ export async function handleEvent(b: Bridge, event: string, payload: Obj): Promi
   if (event === "installation" && action === "deleted" && installation !== null) {
     let done = false;
     while (!done) ({ done } = await b.wake.deleteScope(String(installation)));
+    await b.asks.forgetInstallation(installation);
     return { did: "forgot the installation" };
   }
   const repo = repoOf(payload.repository);

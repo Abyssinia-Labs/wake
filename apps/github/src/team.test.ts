@@ -62,11 +62,8 @@ async function bench() {
   };
   const db = drizzle(client);
   const kv = kvInPg(db);
-  const bridge = createBridge(
-    { store: drizzleStore(db), asks: asksIn(db), kv },
-    config,
-    fake as typeof fetch,
-  );
+  const asks = asksIn(db);
+  const bridge = createBridge({ store: drizzleStore(db), asks, kv }, config, fake as typeof fetch);
   const hook = async (event: string, payload: object, secret = config.webhookSecret) => {
     const body = JSON.stringify(payload);
     const res = await bridge(
@@ -83,7 +80,7 @@ async function bench() {
   };
   const as = async (who: { id: number; login: string }) =>
     (await sessionCookie(config.sessionSecret, who)).split(";")[0] ?? "";
-  return { bridge, hook, as, kv, github };
+  return { bridge, hook, as, kv, asks, github };
 }
 
 const purchase = (action: string, plan: { name: string; monthly_price_in_cents: number }) => ({
@@ -173,7 +170,14 @@ test("on Team, admins set a policy, it refuses what it leaves out, and the audit
     sender,
     issue,
   };
-  expect(await b.hook("issues", labeled)).toMatchObject({ did: "summoned" });
+  const first = await b.hook("issues", labeled);
+  expect(first).toMatchObject({ did: "summoned" });
+  const summons = String((first as { summons?: string }).summons);
+  expect(await b.asks.get(summons)).toMatchObject({
+    repo: "acme/widgets",
+    number: 12,
+    asker: "ada",
+  });
 
   const saved = await b.bridge(
     new Request(`${ORIGIN}/org/acme`, {
@@ -201,4 +205,18 @@ test("on Team, admins set a policy, it refuses what it leaves out, and the audit
   expect(page).toContain("acme/widgets#12");
   expect(page).toContain("@ada");
   expect(page).toContain("acme/other</textarea>");
+
+  // Uninstalling forgets the installation's summonses and which issues they were about.
+  expect(
+    await b.hook("installation", {
+      action: "deleted",
+      installation: { id: 5, account: acme },
+      sender,
+    }),
+  ).toEqual({ did: "forgot the installation" });
+  expect(await b.asks.get(summons)).toBeNull();
+  const after = await (
+    await b.bridge(new Request(`${ORIGIN}/org/acme`, { headers: { cookie: ada } }))
+  ).text();
+  expect(after).toContain("No runs yet.");
 });

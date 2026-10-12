@@ -34,6 +34,8 @@ export type Asks = {
   keep(row: Omit<AskRow, "statusComment">): Promise<void>;
   get(summons: string): Promise<AskRow | null>;
   setStatusComment(summons: string, id: number): Promise<void>;
+  /** An uninstalled app's records: which issues its summonses were about, and who asked. */
+  forgetInstallation(installation: number): Promise<void>;
 };
 
 export function asksIn<H extends PgQueryResultHKT, S extends Record<string, unknown>>(
@@ -52,6 +54,9 @@ export function asksIn<H extends PgQueryResultHKT, S extends Record<string, unkn
         .update(githubAsks)
         .set({ statusComment: id })
         .where(and(eq(githubAsks.summons, summons)));
+    },
+    async forgetInstallation(installation) {
+      await db.delete(githubAsks).where(eq(githubAsks.installation, installation));
     },
   };
 }

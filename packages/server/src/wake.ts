@@ -6,15 +6,10 @@
 import { type Changes, localChanges } from "./changes";
 import { WakeError } from "./errors";
 import { CODE_TTL_MS, hashSecret, newPairCode, newPlaceKey, normalizeCode } from "./keys";
+import { forOwner, forScope, forSubject } from "./reads";
 import { APP, checkSummons } from "./shape";
-import type { PlaceRow, State, SummonsRow, Target, Tool, WakeStore } from "./store";
-import {
-  type PendingSummons,
-  type PlaceView,
-  placeViewOf,
-  type SummonsView,
-  viewOf,
-} from "./views";
+import type { PlaceRow, State, Target, Tool, WakeStore } from "./store";
+import { type PendingSummons, type PlaceView, placeViewOf, type SummonsView } from "./views";
 import {
   type ClaimResult,
   claim,
@@ -221,24 +216,18 @@ export class Wake {
   }
 
   /** Each agent's latest summons about `subject`, to show where it was made. */
-  async forSubject(subject: string): Promise<SummonsView[]> {
-    const latest = new Map<string, SummonsRow>();
-    for (const row of await this.store.summonsesAbout(subject)) {
-      const seen = latest.get(row.agent);
-      if (!seen || row.updatedAt > seen.updatedAt) latest.set(row.agent, row);
-    }
-    const now = this.now();
-    return [...latest.values()].map((row) => viewOf(row, now));
+  forSubject(subject: string): Promise<SummonsView[]> {
+    return forSubject(this.store, subject, this.now());
   }
 
   /** A person's runs list: their agents' summonses, newest first, without the dropped. */
-  async forOwner(o: { owner: string; scope?: string; limit?: number }): Promise<SummonsView[]> {
-    const limit = Math.max(1, Math.min(o.limit ?? 20, 50));
-    const now = this.now();
-    return (await this.store.summonsesOwnedBy(o.owner, 500))
-      .filter((row) => row.state !== "dropped" && (o.scope === undefined || row.scope === o.scope))
-      .slice(0, limit)
-      .map((row) => viewOf(row, now));
+  forOwner(o: { owner: string; scope?: string; limit?: number }): Promise<SummonsView[]> {
+    return forOwner(this.store, o, this.now());
+  }
+
+  /** A tenant's summonses, every state, newest first: its audit. */
+  forScope(o: { scope: string; limit?: number }): Promise<SummonsView[]> {
+    return forScope(this.store, o, this.now());
   }
 
   // Places.

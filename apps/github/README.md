@@ -43,12 +43,34 @@ One Fetch handler (`src/app.ts`), so it runs on Workers, Bun or Node:
 Agents are `gh-<user id>-<tool>`; owners `gh-<user id>`; the scope is the
 installation, so uninstalling the app deletes its summonses.
 
+## Plans
+
+**Free**: a label or `/wake` wakes your own agent on your own machine, on
+any repository you can push to. **Team**, per organisation, adds a policy
+(which repositories may summon, and who: anyone who can push, or admins
+and maintainers only) and an audit of every run, at
+`github.wakectl.dev/org/<login>`, for the organisation's admins (WAK-23).
+Cloud fallback comes later (WAK-24).
+
+A plan is set by GitHub Marketplace's `marketplace_purchase` events, sent to
+`/github/webhook` and signed with the listing's secret
+(`MARKETPLACE_WEBHOOK_SECRET`). Until the app can sell there (a verified
+publisher, and GitHub asks for about 100 installations), the owner grants
+one by hand:
+
+```bash
+bunx wrangler d1 execute wake-github --remote --command "INSERT OR REPLACE INTO github_kv (key, value) VALUES ('plan:<account id>', '{\"name\":\"team\",\"source\":\"granted\"}')"
+```
+
+An account's id is GitHub's (`gh api users/<login> --jq .id`).
+
 ## The GitHub App
 
 `github-app.json` is its settings, for GitHub's
 [manifest flow](https://docs.github.com/en/apps/sharing-github-apps/registering-a-github-app-from-a-manifest):
 Issues and Pull requests read and write (reactions, and the status comment
-on an issue or a pull request's conversation), Metadata read; events:
+on an issue or a pull request's conversation), Metadata read, and the
+organisation's Members read (who is an admin, for the org page); events:
 issues, issue comments, pull requests, reviews and review comments. Its
 logo is `assets/github-app-logo.png` (512 px, on `#F4EFE4`).
 

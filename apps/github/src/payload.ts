@@ -17,7 +17,11 @@ export function num(v: unknown): number | null {
 }
 
 export type Person = { id: number; login: string };
-export type Repo = { id: number; fullName: string };
+export type Repo = {
+  id: number;
+  fullName: string;
+  owner?: { id: number; login: string; type: "Organization" | "User" };
+};
 export type Issue = { number: number; title: string; url: string; isPull: boolean };
 
 export function personOf(v: unknown): Person | null {
@@ -33,7 +37,23 @@ export function repoOf(v: unknown): Repo | null {
   const o = obj(v);
   const id = num(o?.id);
   const fullName = str(o?.full_name);
-  return id !== null && fullName ? { id, fullName } : null;
+  if (id === null || !fullName) return null;
+  const owner = obj(o?.owner);
+  const ownerId = num(owner?.id);
+  const login = str(owner?.login);
+  return {
+    id,
+    fullName,
+    ...(ownerId !== null && login
+      ? {
+          owner: {
+            id: ownerId,
+            login,
+            type: str(owner?.type) === "User" ? "User" : "Organization",
+          },
+        }
+      : {}),
+  };
 }
 
 export function issueOf(v: unknown): Issue | null {

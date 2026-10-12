@@ -10,6 +10,7 @@ import { PGlite } from "@electric-sql/pglite";
 import { drizzle } from "drizzle-orm/pglite";
 import { createBridge } from "./app";
 import { asksIn, GITHUB_TABLES_SQL } from "./db";
+import { GITHUB_KV_SQL, kvInPg } from "./kv";
 
 function need(name: string): string {
   const value = process.env[name];
@@ -18,11 +19,11 @@ function need(name: string): string {
 }
 
 const client = new PGlite("./.data");
-await client.exec(WAKE_TABLES_SQL + GITHUB_TABLES_SQL);
+await client.exec(WAKE_TABLES_SQL + GITHUB_TABLES_SQL + GITHUB_KV_SQL);
 const port = Number(process.env.PORT ?? 3220);
 const db = drizzle(client);
 const bridge = createBridge(
-  { store: drizzleStore(db), asks: asksIn(db) },
+  { store: drizzleStore(db), asks: asksIn(db), kv: kvInPg(db) },
   {
     origin: process.env.ORIGIN ?? `http://localhost:${port}`,
     appId: need("GITHUB_APP_ID"),

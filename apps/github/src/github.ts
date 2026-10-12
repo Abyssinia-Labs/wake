@@ -17,6 +17,8 @@ export type GitHub = {
     repo: string,
     number: number,
   ): Promise<{ head: string; headRepo: string | null }>;
+  /** `admin`, `member`, or null when they aren't one (or the app can't see members). */
+  orgRole(installation: number, org: string, login: string): Promise<string | null>;
 };
 
 export function gitHub(config: GitHubConfig, fetcher: typeof fetch = fetch): GitHub {
@@ -84,6 +86,13 @@ export function gitHub(config: GitHubConfig, fetcher: typeof fetch = fetch): Git
       );
       if (res.status === 404) return "none";
       return ((await res.json()) as { permission?: string }).permission ?? "none";
+    },
+    async orgRole(installation, org, login) {
+      const path = `/orgs/${org}/memberships/${encodeURIComponent(login)}`;
+      const res = await call(installation, "GET", path).catch(() => null);
+      if (!res?.ok) return null;
+      const body = (await res.json()) as { role?: string; state?: string };
+      return body.state === "active" ? (body.role ?? null) : null;
     },
     async pull(installation, repo, number) {
       const res = await call(installation, "GET", `/repos/${repo}/pulls/${number}`);

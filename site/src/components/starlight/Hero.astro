@@ -1,9 +1,10 @@
 ---
-// The landing hero: badges, the headline in two inks, the tagline, the
-// actions as shadcn buttons, the install line in a terminal frame, and the
-// clock from the page's frontmatter (RingClock.astro rings it).
+// The landing hero: badges, the headline in two inks, the tagline and its
+// three points, the actions as shadcn buttons, the install line in a
+// terminal frame, and the clock from the page's frontmatter (RingClock.astro
+// rings it).
 import { Code } from "@astrojs/starlight/components";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Check } from "lucide-react";
 import { HeroBadges } from "@/components/site/hero-badges";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -14,6 +15,7 @@ const PAGE_TITLE_ID = "_top";
 
 const { data } = Astro.locals.starlightRoute.entry;
 const { title = data.title, tagline, image, actions = [] } = data.hero ?? {};
+const points = data.heroPoints ?? [];
 const art = image && "html" in image ? image.html : undefined;
 const install = "bun add -g @abyssinia-labs/wake\nwake setup";
 
@@ -28,10 +30,25 @@ const variants: Record<string, Variant> = {
 <div
   class="hero not-content grid items-center gap-12 py-10 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:py-16"
 >
-  <div class="flex flex-col gap-7">
+  <div class="flex flex-col gap-6">
     <HeroBadges version={pkg.version} />
     <h1 id={PAGE_TITLE_ID} data-page-title class="wake-headline" set:html={title} />
     {tagline && <p class="m-0 max-w-[36rem] text-lg leading-relaxed text-foreground" set:html={tagline} />}
+    {
+      points.length > 0 && (
+        <ul class="m-0 flex max-w-[36rem] list-none flex-col gap-2.5 p-0 text-sm leading-relaxed">
+          {points.map(({ title, text }) => (
+            <li class="flex items-start gap-2.5">
+              <Check className="mt-0.5 size-4 shrink-0 text-ink-a" strokeWidth={2.5} />
+              <span>
+                <strong class="font-semibold text-foreground">{title}</strong>{" "}
+                <span class="text-muted-foreground">{text}</span>
+              </span>
+            </li>
+          ))}
+        </ul>
+      )
+    }
     {
       actions.length > 0 && (
         <div class="flex flex-wrap items-center gap-3">

@@ -23,25 +23,32 @@ hero:
           </g>
         </g>
       </svg>
-  tagline: Assign your coding agent a ticket, or mention it in a comment, and Wake gets it out of bed on your Mac, in the right repository, on its own branch, inside a sandbox. No session to open, no "check your mentions".
+  tagline: A coding agent does nothing until someone opens a session and pastes it the work. Wake is the listener that fixes that. Hand your agent an issue, or mention it in a comment, and it starts on your own machine and comes back with a pull request.
   actions:
     - text: Get started
       link: /start/getting-started/
     - text: Add Wake to your app
       link: /apps/overview/
       variant: secondary
+heroPoints:
+  - title: Starts from the work, not from you.
+    text: Label an issue, assign a ticket, mention the agent. No session to open, nothing to paste, no "check your mentions".
+  - title: Runs where your access already is.
+    text: Your clones, your logins, your MCP servers, on your Mac or Linux box. No cloud copy to set up, no second set of keys.
+  - title: Ends in a pull request you review.
+    text: On its own branch, in a sandbox, in only the repositories you approved. It never merges.
 ---
 
 import RingClock from "../../components/RingClock.astro";
 import ForApps from "../../components/landing/ForApps.astro";
+import HowItWorks from "../../components/landing/HowItWorks.astro";
 import { Features } from "../../components/landing/features";
-import { HowItWorks } from "../../components/landing/how-it-works";
 import { SiteFooter } from "../../components/landing/site-footer";
 import { WorksWith } from "../../components/landing/works-with";
 
 <WorksWith />
-<Features />
 <HowItWorks />
+<Features />
 <ForApps />
 <SiteFooter />
 <RingClock />

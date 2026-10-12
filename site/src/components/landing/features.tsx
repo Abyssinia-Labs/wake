@@ -68,7 +68,7 @@ const features: { icon: LucideIcon; title: string; body: ReactNode }[] = [
 /** What you get: six cards, an icon tile in the second ink on each. */
 export function Features(): React.JSX.Element {
   return (
-    <section className="not-content flex flex-col gap-10 py-20">
+    <section className="not-content flex flex-col gap-10 border-t py-20">
       <SectionHeader
         eyebrow="What you get"
         title="Your agent, out of bed and in the right place."

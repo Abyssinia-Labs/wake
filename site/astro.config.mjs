@@ -26,6 +26,7 @@ export default defineConfig({
         "./src/styles/riso.css",
         "./src/styles/chrome.css",
         "./src/styles/content.css",
+        "./src/styles/demo.css",
       ],
       components: {
         Header: "./src/components/starlight/Header.astro",

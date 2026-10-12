@@ -1,5 +1,5 @@
 import { ArrowRight } from "lucide-react";
-import { GitHubMark } from "@/components/site/mark";
+import { GitHubMark } from "@/components/site/logos";
 import { Chip } from "@/components/site/text";
 
 const item = "inline-flex items-center gap-2 text-sm font-semibold text-foreground no-underline";

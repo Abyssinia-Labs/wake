@@ -46,6 +46,7 @@ export default defineConfig({
         {
           label: "Guides",
           items: [
+            { label: "Wake for GitHub", slug: "guides/github" },
             { label: "How runs work", slug: "guides/runs" },
             { label: "Security", slug: "guides/security" },
             { label: "Troubleshooting", slug: "guides/troubleshooting" },

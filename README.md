@@ -167,6 +167,15 @@ Two runs on one branch take turns. When a run fails, the ticket says why
 only in words written to be shared; paths and command output stay in
 `wakectl logs`. Wake's config, state and log are readable by you alone.
 
+## On GitHub
+
+Label an issue `wake`, or write `/wake` in a comment or a review, and your
+agent starts on your machine: install
+[Wake for GitHub](https://github.com/apps/wake-for-github), pair at
+`github.wakectl.dev/pair`, and approve the repository with
+`wakectl repos allow <owner/name> --app github.wakectl.dev`. Its code is
+[`apps/github`](apps/github).
+
 ## For apps: serve wake/v1
 
 Any app can let Wake start its users' agents by serving `wake/v1`:

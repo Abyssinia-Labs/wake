@@ -7,6 +7,7 @@ import { doctor, setup } from "./commands/doctor";
 import { open } from "./commands/open";
 import { forget, pair } from "./commands/pair";
 import { prune } from "./commands/prune";
+import { read } from "./commands/read";
 import { repos } from "./commands/repos";
 import { install, logs, pause, resume, uninstall } from "./commands/service";
 import { allow, mode, permissions, trust } from "./commands/settings";
@@ -72,6 +73,8 @@ async function main(argv: string[]): Promise<void> {
       return status();
     case "logs":
       return logs(values.follow);
+    case "read":
+      return read(rest[0]);
     case "open":
       return open(rest[0]);
     case "pause":

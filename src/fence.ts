@@ -41,7 +41,15 @@ export const HOSTS = [
 ];
 
 /** Commands that can't run in the sandbox; each still needs an allow rule to run unasked. */
-const OUTSIDE = ["git push *", "git fetch *", "git pull *", "gh *"];
+// `wakectl read` uses gh's sign-in, so it runs outside too (WAK-19).
+const OUTSIDE = [
+  "git push *",
+  "git fetch *",
+  "git pull *",
+  "gh *",
+  "wakectl read *",
+  "wake read *",
+];
 
 const GH_READS = [
   "pr view",
@@ -70,6 +78,9 @@ function outsideAllowed(branch: string | undefined): string[] {
     "Bash(gh pr edit *)",
     // An issue's answer is a comment on it, as a pull request's is (the GitHub bridge, WAK-17).
     "Bash(gh issue comment *)",
+    // A GitHub comment by its address, read-only, in place of `gh api` (WAK-19).
+    "Bash(wakectl read *)",
+    "Bash(wake read *)",
   ];
 }
 
@@ -174,6 +185,8 @@ export function cursorPermissions(o: ClaudeRun): { allow: string[]; deny: string
       "Shell(gh:pr comment*)",
       "Shell(gh:pr edit*)",
       "Shell(gh:issue comment*)",
+      "Shell(wakectl:read*)",
+      "Shell(wake:read*)",
       own,
       ...extra,
     ],

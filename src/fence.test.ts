@@ -74,7 +74,15 @@ describe("a repository run", () => {
       filesystem: { denyRead: SECRETS },
       network: { allowedDomains: HOSTS },
     });
-    expect(sandbox.excludedCommands).toEqual(["git push *", "git fetch *", "git pull *", "gh *"]);
+    expect(sandbox.excludedCommands).toEqual([
+      "git push *",
+      "git fetch *",
+      "git pull *",
+      "gh *",
+      "wakectl read *",
+      "wake read *",
+    ]);
+    expect(allowed).toContain("Bash(wakectl read *)");
   });
 });
 

@@ -49,6 +49,9 @@ test("review feedback works on the pull request's own branch", () => {
   });
   expect(ask.prompt).toContain("gh pr diff 13 --repo acme/widgets");
   expect(ask.prompt).toContain("a review comment on src/login.ts:42");
+  expect(ask.prompt).toContain(
+    "wakectl read https://github.com/acme/widgets/pull/13#discussion_r7",
+  );
   expect(ask.prompt).not.toContain("gh api");
   expect(ask.prompt).toContain("Never merge, never force-push");
 });

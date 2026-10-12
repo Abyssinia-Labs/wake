@@ -1,0 +1,9 @@
+---
+// Starlight's sidebar, with the release this site documents at its foot.
+import Default from "@astrojs/starlight/components/Sidebar.astro";
+import { VersionCard } from "@/components/site/version-card";
+import pkg from "../../../../package.json";
+---
+
+<Default />
+<VersionCard version={pkg.version} />

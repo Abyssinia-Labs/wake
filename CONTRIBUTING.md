@@ -41,10 +41,14 @@ issue for it.
 
 ## The website
 
-`site/` is wakectl.dev (Astro Starlight). `bun run --cwd site dev` serves it
-locally; `bun run --cwd site deploy` builds it and deploys the Cloudflare
-Worker that serves it, on the Abyssinia Labs account. The spec page is
-copied from `docs/spec/wake-v1.md` at build time: edit the spec there.
+`site/` is wakectl.dev: Astro Starlight, its chrome shadcn/ui on Tailwind in
+the risograph inks of `site/src/styles/riso.css`. The shadcn components live
+in `site/src/components/ui` (added with `bunx shadcn@latest add <name>`, then
+pinned exactly in `site/package.json`); Starlight's overridden parts in
+`site/src/components/starlight`. `bun run --cwd site dev` serves it locally;
+`bun run --cwd site deploy` builds it and deploys the Cloudflare Worker that
+serves it, on the Abyssinia Labs account. The spec page is copied from
+`docs/spec/wake-v1.md` at build time: edit the spec there.
 
 ## Pull requests
 

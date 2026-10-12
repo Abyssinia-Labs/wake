@@ -1,0 +1,45 @@
+---
+// The site header: brand, the four site links, Starlight's search and theme
+// picker, GitHub, and a Get started button. Starlight's own pieces keep
+// their scripts; chrome.css dresses them.
+import Search from "@astrojs/starlight/components/Search.astro";
+import SocialIcons from "@astrojs/starlight/components/SocialIcons.astro";
+import ThemeSelect from "@astrojs/starlight/components/ThemeSelect.astro";
+import { Mark } from "@/components/site/mark";
+import { buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+
+const { siteTitleHref } = Astro.locals.starlightRoute;
+const path = Astro.url.pathname;
+const links = [
+  { label: "Docs", href: "/start/getting-started/", under: ["/start/", "/reference/"] },
+  { label: "Guides", href: "/guides/github/", under: ["/guides/"] },
+  { label: "For apps", href: "/apps/overview/", under: ["/apps/"] },
+  { label: "Spec", href: "/spec/wake-v1/", under: ["/spec/"] },
+];
+const isCurrent = (under: string[]): boolean => under.some((prefix) => path.startsWith(prefix));
+---
+
+<div class="site-header">
+  <a href={siteTitleHref} class="brand">
+    <Mark className="size-7" />
+    <span>wakectl</span>
+  </a>
+  <nav aria-label="Site" class="site-nav">
+    {
+      links.map(({ label, href, under }) => (
+        <a href={href} aria-current={isCurrent(under) ? "page" : undefined}>
+          {label}
+        </a>
+      ))
+    }
+  </nav>
+  <div class="search print:hidden">
+    <Search />
+  </div>
+  <div class="right print:hidden">
+    <SocialIcons />
+    <ThemeSelect />
+    <a href="/start/getting-started/" class={cn(buttonVariants({ size: "sm" }), "no-underline")}>Get started</a>
+  </div>
+</div>

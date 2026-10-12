@@ -3,17 +3,25 @@
  * light is Blue + Fluorescent Orange on cream (pairing 02),
  * dark is Yellow + Fluorescent Pink on black stock (pairing 08).
  * --riso-a is the ink type and outlines print in; --riso-b the second
- * ink, for the off-register shadow and halftones. Starlight's own
- * colour slots are mapped from them, so every page wears the print.
+ * ink, for the off-register shadow and halftones. Starlight's colour
+ * slots and shadcn's tokens (global.css) are mapped from them, so every
+ * page wears the print. The tokens stay outside any cascade layer so they
+ * beat the Tailwind bridge's defaults.
  */
 
 /* Dark: Starlight's default theme. */
 :root {
   --riso-paper: #1c1a22;
   --riso-card: #26232e;
+  --riso-wash: #2a2733;
+  --riso-hover: #312d3b;
+  --riso-code: #211e29;
   --riso-ink: #f2eee3;
   --riso-a: #ffe800;
   --riso-b: #ff48b0;
+  --riso-a-soft: #3a3510;
+  --riso-on-a: #1c1a22;
+  --riso-link: #ffe800;
 
   --sl-color-white: #f2eee3;
   --sl-color-gray-1: #ebe6e4;
@@ -28,6 +36,15 @@
   --sl-color-accent: #ffe800;
   --sl-color-accent-high: #fff38c;
 
+  /* Links, rules and the chrome's grounds, as the design draws them. */
+  --sl-color-text-accent: var(--riso-link);
+  --sl-color-bg-nav: var(--riso-paper);
+  --sl-color-bg-sidebar: var(--riso-paper);
+  --sl-color-bg-inline-code: var(--riso-wash);
+  --sl-color-hairline: var(--sl-color-gray-5);
+  --sl-color-hairline-light: var(--sl-color-gray-5);
+  --sl-color-hairline-shade: var(--sl-color-gray-5);
+
   --sl-font: "Work Sans", system-ui, sans-serif;
   --sl-font-mono: "Space Mono", ui-monospace, monospace;
 }
@@ -36,9 +53,16 @@
 :root[data-theme="light"] {
   --riso-paper: #f4efe4;
   --riso-card: #fffcf5;
+  --riso-wash: #ebe5d7;
+  --riso-hover: #ebe5d7;
+  --riso-code: #fffcf5;
   --riso-ink: #14213d;
   --riso-a: #0078bf;
   --riso-b: #ff7477;
+  --riso-a-soft: #d9e9f5;
+  --riso-on-a: #ffffff;
+  /* The blue ink alone is 4.1:1 on cream; link text takes the darker shade. */
+  --riso-link: #005a91;
 
   --sl-color-white: #14213d;
   --sl-color-gray-1: #1f2c4a;
@@ -55,138 +79,96 @@
   --sl-color-accent-high: #005a91;
 }
 
-/* Display type: Syne, as the print's headlines. */
-h1,
-h2,
-h3,
-.site-title,
-.hero h1 {
-  font-family: "Syne", var(--sl-font);
-  letter-spacing: -0.02em;
-}
-.site-title {
-  font-weight: 800;
-  font-size: 1.35rem;
-  color: var(--riso-ink);
-}
+@layer base {
+  /* Display type: Syne, as the print's headlines. */
+  h1,
+  h2,
+  h3 {
+    font-family: "Syne", var(--sl-font);
+    letter-spacing: -0.02em;
+  }
 
-/* The headline prints in the first ink, its shadow a little off in the second. */
-.hero h1 {
-  font-weight: 800;
-  font-size: clamp(3rem, 8vw, 6.25rem);
-  line-height: 0.92;
-  letter-spacing: -0.04em;
-  color: var(--riso-a);
-  text-shadow: 0.05em 0.04em 0 var(--riso-b);
-}
-.hero .tagline {
-  color: var(--riso-ink);
-  font-size: 1.2rem;
-}
-
-/* Buttons are inked pills. */
-.sl-link-button.primary {
-  background: var(--riso-ink);
-  border-color: var(--riso-ink);
-  color: var(--riso-paper);
-  border-radius: 999px;
-  font-weight: 600;
-}
-.sl-link-button.primary:hover {
-  background: var(--riso-a);
-  border-color: var(--riso-a);
-  color: var(--riso-paper);
-}
-.sl-link-button.minimal {
-  color: var(--riso-ink);
-  font-weight: 600;
-}
-
-/* Cards are stickers: an inked rule and a little lift. */
-.card {
-  background: var(--riso-card);
-  border: 2px solid var(--riso-ink);
-  border-radius: 6px;
-}
-.card .title {
-  font-family: "Syne", var(--sl-font);
-  font-weight: 700;
-}
-.card .icon {
-  color: var(--riso-b);
-}
-
-/* Code reads like a stamped box. */
-.expressive-code .frame {
-  --ec-brdRad: 6px;
+  /* The headline prints in the first ink, its shadow a little off in the second. */
+  .wake-headline {
+    margin: 0;
+    font-family: "Syne", var(--sl-font);
+    font-weight: 800;
+    font-size: clamp(3rem, 8vw, 5.5rem);
+    line-height: 0.92;
+    letter-spacing: -0.04em;
+    color: var(--riso-a);
+    text-shadow: 0.05em 0.04em 0 var(--riso-b);
+  }
 }
 
 /*
  * The hero clock, inline so it prints in the page's inks. While
- * .is-ringing (set by the script in index.mdx) it rattles on its feet, its
- * bells chatter and the second ink slips register. Each cycle is a burst
- * and a rest, so the script can stop it at a rest.
+ * .is-ringing (set by RingClock.astro) it rattles on its feet, its bells
+ * chatter and the second ink slips register. Each cycle is a burst and a
+ * rest, so the script can stop it at a rest.
  */
-.wake-clock {
-  overflow: visible;
-}
-.wake-clock .dot {
-  fill: var(--riso-b);
-}
-.wake-clock .paper {
-  fill: var(--riso-paper);
-}
-.wake-clock .shadow {
-  fill: var(--riso-b);
-  fill-opacity: 0.92;
-}
-.wake-clock .rim,
-.wake-clock .bell,
-.wake-clock .ring {
-  stroke: var(--riso-a);
-}
-.wake-clock .hands {
-  stroke: var(--riso-ink);
-}
-.wake-clock .body,
-.wake-clock .bell,
-.wake-clock .ring {
-  transform-box: fill-box;
-}
-.wake-clock .body {
-  transform-origin: 50% 100%;
-}
-.wake-clock .bell-l {
-  transform-origin: 100% 100%;
-}
-.wake-clock .bell-r {
-  transform-origin: 0% 100%;
-}
-.wake-clock .ring {
-  opacity: 0;
-}
-.wake-clock .ring-l {
-  transform-origin: 100% 100%;
-}
-.wake-clock .ring-r {
-  transform-origin: 0% 100%;
-}
+@layer components {
+  .wake-clock {
+    overflow: visible;
+  }
+  .wake-clock .dot {
+    fill: var(--riso-b);
+  }
+  .wake-clock .paper {
+    fill: var(--riso-paper);
+  }
+  .wake-clock .shadow {
+    fill: var(--riso-b);
+    fill-opacity: 0.92;
+  }
+  .wake-clock .rim,
+  .wake-clock .bell,
+  .wake-clock .ring {
+    stroke: var(--riso-a);
+  }
+  .wake-clock .hands {
+    stroke: var(--riso-ink);
+  }
+  .wake-clock .body,
+  .wake-clock .bell,
+  .wake-clock .ring {
+    transform-box: fill-box;
+  }
+  .wake-clock .body {
+    transform-origin: 50% 100%;
+  }
+  .wake-clock .bell-l {
+    transform-origin: 100% 100%;
+  }
+  .wake-clock .bell-r {
+    transform-origin: 0% 100%;
+  }
+  .wake-clock .ring {
+    opacity: 0;
+  }
+  .wake-clock .ring-l {
+    transform-origin: 100% 100%;
+  }
+  .wake-clock .ring-r {
+    transform-origin: 0% 100%;
+  }
 
-@media (prefers-reduced-motion: no-preference) {
-  .wake-clock.is-ringing .body {
-    animation: wake-rattle 1.1s linear infinite;
-  }
-  .wake-clock.is-ringing .bell-l {
-    animation: wake-bell 1.1s linear infinite;
-  }
-  .wake-clock.is-ringing .bell-r {
-    animation: wake-bell 1.1s linear infinite;
-  }
-  .wake-clock.is-ringing .shadow {
-    animation: wake-register 1.1s steps(1) infinite;
-  }
-  .wake-clock.is-ringing .ring {
-    animation: wake-ring 1.1s ease-out infinite;
+  @media (prefers-reduced-motion: no-preference) {
+    .wake-clock.is-ringing .body {
+      animation: wake-rattle 1.1s linear infinite;
+    }
+    .wake-clock.is-ringing .bell-l {
+      animation: wake-bell 1.1s linear infinite;
+    }
+    .wake-clock.is-ringing .bell-r {
+      animation: wake-bell 1.1s linear infinite;
+    }
+    .wake-clock.is-ringing .shadow {
+      animation: wake-register 1.1s steps(1) infinite;
+    }
+    .wake-clock.is-ringing .ring {
+      animation: wake-ring 1.1s ease-out infinite;
+    }
   }
 }
 

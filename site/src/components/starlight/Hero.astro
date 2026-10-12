@@ -1,0 +1,58 @@
+---
+// The landing hero: badges, the headline in two inks, the tagline, the
+// actions as shadcn buttons, the install line in a terminal frame, and the
+// clock from the page's frontmatter (RingClock.astro rings it).
+import { Code } from "@astrojs/starlight/components";
+import { ArrowRight } from "lucide-react";
+import { HeroBadges } from "@/components/site/hero-badges";
+import { buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import pkg from "../../../../package.json";
+
+// Starlight's PAGE_TITLE_ID: the skip link's target.
+const PAGE_TITLE_ID = "_top";
+
+const { data } = Astro.locals.starlightRoute.entry;
+const { title = data.title, tagline, image, actions = [] } = data.hero ?? {};
+const art = image && "html" in image ? image.html : undefined;
+const install = "bun add -g @abyssinia-labs/wake\nwake setup";
+
+type Variant = "default" | "outline" | "ghost";
+const variants: Record<string, Variant> = {
+  primary: "default",
+  secondary: "outline",
+  minimal: "ghost",
+};
+---
+
+<div
+  class="hero not-content grid items-center gap-12 py-10 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:py-16"
+>
+  <div class="flex flex-col gap-7">
+    <HeroBadges version={pkg.version} />
+    <h1 id={PAGE_TITLE_ID} data-page-title class="wake-headline" set:html={title} />
+    {tagline && <p class="m-0 max-w-[36rem] text-lg leading-relaxed text-foreground" set:html={tagline} />}
+    {
+      actions.length > 0 && (
+        <div class="flex flex-wrap items-center gap-3">
+          {actions.map(({ link, text, variant }, index) => (
+            <a
+              href={link}
+              class={cn(
+                buttonVariants({ variant: variants[variant] ?? "outline", size: "lg" }),
+                "no-underline",
+              )}
+            >
+              {text}
+              {index === 0 && <ArrowRight />}
+            </a>
+          ))}
+        </div>
+      )
+    }
+    <div class="max-w-[36rem]">
+      <Code code={install} lang="bash" frame="terminal" title="Terminal" />
+    </div>
+  </div>
+  {art && <div class="mx-auto w-full max-w-[25rem] lg:justify-self-end" set:html={art} />}
+</div>

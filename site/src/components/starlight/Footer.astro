@@ -1,0 +1,9 @@
+---
+// Docs pages keep Starlight's footer (edit link, last updated, the
+// previous/next cards). The landing page has its own footer in its body.
+import Default from "@astrojs/starlight/components/Footer.astro";
+
+const isSplash = Astro.locals.starlightRoute.entry.data.template === "splash";
+---
+
+{!isSplash && <Default />}

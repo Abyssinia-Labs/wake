@@ -1,0 +1,54 @@
+---
+// For apps: the copy, and a Tabs card with one real snippet per way to
+// serve wake/v1. Expressive Code renders the snippets here, at build, and
+// hands them to the island as slots.
+import { Code } from "@astrojs/starlight/components";
+import { ForAppsCopy } from "./for-apps-copy";
+import { ServerTabs } from "./server-tabs";
+
+const convexConfig = `import { defineApp } from "convex/server";
+import wake from "@abyssinia-labs/wake-convex/convex.config";
+
+const app = defineApp();
+app.use(wake);
+export default app;`;
+
+const postgres = `import { drizzleStore } from "@abyssinia-labs/wake-server/drizzle";
+import { Wake, wakeHandler } from "@abyssinia-labs/wake-server";
+
+export const wake = new Wake({ app: "acme", store: drizzleStore(db), keyPrefix: "acme_" });
+export const routes = wakeHandler(wake);`;
+
+const sqlite = `import { drizzle } from "drizzle-orm/d1";
+import { sqliteStore } from "@abyssinia-labs/wake-server/sqlite";
+import { Wake } from "@abyssinia-labs/wake-server";
+
+const wake = new Wake({ app: "acme", store: sqliteStore(drizzle(env.DB)), keyPrefix: "acme_" });`;
+
+const http = `import { discovery } from "@abyssinia-labs/wake-server";
+
+// GET /.well-known/wake
+Response.json(discovery({ httpBase: "https://acme.dev/api" }));`;
+---
+
+<section class="not-content grid items-start gap-12 border-t py-20 lg:grid-cols-2">
+  <ForAppsCopy />
+  <ServerTabs client:load>
+    <Fragment slot="convex">
+      <Code code="bun add @abyssinia-labs/wake-convex" lang="bash" />
+      <Code code={convexConfig} lang="ts" title="convex/convex.config.ts" />
+    </Fragment>
+    <Fragment slot="postgres">
+      <Code code="bun add @abyssinia-labs/wake-server drizzle-orm" lang="bash" />
+      <Code code={postgres} lang="ts" title="wake.ts" />
+    </Fragment>
+    <Fragment slot="sqlite">
+      <Code code="bun add @abyssinia-labs/wake-server drizzle-orm" lang="bash" />
+      <Code code={sqlite} lang="ts" title="wake.ts" />
+    </Fragment>
+    <Fragment slot="http">
+      <Code code={http} lang="ts" title="route.ts" />
+      <Code code="wake check acme.dev" lang="bash" />
+    </Fragment>
+  </ServerTabs>
+</section>

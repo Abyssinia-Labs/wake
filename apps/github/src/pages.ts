@@ -39,7 +39,7 @@ export function home(o: { installUrl: string; signedIn: boolean }): Response {
 <h2>How to ask</h2>
 <div class="card"><p><code>wake</code> on an issue, or <code>/wake</code> on its own line in a comment: your first paired agent works on it.<br><code>wake:codex</code> or <code>/wake cursor</code> picks the tool. On a pull request, <code>/wake</code> in a review addresses the feedback on its branch.</p>
 <small>Only you can wake your agent, and only on a repository you can push to. Taking the label off or closing the issue lets it go.</small></div>
-<p><small>Wake is open source: <a href="https://wakectl.dev">wakectl.dev</a>.</small></p>`,
+<p><small>Wake is open source: <a href="https://wakectl.dev">wakectl.dev</a> · <a href="https://wakectl.dev/privacy/">Privacy</a></small></p>`,
   );
 }
 

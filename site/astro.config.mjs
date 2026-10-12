@@ -1,6 +1,10 @@
 // wakectl.dev: what Wake is, how to use it, and how an app serves wake/v1.
-// Static, served by a Cloudflare Worker (wrangler.jsonc).
+// Static, served by a Cloudflare Worker (wrangler.jsonc). The chrome is
+// shadcn/ui on Tailwind (React, rendered to HTML at build; the one island
+// is the server-half tabs on the landing page), in the inks of riso.css.
+import react from "@astrojs/react";
 import starlight from "@astrojs/starlight";
+import tailwindcss from "@tailwindcss/vite";
 import { defineConfig } from "astro/config";
 
 export default defineConfig({
@@ -15,8 +19,23 @@ export default defineConfig({
         dark: "./src/assets/mark-dark.svg",
         alt: "",
       },
-      // Risograph inks: Blue + Fluorescent Orange by day, Yellow + Pink by night (riso.css).
-      customCss: ["./src/styles/riso.css"],
+      // Tailwind first (it declares the cascade layers), then the risograph
+      // inks, then Starlight's chrome and content restyled to shadcn's measures.
+      customCss: [
+        "./src/styles/global.css",
+        "./src/styles/riso.css",
+        "./src/styles/chrome.css",
+        "./src/styles/content.css",
+        "./src/styles/demo.css",
+      ],
+      components: {
+        Header: "./src/components/starlight/Header.astro",
+        Hero: "./src/components/starlight/Hero.astro",
+        Footer: "./src/components/starlight/Footer.astro",
+        Pagination: "./src/components/starlight/Pagination.astro",
+        PageTitle: "./src/components/starlight/PageTitle.astro",
+        Sidebar: "./src/components/starlight/Sidebar.astro",
+      },
       head: [
         { tag: "link", attrs: { rel: "preconnect", href: "https://fonts.googleapis.com" } },
         {
@@ -72,5 +91,7 @@ export default defineConfig({
         },
       ],
     }),
+    react(),
   ],
+  vite: { plugins: [tailwindcss()] },
 });

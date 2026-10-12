@@ -1,0 +1,239 @@
+/*
+ * Starlight's chrome (the table of contents, header, search, theme picker
+ * and sidebar) restyled to shadcn's measures: 36px controls, 32px menu
+ * rows, 6px radii, 1px rules. The `components` layer sits after
+ * Starlight's own, so these win without !important, and a Tailwind utility
+ * on the same element still wins over these. Blocks run from the least to
+ * the most specific selector, as Biome asks.
+ */
+@layer components {
+  /* On this page: a hairline with a 2px marker in the first ink on the current heading. */
+  starlight-toc > nav > ul {
+    border-inline-start: 1px solid var(--border);
+  }
+  starlight-toc a {
+    margin-inline-start: -1px;
+    border-inline-start: 2px solid transparent;
+    border-radius: 0;
+    padding-block: 0.375rem;
+    padding-inline: calc(1rem * var(--depth) + 0.75rem) 0.75rem;
+    font-size: 0.875rem;
+    line-height: 1.3;
+    color: var(--muted-foreground);
+  }
+  starlight-toc a:hover {
+    color: var(--foreground);
+  }
+  starlight-toc a[aria-current="true"] {
+    border-color: var(--ink-a);
+    color: var(--foreground);
+    font-weight: 500;
+  }
+  .right-sidebar-panel h2 {
+    margin-bottom: 0.75rem;
+    font-family: var(--font-sans);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0;
+    color: var(--foreground);
+  }
+
+  /* Header (Header.astro). On the landing page it shares the content's container. */
+  .site-header {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    height: 100%;
+  }
+  [data-has-hero] .site-header {
+    max-width: 70rem;
+    margin-inline: auto;
+  }
+  .site-header .brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.625rem;
+    color: var(--foreground);
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 1.25rem;
+    letter-spacing: -0.02em;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+  .site-nav {
+    display: none;
+    gap: 0.25rem;
+  }
+  .site-nav a {
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--muted-foreground);
+    text-decoration: none;
+    white-space: nowrap;
+  }
+  .site-nav a:hover {
+    color: var(--foreground);
+  }
+  .site-nav a[aria-current="page"] {
+    background: var(--accent);
+    color: var(--foreground);
+    font-weight: 600;
+  }
+  .site-header .search {
+    flex: 1 1 auto;
+    display: flex;
+    justify-content: flex-end;
+    min-width: 0;
+  }
+  .site-header .right {
+    display: none;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  @media (min-width: 50rem) {
+    .site-nav,
+    .site-header .right {
+      display: flex;
+    }
+  }
+
+  /* The search trigger: an Input-shaped button with a Kbd. */
+  site-search button[data-open-modal] {
+    height: 2.25rem;
+    border-radius: 0.375rem;
+    color: var(--muted-foreground);
+  }
+  site-search button[data-open-modal]:hover {
+    background: var(--accent);
+    color: var(--foreground);
+  }
+  @media (min-width: 50rem) {
+    site-search button[data-open-modal] {
+      width: 100%;
+      max-width: 14rem;
+      gap: 0.625rem;
+      padding-inline: 0.75rem 0.5rem;
+      border: 1px solid var(--border);
+      background: var(--background);
+      font-size: 0.875rem;
+    }
+    site-search button[data-open-modal]:hover {
+      border-color: var(--border);
+    }
+  }
+  site-search button[data-open-modal] > kbd {
+    height: 1.25rem;
+    padding-inline: 0.375rem;
+    border: 1px solid var(--border);
+    border-radius: 0.25rem;
+    background: var(--muted);
+    font-family: var(--font-mono);
+    font-size: 0.625rem;
+    font-weight: 700;
+    color: var(--muted-foreground);
+  }
+  site-search button[data-open-modal] > kbd > kbd {
+    padding: 0;
+    border: 0;
+    background: none;
+    font: inherit;
+  }
+
+  /* The GitHub link and the theme picker read as ghost buttons. */
+  .site-header .right a[rel="me"] {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    margin: 0;
+    padding: 0;
+    border-radius: 0.375rem;
+    color: var(--muted-foreground);
+  }
+  .site-header .right a[rel="me"]:hover {
+    background: var(--accent);
+    color: var(--foreground);
+  }
+  .site-header starlight-theme-select label {
+    height: 2.25rem;
+    padding-inline: 0.5rem;
+    border-radius: 0.375rem;
+    color: var(--muted-foreground);
+  }
+  .site-header starlight-theme-select label:hover {
+    background: var(--accent);
+    color: var(--foreground);
+  }
+  .site-header starlight-theme-select select {
+    padding-block: 0;
+    height: 100%;
+  }
+
+  /* Sidebar: group labels over 32px menu rows, the current page on the accent wash. */
+  .sidebar-content {
+    padding-top: 1.5rem;
+  }
+  .sidebar-content ul ul {
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+    margin-top: 0.125rem;
+  }
+  .sidebar-content ul ul li {
+    margin-inline-start: 0;
+    border-inline-start: 0;
+    padding-inline-start: 0;
+  }
+  .sidebar-content .top-level > li + li {
+    margin-top: 1.25rem;
+  }
+  .sidebar-content summary {
+    height: 2rem;
+    padding: 0 0.5rem;
+  }
+  .sidebar-content .group-label .large {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--muted-foreground);
+  }
+  .sidebar-content .caret {
+    font-size: 0.875rem;
+    color: var(--muted-foreground);
+  }
+  .sidebar-content .top-level a {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    height: 2rem;
+    padding: 0 0.5rem;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    line-height: 1;
+    color: var(--muted-foreground);
+  }
+  .sidebar-content .top-level a:hover,
+  .sidebar-content .top-level a:focus-visible {
+    background: var(--accent);
+    color: var(--foreground);
+  }
+  .sidebar-content .top-level a[aria-current="page"],
+  .sidebar-content .top-level a[aria-current="page"]:hover,
+  .sidebar-content .top-level a[aria-current="page"]:focus-visible {
+    background: var(--accent);
+    color: var(--foreground);
+    font-weight: 600;
+  }
+  .sidebar-content .top-level a[aria-current="page"]::after {
+    content: "";
+    flex: none;
+    width: 0.375rem;
+    height: 0.375rem;
+    border-radius: 999px;
+    background: var(--ink-a);
+  }
+}

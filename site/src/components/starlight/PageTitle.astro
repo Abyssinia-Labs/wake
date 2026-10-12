@@ -1,0 +1,40 @@
+---
+// A docs page opens with its place in the sidebar, the title, and the
+// description as a lead.
+import { PageBreadcrumb } from "@/components/site/page-breadcrumb";
+
+// Starlight's PAGE_TITLE_ID: the skip link's target.
+const PAGE_TITLE_ID = "_top";
+
+const { entry, sidebar } = Astro.locals.starlightRoute;
+type Entry = (typeof sidebar)[number];
+
+// The labels of the groups above the current page, outermost first.
+const trailTo = (entries: Entry[], trail: string[] = []): string[] | undefined => {
+  for (const entry of entries) {
+    if (entry.type === "group") {
+      const found = trailTo(entry.entries, [...trail, entry.label]);
+      if (found) return found;
+    } else if (entry.isCurrent) {
+      return trail;
+    }
+  }
+  return undefined;
+};
+const trail = trailTo(sidebar) ?? [];
+---
+
+<div class="page-title not-content flex flex-col gap-3">
+  {trail.length > 0 && <PageBreadcrumb trail={trail} page={entry.data.title} />}
+  <h1
+    id={PAGE_TITLE_ID}
+    class="m-0 font-display text-4xl leading-[1.05] font-extrabold tracking-[-0.03em] break-normal text-foreground sm:text-[2.75rem]"
+  >
+    {entry.data.title}
+  </h1>
+  {
+    entry.data.description && (
+      <p class="m-0 text-lg leading-relaxed text-muted-foreground">{entry.data.description}</p>
+    )
+  }
+</div>

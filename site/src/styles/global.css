@@ -1,0 +1,103 @@
+/*
+ * Tailwind v4 and shadcn's tokens, mapped onto the risograph inks that
+ * riso.css defines. The layer order is Starlight's recipe: its own styles
+ * sit between Tailwind's base and its utilities, so a utility class on an
+ * element always wins over Starlight's defaults.
+ */
+@layer base, starlight, theme, components, utilities;
+
+@import "@astrojs/starlight-tailwind";
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(utilities);
+
+@theme {
+  --font-sans: "Work Sans", system-ui, sans-serif;
+  --font-mono: "Space Mono", ui-monospace, monospace;
+  --font-display: "Syne", "Work Sans", system-ui, sans-serif;
+}
+
+/* shadcn's names for the print's colours; each resolves per theme in riso.css. */
+:root {
+  --radius: 0.5rem;
+  --background: var(--riso-paper);
+  --foreground: var(--riso-ink);
+  --card: var(--riso-card);
+  --card-foreground: var(--riso-ink);
+  --popover: var(--riso-card);
+  --popover-foreground: var(--riso-ink);
+  --primary: var(--riso-ink);
+  --primary-foreground: var(--riso-paper);
+  --secondary: var(--riso-card);
+  --secondary-foreground: var(--riso-ink);
+  --muted: var(--riso-wash);
+  --muted-foreground: var(--sl-color-gray-3);
+  --accent: var(--riso-hover);
+  --accent-foreground: var(--riso-ink);
+  --destructive: var(--riso-b);
+  --border: var(--sl-color-gray-5);
+  --input: var(--sl-color-gray-5);
+  --ring: var(--riso-a);
+  --ink-a: var(--riso-a);
+  --ink-b: var(--riso-b);
+  --ink-a-soft: var(--riso-a-soft);
+  --on-ink-a: var(--riso-on-a);
+  --link: var(--riso-link);
+  --code: var(--riso-code);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-ink-a: var(--ink-a);
+  --color-ink-b: var(--ink-b);
+  --color-ink-a-soft: var(--ink-a-soft);
+  --color-on-ink-a: var(--on-ink-a);
+  --color-link: var(--link);
+  --color-code: var(--code);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+@layer base {
+  /* A bare `border` utility draws in the print's rule colour, as shadcn expects. */
+  *,
+  ::before,
+  ::after {
+    border-color: var(--border);
+  }
+
+  /* The slice of Tailwind's preflight that shadcn's controls assume. Starlight
+     runs without preflight, and its own controls restyle themselves after this. */
+  button,
+  input,
+  select,
+  textarea {
+    font: inherit;
+    letter-spacing: inherit;
+    color: inherit;
+    border-radius: 0;
+    background-color: transparent;
+  }
+  button,
+  [role="button"] {
+    cursor: pointer;
+  }
+}

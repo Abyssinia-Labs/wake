@@ -3,6 +3,13 @@ title: Commands
 description: Every wake command (wakectl is the same command, longer).
 ---
 
+:::note[Two names, one command]
+`wake` and `wakectl` are the same command: the agent's pairing answer says
+`wakectl pair …`, and `wake pair …` does the same. `wake help` prints this
+list; `wake --version` the version. Colour is off when `NO_COLOR` is set or
+the output isn't a terminal.
+:::
+
 ## Get started
 
 | Command | Does |
@@ -41,7 +48,3 @@ description: Every wake command (wakectl is the same command, longer).
 | `wake update` | Install the newest Wake from npm, and restart the listener onto it. |
 | `wake uninstall` | Stop, and don't start at login. |
 | `wake check <domain>` | Test an app against the [wake/v1 spec](/spec/wake-v1/). Pairs nothing, changes nothing. |
-
-`wake` and `wakectl` are the same command: the agent's pairing answer says
-`wakectl pair …`, and `wake pair …` does the same. `wake help` prints this list; `wake --version` the version. Colour is
-off when `NO_COLOR` is set or the output isn't a terminal.

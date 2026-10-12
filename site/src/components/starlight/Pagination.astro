@@ -1,0 +1,38 @@
+---
+// Previous and next as outline buttons with two lines, as shadcn's docs do it.
+import { ArrowLeft, ArrowRight } from "lucide-react";
+import { buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+
+const { dir, pagination } = Astro.locals.starlightRoute;
+const { prev, next } = pagination;
+const link = cn(
+  buttonVariants({ variant: "outline" }),
+  "h-auto gap-3 px-4 py-3 whitespace-normal text-foreground no-underline",
+);
+---
+
+<div class="pagination-links not-content grid gap-4 sm:grid-cols-2 print:hidden" dir={dir}>
+  {
+    prev && (
+      <a href={prev.href} rel="prev" class={cn(link, "justify-start text-left")}>
+        <ArrowLeft className="text-muted-foreground" />
+        <span class="flex flex-col gap-0.5">
+          <span class="text-xs text-muted-foreground">{Astro.locals.t("page.previousLink")}</span>
+          <span class="text-sm font-semibold">{prev.label}</span>
+        </span>
+      </a>
+    )
+  }
+  {
+    next && (
+      <a href={next.href} rel="next" class={cn(link, "justify-end text-right sm:col-start-2")}>
+        <span class="flex flex-col gap-0.5">
+          <span class="text-xs text-muted-foreground">{Astro.locals.t("page.nextLink")}</span>
+          <span class="text-sm font-semibold">{next.label}</span>
+        </span>
+        <ArrowRight className="text-muted-foreground" />
+      </a>
+    )
+  }
+</div>

@@ -1,0 +1,136 @@
+/*
+ * Content: Starlight's markdown restyled to shadcn's measures. Tables sit
+ * in a 1px rounded rule, asides read as Alerts, Expressive Code frames
+ * take the print's rule colour, and the page's meta line sits on a rule.
+ */
+
+/* The landing page runs a 70rem container. Starlight sets this width
+   unlayered in Page.astro, so this one rule stays unlayered too. */
+html[data-has-hero][data-theme] {
+  --sl-content-width: 70rem;
+}
+
+@layer components {
+  /* The title panel and the content panel read as one. */
+  .content-panel + .content-panel {
+    border-top: 0;
+    padding-top: 0;
+  }
+
+  /* Sections the landing page drops into the markdown slot space themselves. */
+  .sl-markdown-content > .not-content {
+    margin-top: 0;
+  }
+
+  /* Headings, a step down from Starlight's scale. */
+  .sl-markdown-content h2:not(:where(.not-content *)) {
+    font-size: 1.625rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+  .sl-markdown-content h3:not(:where(.not-content *)) {
+    font-size: 1.25rem;
+    font-weight: 700;
+  }
+
+  /* Inline code reads as a chip. */
+  .sl-markdown-content code:not(:where(.not-content *)) {
+    border: 1px solid var(--border);
+    border-radius: 0.25rem;
+  }
+
+  /* Tables: a rounded 1px rule, muted header, rows on hairlines. */
+  .sl-markdown-content table:not(:where(.not-content *)) {
+    display: table;
+    width: 100%;
+    border: 1px solid var(--border);
+    border-radius: 0.5rem;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 0.875rem;
+    overflow: hidden;
+  }
+  .sl-markdown-content :is(th, td):not(:where(.not-content *)) {
+    padding: 0.75rem;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+    overflow-wrap: anywhere;
+  }
+  .sl-markdown-content :is(th:first-child, td:first-child):not(:where(.not-content *)) {
+    padding-inline-start: 0.75rem;
+  }
+  .sl-markdown-content :is(th:last-child, td:last-child):not(:where(.not-content *)) {
+    padding-inline-end: 0.75rem;
+  }
+  .sl-markdown-content th:not(:where(.not-content *)) {
+    height: 2.5rem;
+    padding-block: 0;
+    vertical-align: middle;
+    font-weight: 500;
+    color: var(--muted-foreground);
+  }
+  .sl-markdown-content tr:last-child td:not(:where(.not-content *)) {
+    border-bottom: 0;
+  }
+  .sl-markdown-content tbody tr:hover:not(:where(.not-content *)) {
+    background: color-mix(in srgb, var(--muted) 50%, transparent);
+  }
+
+  /* Asides read as shadcn Alerts; a note takes the card ground and the first ink. */
+  .starlight-aside {
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--sl-color-asides-border);
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+  }
+  .starlight-aside--note {
+    --sl-color-asides-text-accent: var(--foreground);
+    --sl-color-asides-border: var(--border);
+    background: var(--card);
+  }
+  .starlight-aside--note .starlight-aside__icon {
+    color: var(--ink-a);
+  }
+  .starlight-aside--note .starlight-aside__content {
+    color: var(--muted-foreground);
+  }
+  .starlight-aside__title {
+    font-size: 0.875rem;
+  }
+  .starlight-aside__title + .starlight-aside__content {
+    margin-top: 0.25rem;
+  }
+
+  /* Code blocks: the print's rule, no window shadow, the second ink for the dots. */
+  .expressive-code {
+    --ec-brdRad: 0.5rem;
+    --ec-brdCol: var(--border);
+    --ec-codeBg: var(--code);
+    --ec-codeFontSize: 0.8125rem;
+    --ec-frm-edBg: var(--code);
+    --ec-frm-edTabBarBg: var(--code);
+    --ec-frm-edTabBarBrdBtmCol: var(--border);
+    --ec-frm-edActTabBg: var(--code);
+    --ec-frm-edActTabIndTopCol: var(--ink-a);
+    --ec-frm-trmBg: var(--code);
+    --ec-frm-trmTtbBg: var(--code);
+    --ec-frm-trmTtbBrdBtmCol: var(--border);
+    --ec-frm-trmTtbDotsFg: var(--ink-b);
+    --ec-frm-frameBoxShdCssVal: none;
+  }
+
+  /* The edit link and last-updated line sit on a rule under the content. */
+  main footer .meta {
+    margin-top: 2.5rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--border);
+    font-size: 0.8125rem;
+  }
+  main footer .meta a {
+    color: var(--muted-foreground);
+    text-decoration: none;
+  }
+  main footer .meta a:hover {
+    color: var(--foreground);
+  }
+}

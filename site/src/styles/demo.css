@@ -1,0 +1,74 @@
+/*
+ * The landing page's demo (wake-demo.tsx) shows what a person really sees:
+ * GitHub's pages in GitHub's colours, a terminal in a terminal's. Those
+ * palettes are scoped to the demo so the rest of the page keeps its inks.
+ * GitHub's follow the site's theme; the terminals stay dark, as terminals do.
+ */
+@layer components {
+  .gh {
+    --gh-bg: #0d1117;
+    --gh-bg-2: #161b22;
+    --gh-bg-3: #21262d;
+    --gh-border: #30363d;
+    --gh-fg: #e6edf3;
+    --gh-muted: #8b949e;
+    --gh-link: #58a6ff;
+    --gh-green: #3fb950;
+    --gh-green-bg: #238636;
+    --gh-red: #f85149;
+    --gh-yellow: #d29922;
+    --gh-label-wake-bg: #fbca04;
+    --gh-label-wake-fg: #1f2328;
+    --gh-label-enh-bg: #a2eeef;
+    --gh-label-enh-fg: #1f2328;
+    color: var(--gh-fg);
+    background: var(--gh-bg);
+    font-family:
+      -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif;
+  }
+  [data-theme="light"] .gh {
+    --gh-bg: #ffffff;
+    --gh-bg-2: #f6f8fa;
+    --gh-bg-3: #eaeef2;
+    --gh-border: #d0d7de;
+    --gh-fg: #1f2328;
+    --gh-muted: #656d76;
+    --gh-link: #0969da;
+    --gh-green: #1a7f37;
+    --gh-green-bg: #1f883d;
+    --gh-red: #cf222e;
+    --gh-yellow: #9a6700;
+  }
+
+  /* A terminal: one dark palette, the standard sixteen the CLI paints with. */
+  .term {
+    --t-bg: #121216;
+    --t-bar: #1b1b21;
+    --t-fg: #e4e1d8;
+    --t-dim: #8a8793;
+    --t-cyan: #56c2cc;
+    --t-magenta: #c678dd;
+    --t-green: #98c379;
+    --t-red: #e06c75;
+    --t-yellow: #e5c07b;
+    --t-blue: #61afef;
+    --t-clay: #d97757;
+    color: var(--t-fg);
+    background: var(--t-bg);
+    font-family: var(--font-mono);
+  }
+
+  /* The step bar fills across one step's time while the demo plays. */
+  .wake-progress {
+    animation: wake-progress linear forwards;
+  }
+}
+
+@keyframes wake-progress {
+  from {
+    width: 0;
+  }
+  to {
+    width: 100%;
+  }
+}

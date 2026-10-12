@@ -20,6 +20,7 @@ description: Every wake command (wakectl is the same command, longer).
 | --- | --- |
 | `wake logs [-f]` | The listener's log; `-f` follows it. |
 | `wake open [name]` | Back into a run by the name the app shows (`amber-heron`): its tool, on its session, in its folder. With no name, the recent runs. |
+| `wake read <comment url>` | A comment on GitHub (an inline review comment, an issue comment, a review), read-only. Runs use it in place of `gh api`, which they may not run. |
 
 ## How runs work
 

@@ -26,6 +26,10 @@ const GROUPS: readonly { title: string; entries: readonly Entry[] }[] = [
     entries: [
       { use: "logs [-f]", what: "The listener's log, following it with -f" },
       { use: "open [name]", what: "Back into a run by its name (amber-heron), or list them" },
+      {
+        use: "read <comment url>",
+        what: "A GitHub comment, read-only: what a run uses for review comments",
+      },
     ],
   },
   {
@@ -62,6 +66,7 @@ export const COMMANDS = [
   "status",
   "logs",
   "open",
+  "read",
   "pause",
   "resume",
   "mode",

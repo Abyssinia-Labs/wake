@@ -4,6 +4,7 @@ import { chmod, mkdir, rename, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
 import { type Agent, type AgentTool, isRepo, type Transport } from "./contract";
+import { type Models, readModels } from "./models";
 
 export type PairedApp = {
   /** As the person typed it to `wakectl pair`, and the Keychain's name for its key. */
@@ -34,6 +35,8 @@ export type Config = {
   permissionMode: PermissionMode;
   /** Trust a Codex run's worktree in Codex's config first, so herdr runs are not asked (codex-trust.ts). */
   trustCodexWorktrees: boolean;
+  /** The model and effort each tool runs with (models.ts); the tool's own default when absent. */
+  models: Models;
   /**
    * The repositories each app's domain may run in, `owner/name` in lower
    * case: a summons for any other is refused, so an app can't aim a run at
@@ -113,6 +116,7 @@ export function defaults(): Config {
     run: "headless",
     permissionMode: "acceptEdits",
     trustCodexWorktrees: false,
+    models: {},
     repos: {},
     apps: {},
   };
@@ -167,6 +171,7 @@ export async function loadConfig(): Promise<Config> {
     extraAllowedTools: strings(v.extraAllowedTools) ?? base.extraAllowedTools,
     run: RUN_MODES.find((mode) => mode === v.run) ?? base.run,
     trustCodexWorktrees: v.trustCodexWorktrees === true,
+    models: readModels(v.models),
     repos: approvedRepos(v.repos),
     // Anything else in the file, bypassPermissions included, is read as the default.
     permissionMode:

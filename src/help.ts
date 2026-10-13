@@ -37,6 +37,10 @@ const GROUPS: readonly { title: string; entries: readonly Entry[] }[] = [
     entries: [
       { use: "mode [headless|herdr]", what: "In the background, or a tab in herdr you can watch" },
       { use: "permissions [mode]", what: "What a run may do unasked: acceptEdits, auto, dontAsk" },
+      {
+        use: "model [tool] [name] [--effort x]",
+        what: "The model each tool runs with, or its own default",
+      },
       { use: "allow [rule] [--remove]", what: "Tools a run may use beyond Wake's own" },
       { use: "trust codex [on|off]", what: "Let Codex runs in herdr skip 'trust this folder?'" },
     ],
@@ -71,6 +75,7 @@ export const COMMANDS = [
   "resume",
   "mode",
   "permissions",
+  "model",
   "allow",
   "trust",
   "repos",
@@ -98,6 +103,7 @@ export function help(): string {
     `  ${dim("$")} wakectl pair app.example.com K7QD-2M9X`,
     `  ${dim("$")} wakectl repos allow your-org/your-repo`,
     `  ${dim("$")} wakectl mode herdr`,
+    `  ${dim("$")} wakectl model claude opus --effort high`,
     `  ${dim("$")} wakectl allow "Bash(npm test:*)"`,
     "",
     dim("wake is the same command, shorter to type: wake status, wake logs -f."),

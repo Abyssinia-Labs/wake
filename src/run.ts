@@ -10,6 +10,7 @@ import type { Exec } from "./exec";
 import { herdrRunning, runInHerdr } from "./herdr";
 import { installDependencies } from "./install";
 import { madeWorktrees, rememberWorktree } from "./made";
+import { describeModel } from "./models";
 import { findClone } from "./repos";
 import { runName } from "./run-name";
 import { runCodex } from "./runners/codex";
@@ -151,6 +152,9 @@ async function runOne(
   o.onStart({ sessionId: ours ? sessionId : "", cwd, tool, name });
   const acknowledged =
     (await o.report?.({ name, tool, ...(ours ? { session: sessionId } : {}) })) ?? false;
+  const model = o.config.models[tool];
+  // Codex doesn't say which model it began on, so the log says what was asked for.
+  if (model) o.onEvent?.(`model: ${describeModel(tool, model)}`);
   const result = await o.deps.claude(
     {
       cwd,
@@ -170,6 +174,7 @@ async function runOne(
       name: `${summons.target.ref} · ${name}`,
       runName: name,
       permissionMode: o.config.permissionMode,
+      ...(model ? { model } : {}),
       trustFolder: o.config.trustCodexWorktrees,
       ...(o.onEvent ? { onEvent: o.onEvent } : {}),
     },

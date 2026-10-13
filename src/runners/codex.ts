@@ -4,6 +4,7 @@
 // and open a pull request. The rules ride at the head of the prompt, read
 // from stdin, since Codex takes no appended system prompt on the command line.
 import { type ClaudeResult, type ClaudeRun, rules, type Spawn, spawnClaude } from "../claude";
+import { modelArgs } from "../models";
 
 function isRecord(v: unknown): v is Record<string, unknown> {
   return typeof v === "object" && v !== null && !Array.isArray(v);
@@ -24,6 +25,7 @@ export function codexArgs(o: ClaudeRun): string[] {
     "--skip-git-repo-check",
     // auto: Codex's own review decides; the others never ask, exec has no one to ask.
     ...(o.permissionMode === "auto" ? ["--approve-for-me"] : []),
+    ...modelArgs("codex", o.model),
     "-",
   ];
 }

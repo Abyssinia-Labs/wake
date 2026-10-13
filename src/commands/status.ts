@@ -4,8 +4,9 @@
 import { existsSync } from "node:fs";
 import { type Config, loadConfig, paths } from "../config";
 import { say } from "../log";
+import { describeModel } from "../models";
 import { isAlive, type ListenerState, readState } from "../state";
-import { resumeLine, TOOL_NAMES, toolOf } from "../tools";
+import { pairedTools, resumeLine, TOOL_NAMES, toolOf } from "../tools";
 import { ago, bold, cyan, dim, mark, pad, red, someOf, tildify, yellow } from "../ui";
 
 export type StatusInput = {
@@ -97,6 +98,10 @@ export function statusLines({ config, state, paused, now }: StatusInput): string
     bold("Runs"),
     `  ${pad(dim("mode"), 14)}${config.run}`,
     `  ${pad(dim("permissions"), 14)}${config.permissionMode}`,
+    ...pairedTools(config).map(
+      (tool) =>
+        `  ${pad(dim("model"), 14)}${config.models[tool] ? `${TOOL_NAMES[tool]} · ${describeModel(tool, config.models[tool])}` : describeModel(tool, undefined)}`,
+    ),
     `  ${pad(dim("also allowed"), 14)}${allowed.length > 0 ? allowed.join(", ") : dim("nothing beyond Wake's own")}`,
     `  ${pad(dim("clones in"), 14)}${config.roots.map((root) => tildify(root)).join(", ")}`,
   );

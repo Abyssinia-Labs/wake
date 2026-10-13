@@ -48,7 +48,8 @@ which puts `wakectl` on your PATH.
 Then run **`wakectl setup`**. It checks the machine (Bun, git, gh, which
 agents you have), asks where your clones are, pairs your agent, asks which
 repositories each app may run in, how runs should open and what they may
-do unasked, and starts the listener. Run it again any time; every answer
+do unasked, which model each of your agents runs with, and starts the
+listener. Run it again any time; every answer
 also has its own command:
 
 1. **Pair.** In Claude Code, Codex or Cursor, with the app's MCP server
@@ -89,6 +90,17 @@ Cursor run keeps to its allowed list and asks).
 `wakectl allow "Bash(npm test:*)"` adds a tool to the allowed list, and
 `--remove` takes it back. `bypassPermissions` is never offered.
 
+**Which model.** A run uses its tool's own default model unless you pick
+one: `wakectl model claude opus --effort high`, `wakectl model codex
+gpt-6.1-sol --effort medium`, `wakectl model cursor composer-2.5`. Setup
+asks the same once for each tool you've paired, offering Claude Code's
+aliases (`opus`, `sonnet`, `fable`, `haiku`, which follow the newest
+model), the models Codex lists in `~/.codex`, and those `cursor-agent
+models` lists for your account. Cursor's models carry their effort in the
+name, so it takes no `--effort`. `default` clears either (`wakectl model
+codex default --effort default`), and `wakectl model` alone shows all
+three. The choice is yours, on your machine: an app never picks the model.
+
 **Which tool, and where.** A pairing names the tool that runs its agent:
 Claude Code, Codex or Cursor (`wakectl pair … --tool codex` when the app
 cannot tell: the Codex CLI often reaches an app as ChatGPT). Each run's worktree
@@ -114,7 +126,8 @@ Place keys live in the macOS Keychain or Linux's Secret Service
 Linux). A Linux machine with no Secret Service (a server, a container)
 keeps them in `~/.config/wake/keys.json`, readable by you alone. Its settings:
 `roots` (where to look for clones, `~/Projects` by default), `maxRuns` (2),
-`runTimeoutMinutes` (120), and `extraAllowedTools` for a run.
+`runTimeoutMinutes` (120), `extraAllowedTools` for a run, and `models`,
+as `wakectl model` sets it.
 
 ## What a run does
 

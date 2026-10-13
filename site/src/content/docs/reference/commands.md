@@ -35,6 +35,7 @@ the output isn't a terminal.
 | --- | --- |
 | `wake mode [headless\|herdr]` | In the background, or a tab in herdr you can watch. |
 | `wake permissions [acceptEdits\|auto\|dontAsk]` | What a run may do without asking. |
+| `wake model [claude\|codex\|cursor] [name\|default] [--effort level\|default]` | The model, and how hard it thinks, each tool runs with; its own default when unset. See [Which model](/guides/runs/#which-model). |
 | `wake allow [rule] [--remove]` | A tool runs may use beyond Wake's own, e.g. `"Bash(make test:*)"`. |
 | `wake trust codex [on\|off]` | Let Codex runs in herdr skip "trust this folder?". |
 

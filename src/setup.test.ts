@@ -80,6 +80,8 @@ test("a first setup: folders, pairing, repositories, runs, install", async () =>
     "2", // repositories: acme/widgets (sorted: gadgets, widgets)
     "1", // runs open in herdr
     "2", // permissions: auto
+    "2", // Claude Code runs on opus
+    "", // at its default effort
     "y", // install
   ]);
   await setupFlow({
@@ -109,6 +111,7 @@ test("a first setup: folders, pairing, repositories, runs, install", async () =>
   expect(config.repos).toEqual({ "app.example.com": ["acme/widgets"] });
   expect(config.run).toBe("herdr");
   expect(config.permissionMode).toBe("auto");
+  expect(config.models).toEqual({ claude: { model: "opus" } });
   expect(installed).toEqual(["yes"]);
   expect(io.said.some((line) => line.includes("isn't a pair command"))).toBe(true);
   expect(io.said.join("\n")).toContain("Listening (pid 7)");

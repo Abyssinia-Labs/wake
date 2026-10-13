@@ -2,7 +2,7 @@
 // how a run is driven (that is runners/*): the program, whether it is here,
 // and how a person picks a session back up. A pairing names its tool
 // (GAT-68); an older pairing that did not is Claude Code, as it always was.
-import type { PairedApp } from "./config";
+import type { Config, PairedApp } from "./config";
 import type { AgentTool } from "./contract";
 import type { Exec } from "./exec";
 
@@ -32,6 +32,12 @@ export function toolOf(app: Pick<PairedApp, "tool" | "agent">): AgentTool | null
   if (name.startsWith("codex")) return "codex";
   if (name.startsWith("cursor")) return "cursor";
   return null;
+}
+
+/** The tools that run this machine's pairings, each once. */
+export function pairedTools(config: Pick<Config, "apps">): AgentTool[] {
+  const tools = Object.values(config.apps).map(toolOf);
+  return [...new Set(tools.filter((tool): tool is AgentTool => tool !== null))];
 }
 
 export function programOf(tool: AgentTool): string {

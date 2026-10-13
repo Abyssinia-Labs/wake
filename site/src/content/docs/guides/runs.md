@@ -34,6 +34,30 @@ whichever tool made it. Worktrees are kept so you can resume a session;
 `wake prune` removes the ones untouched for 14 days, never one with
 uncommitted work.
 
+## Which model
+
+A run uses its tool's own default model, the one you get at the keyboard,
+unless you pick one for it:
+
+```bash
+wake model claude opus --effort high
+wake model codex gpt-6.1-sol --effort medium
+wake model cursor composer-2.5
+wake model                                # all three
+wake model codex default --effort default # back to Codex's own
+```
+
+`wake setup` asks the same once for each tool you've paired:
+
+| Tool | What setup offers | Effort |
+| --- | --- | --- |
+| Claude Code | `opus`, `sonnet`, `fable`, `haiku`: aliases that follow the newest model | `low` to `max` |
+| Codex | The models Codex lists in `~/.codex` | The levels Codex lists for that model |
+| Cursor | What `cursor-agent models` lists for your account | In the model's name, as `gpt-5.3-codex-high` |
+
+Any tool also takes a name you type. The choice is yours, on your machine:
+an app never picks the model a run uses.
+
 ## What a run may do without asking
 
 ```bash

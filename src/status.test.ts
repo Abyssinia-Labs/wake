@@ -45,6 +45,14 @@ test("running: the listener, each app's connection, the runs and how they are se
   expect(lines).toMatch(/GAT-20\s+20 min/);
   expect(lines).toContain("claude --resume s-1");
   expect(lines).toMatch(/permissions\s+acceptEdits/);
+  expect(lines).toMatch(/model\s+Claude Code's default/);
+  const chosen = statusLines({
+    config: { ...config, models: { claude: { model: "opus", effort: "high" } } },
+    paused: false,
+    now: 0,
+    state: null,
+  }).join("\n");
+  expect(chosen).toMatch(/model\s+Claude Code · opus, high effort/);
   delete process.env.NO_COLOR;
 });
 

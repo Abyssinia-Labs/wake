@@ -16,6 +16,7 @@ import { trustCodexFolder } from "./codex-trust";
 import type { Exec } from "./exec";
 import { claudeSettings } from "./fence";
 import { promptUntilTurnEnds } from "./herdr-prompt";
+import { modelArgs } from "./models";
 import { branchListsMcps, cursorModeArgs, writeCursorPermissions } from "./runners/cursor";
 
 const WORKSPACE = "Wake";
@@ -62,8 +63,14 @@ export function openingPrompt(o: ClaudeRun): string {
  * Wake has written into the worktree, and is told the worktree is trusted:
  * every worktree is a folder it has not seen, and its trust question is one
  * herdr does not report as blocked, so a start waits out its timeout (GAT-31).
+ * Then the model the person chose, a name checked to be one plain argument.
  */
 export function nativeArgs(o: ClaudeRun, settings: string, approveMcps = true): string[] {
+  const tool = o.tool ?? "claude";
+  return [...toolArgs(o, settings, approveMcps), ...modelArgs(tool, o.model)];
+}
+
+function toolArgs(o: ClaudeRun, settings: string, approveMcps: boolean): string[] {
   switch (o.tool ?? "claude") {
     case "codex":
       return ["--sandbox", "workspace-write", "-c", "sandbox_workspace_write.network_access=true"];

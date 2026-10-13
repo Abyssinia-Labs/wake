@@ -17,6 +17,7 @@ import type { Exec } from "../exec";
 import { choose, chooseMany, confirm, type Io, type Option, text } from "../prompt";
 import { listClones } from "../repos";
 import { bold, cyan, dim, mark, tildify } from "../ui";
+import { askModels } from "./model";
 import { MEANS } from "./settings";
 
 export type SetupDeps = {
@@ -230,6 +231,7 @@ export async function setupFlow(d: SetupDeps): Promise<void> {
   let config = await repositories(d, await loadConfig());
   const herdr = machine.some((check) => check.what === "herdr");
   config = await howRunsWork(d, config, herdr);
+  config = await askModels(d.io, d.run, config, d.home);
   await saveConfig(config);
   d.io.say("");
   if (!probe.exists(probe.plist)) {

@@ -4,6 +4,7 @@ import { parseArgs } from "node:util";
 import pkg from "../package.json";
 import { check } from "./commands/check";
 import { doctor, setup } from "./commands/doctor";
+import { model } from "./commands/model";
 import { open } from "./commands/open";
 import { forget, pair } from "./commands/pair";
 import { prune } from "./commands/prune";
@@ -34,6 +35,7 @@ async function main(argv: string[]): Promise<void> {
       remove: { type: "boolean", default: false },
       tool: { type: "string" },
       app: { type: "string" },
+      effort: { type: "string" },
       days: { type: "string", default: "14" },
       help: { type: "boolean", short: "h", default: false },
       version: { type: "boolean", short: "v", default: false },
@@ -85,6 +87,8 @@ async function main(argv: string[]): Promise<void> {
       return mode(rest[0]);
     case "permissions":
       return permissions(rest[0]);
+    case "model":
+      return model(rest[0], rest[1], values.effort);
     case "allow":
       return allow(rest[0], values.remove);
     case "repos":

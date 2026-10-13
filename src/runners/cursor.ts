@@ -14,6 +14,7 @@ import { Shareable } from "../errors";
 import type { Exec } from "../exec";
 import { gitOk } from "../exec";
 import { cursorPermissions } from "../fence";
+import { modelArgs } from "../models";
 import { excludeFromGit } from "../worktree";
 
 function isRecord(v: unknown): v is Record<string, unknown> {
@@ -90,6 +91,7 @@ export function cursorArgs(o: ClaudeRun, approveMcps = true): string[] {
     "enabled",
     ...(approveMcps ? ["--approve-mcps"] : []),
     ...cursorModeArgs(o),
+    ...modelArgs("cursor", o.model),
     "--workspace",
     o.cwd,
     `${rules({ ...o, tool: "cursor" })}\n\n---\n\n${o.prompt}`,

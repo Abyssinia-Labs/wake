@@ -34,6 +34,28 @@ html[data-has-hero][data-theme] {
     font-weight: 700;
   }
 
+  /* The changelog (pages/changelog.astro): each release on a rule, its
+     date a quiet line under the version, each category's badge over its list. */
+  .sl-markdown-content .changelog-release {
+    border-top: 1px solid var(--border);
+    padding-top: 1.5rem;
+    margin-top: 2.5rem;
+  }
+  .sl-markdown-content .changelog-release > :is(h2, h3) {
+    margin-top: 0;
+  }
+  .sl-markdown-content .changelog-date {
+    margin-top: 0.25rem;
+    font-size: 0.875rem;
+    color: var(--muted-foreground);
+  }
+  .sl-markdown-content .changelog-group {
+    margin-top: 1.25rem;
+  }
+  .sl-markdown-content .changelog-group > ul {
+    margin-top: 0.5rem;
+  }
+
   /* Inline code reads as a chip. */
   .sl-markdown-content code:not(:where(.not-content *)) {
     border: 1px solid var(--border);

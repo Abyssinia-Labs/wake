@@ -1,5 +1,5 @@
 ---
-// The landing hero: badges, the headline in two inks, the tagline and its
+// The landing hero: what's new and the badges, the headline in two inks, the tagline and its
 // three points, the actions as shadcn buttons, the install line in a
 // terminal frame, and the clock from the page's frontmatter (RingClock.astro
 // rings it).
@@ -7,8 +7,8 @@ import { Code } from "@astrojs/starlight/components";
 import { ArrowRight, Check } from "lucide-react";
 import { HeroBadges } from "@/components/site/hero-badges";
 import { buttonVariants } from "@/components/ui/button";
+import { latest, wakeLog } from "@/lib/changelog";
 import { cn } from "@/lib/utils";
-import pkg from "../../../../package.json";
 
 // Starlight's PAGE_TITLE_ID: the skip link's target.
 const PAGE_TITLE_ID = "_top";
@@ -18,6 +18,14 @@ const { title = data.title, tagline, image, actions = [] } = data.hero ?? {};
 const points = data.heroPoints ?? [];
 const art = image && "html" in image ? image.html : undefined;
 const install = "bun add -g @abyssinia-labs/wake\nwake setup";
+// The newest release on npm, and its lead headline, linking to its notes.
+const newest = latest(wakeLog);
+if (!newest) throw new Error("CHANGELOG.md has no release to show.");
+const news = {
+  version: newest.release.version,
+  headline: newest.headline,
+  href: `/changelog/#${newest.release.anchor}`,
+};
 
 type Variant = "default" | "outline" | "ghost";
 const variants: Record<string, Variant> = {
@@ -31,7 +39,7 @@ const variants: Record<string, Variant> = {
   class="hero not-content grid items-center gap-12 py-10 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:py-16"
 >
   <div class="flex flex-col gap-6">
-    <HeroBadges version={pkg.version} />
+    <HeroBadges news={news} />
     <h1 id={PAGE_TITLE_ID} data-page-title class="wake-headline" set:html={title} />
     {tagline && <p class="m-0 max-w-[36rem] text-lg leading-relaxed text-foreground" set:html={tagline} />}
     {

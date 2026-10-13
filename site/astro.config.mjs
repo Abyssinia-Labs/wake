@@ -82,6 +82,7 @@ export default defineConfig({
           items: [
             { label: "Commands", slug: "reference/commands" },
             { label: "Files and settings", slug: "reference/files" },
+            { label: "Changelog", link: "/changelog/" },
           ],
         },
         {
@@ -93,6 +94,7 @@ export default defineConfig({
             { label: "Examples", slug: "apps/examples" },
             { label: "Check your app", slug: "apps/check" },
             { label: "The wake/v1 spec", slug: "spec/wake-v1" },
+            { label: "Changelog for apps", link: "/apps/changelog/" },
           ],
         },
       ],

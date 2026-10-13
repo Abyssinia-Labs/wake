@@ -5,6 +5,7 @@
 import SidebarPersister from "@astrojs/starlight/components/SidebarPersister.astro";
 import { DocsSidebar } from "@/components/site/docs-sidebar";
 import { VersionCard } from "@/components/site/version-card";
+import { wakeLog } from "@/lib/changelog";
 import pkg from "../../../../package.json";
 import MobileMenuFooter from "./MobileMenuFooter.astro";
 
@@ -14,7 +15,10 @@ const { sidebar } = Astro.locals.starlightRoute;
 <SidebarPersister>
   <DocsSidebar entries={sidebar} />
 </SidebarPersister>
-<VersionCard version={pkg.version} />
+<VersionCard
+  version={pkg.version}
+  href={`/changelog/#${wakeLog.releases.find((one) => one.version === pkg.version)?.anchor ?? ""}`}
+/>
 <div class="md:sl-hidden">
   <MobileMenuFooter />
 </div>

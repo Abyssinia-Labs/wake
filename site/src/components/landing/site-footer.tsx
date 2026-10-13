@@ -25,7 +25,7 @@ const columns: { title: string; links: { label: string; href: string }[] }[] = [
     links: [
       { label: "GitHub", href: "https://github.com/Abyssinia-Labs/wake" },
       { label: "npm", href: "https://www.npmjs.com/package/@abyssinia-labs/wake" },
-      { label: "Releases", href: "https://github.com/Abyssinia-Labs/wake/releases" },
+      { label: "Changelog", href: "/changelog/" },
       { label: "Security policy", href: "https://github.com/Abyssinia-Labs/wake/security" },
     ],
   },

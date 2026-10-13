@@ -30,7 +30,8 @@ jobs:
 
   publish:
     needs: notes
-    runs-on: macos-latest
+    # GitHub-hosted, as npm's trusted publishing requires.
+    runs-on: ubuntu-latest
     timeout-minutes: 15
     environment: npm
     permissions:

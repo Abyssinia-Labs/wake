@@ -35,7 +35,8 @@ jobs:
 
   publish:
     needs: notes
-    runs-on: macos-latest
+    # GitHub-hosted, as npm's trusted publishing requires.
+    runs-on: ubuntu-latest
     timeout-minutes: 15
     # The npm environment is where a person can be required to approve a
     # release, and what npm's trusted publisher names.

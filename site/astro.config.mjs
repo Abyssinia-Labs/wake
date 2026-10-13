@@ -2,10 +2,13 @@
 // Static, served by a Cloudflare Worker (wrangler.jsonc). The chrome is
 // shadcn/ui on Tailwind (React, rendered to HTML at build; the one island
 // is the server-half tabs on the landing page), in the inks of riso.css.
+
+import { satteri } from "@astrojs/markdown-satteri";
 import react from "@astrojs/react";
 import starlight from "@astrojs/starlight";
 import tailwindcss from "@tailwindcss/vite";
 import { defineConfig } from "astro/config";
+import { shadcnMarkdown } from "./src/markdown/shadcn.ts";
 
 export default defineConfig({
   site: "https://wakectl.dev",
@@ -35,6 +38,7 @@ export default defineConfig({
         Pagination: "./src/components/starlight/Pagination.astro",
         PageTitle: "./src/components/starlight/PageTitle.astro",
         Sidebar: "./src/components/starlight/Sidebar.astro",
+        Search: "./src/components/starlight/Search.astro",
       },
       head: [
         { tag: "link", attrs: { rel: "preconnect", href: "https://fonts.googleapis.com" } },
@@ -93,5 +97,7 @@ export default defineConfig({
     }),
     react(),
   ],
+  // Markdown tables and asides take shadcn's Table and Alert recipes.
+  markdown: { processor: satteri({ hastPlugins: [shadcnMarkdown()] }) },
   vite: { plugins: [tailwindcss()] },
 });

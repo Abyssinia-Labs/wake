@@ -2,7 +2,8 @@
  * Tailwind v4 and shadcn's tokens, mapped onto the risograph inks that
  * riso.css defines. The layer order is Starlight's recipe: its own styles
  * sit between Tailwind's base and its utilities, so a utility class on an
- * element always wins over Starlight's defaults.
+ * element always wins over Starlight's defaults. The `dark` variant comes
+ * from the Starlight bridge (it follows `[data-theme=dark]`).
  */
 @layer base, starlight, theme, components, utilities;
 
@@ -43,6 +44,15 @@
   --on-ink-a: var(--riso-on-a);
   --link: var(--riso-link);
   --code: var(--riso-code);
+  /* shadcn's Sidebar reads its own slots; the docs sidebar wears the page's. */
+  --sidebar: var(--riso-paper);
+  --sidebar-foreground: var(--riso-ink);
+  --sidebar-primary: var(--riso-ink);
+  --sidebar-primary-foreground: var(--riso-paper);
+  --sidebar-accent: var(--riso-hover);
+  --sidebar-accent-foreground: var(--riso-ink);
+  --sidebar-border: var(--sl-color-gray-5);
+  --sidebar-ring: var(--riso-a);
 }
 
 @theme inline {
@@ -70,6 +80,14 @@
   --color-on-ink-a: var(--on-ink-a);
   --color-link: var(--link);
   --color-code: var(--code);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);

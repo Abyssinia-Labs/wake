@@ -1,9 +1,20 @@
 ---
-// Starlight's sidebar, with the release this site documents at its foot.
-import Default from "@astrojs/starlight/components/Sidebar.astro";
+// The docs sidebar on shadcn's Sidebar components (DocsSidebar), inside
+// Starlight's pane, which still owns the mobile drawer and scroll
+// persistence; the mobile menu's footer and the release card follow.
+import MobileMenuFooter from "@astrojs/starlight/components/MobileMenuFooter.astro";
+import SidebarPersister from "@astrojs/starlight/components/SidebarPersister.astro";
+import { DocsSidebar } from "@/components/site/docs-sidebar";
 import { VersionCard } from "@/components/site/version-card";
 import pkg from "../../../../package.json";
+
+const { sidebar } = Astro.locals.starlightRoute;
 ---
 
-<Default />
+<SidebarPersister>
+  <DocsSidebar entries={sidebar} />
+</SidebarPersister>
 <VersionCard version={pkg.version} />
+<div class="md:sl-hidden">
+  <MobileMenuFooter />
+</div>

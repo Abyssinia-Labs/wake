@@ -1,13 +1,13 @@
 ---
-// The site header: brand, the four site links, Starlight's search and theme
-// picker, GitHub, and a Get started button. Starlight's own pieces keep
-// their scripts; chrome.css dresses them.
-import Search from "@astrojs/starlight/components/Search.astro";
 import SocialIcons from "@astrojs/starlight/components/SocialIcons.astro";
 import ThemeSelect from "@astrojs/starlight/components/ThemeSelect.astro";
 import { Mark } from "@/components/site/mark";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+// The site header: brand, the four site links, Starlight's search and theme
+// picker, GitHub, and a Get started button. Starlight's own pieces keep
+// their scripts; chrome.css dresses them.
+import Search from "./Search.astro";
 
 const { siteTitleHref } = Astro.locals.starlightRoute;
 const path = Astro.url.pathname;

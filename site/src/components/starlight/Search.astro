@@ -1,0 +1,258 @@
+---
+import project from "virtual:starlight/project-context";
+// Starlight's Search, with its trigger as a shadcn outline Button and Kbd
+// group. The dialog, the Pagefind UI and the two scripts are Starlight's
+// own (components/Search.astro), kept so search behaves as it did: the
+// inline script turns the Kbd group on and swaps Ctrl for ⌘ on a Mac, so
+// the markup under the button stays `kbd > kbd + kbd`.
+import { Search as SearchIcon } from "lucide-react";
+import { buttonVariants } from "@/components/ui/button";
+import { Kbd, KbdGroup } from "@/components/ui/kbd";
+import { cn } from "@/lib/utils";
+import "../../styles/search.css";
+
+const pagefindTranslations = {
+  placeholder: Astro.locals.t("search.label"),
+  ...Object.fromEntries(
+    Object.entries(Astro.locals.t.all())
+      .filter(([key]) => key.startsWith("pagefind."))
+      .map(([key, value]) => [key.replace("pagefind.", ""), value]),
+  ),
+};
+
+const dataAttributes: DOMStringMap = { "data-translations": JSON.stringify(pagefindTranslations) };
+if (project.trailingSlash === "never") dataAttributes["data-strip-trailing-slash"] = "";
+
+const trigger = cn(
+  buttonVariants({ variant: "outline" }),
+  "w-9 justify-center px-0 text-muted-foreground md:w-56 md:justify-start md:px-3",
+);
+---
+
+<site-search class={Astro.props.class} {...dataAttributes}>
+  <button
+    data-open-modal
+    disabled
+    aria-label={Astro.locals.t("search.label")}
+    aria-keyshortcuts="Control+K"
+    class={trigger}
+  >
+    <SearchIcon />
+    <span class="hidden md:inline" aria-hidden="true">{Astro.locals.t("search.label")}</span>
+    <KbdGroup className="ml-auto hidden md:inline-flex" style={{ display: "none" }}>
+      <Kbd>{Astro.locals.t("search.ctrlKey")}</Kbd><Kbd>K</Kbd>
+    </KbdGroup>
+  </button>
+
+  <dialog style="padding:0" aria-label={Astro.locals.t("search.label")}>
+    <div class="dialog-frame sl-flex">
+      <button data-close-modal class="sl-flex md:sl-hidden">
+        {Astro.locals.t("search.cancelLabel")}
+      </button>
+      {
+        import.meta.env.DEV ? (
+          <div style="margin: auto; text-align: center; white-space: pre-line;" dir="ltr">
+            <p>{Astro.locals.t("search.devWarning")}</p>
+          </div>
+        ) : (
+          <div class="search-container">
+            <div id="starlight__search" />
+          </div>
+        )
+      }
+    </div>
+  </dialog>
+</site-search>
+
+{
+  /* Inlined to avoid briefly showing an invalid shortcut. `navigator.platform` is
+     deprecated but the user agent is spoofed by some browsers with devtools open. */
+}
+<script is:inline>
+  (() => {
+    const openBtn = document.querySelector("button[data-open-modal]");
+    const shortcut = openBtn?.querySelector("kbd");
+    if (!openBtn || !(shortcut instanceof HTMLElement)) return;
+    const platformKey = shortcut.querySelector("kbd");
+    if (platformKey && /(Mac|iPhone|iPod|iPad)/i.test(navigator.platform)) {
+      platformKey.textContent = "⌘";
+      openBtn.setAttribute("aria-keyshortcuts", "Meta+K");
+    }
+    shortcut.style.display = "";
+  })();
+</script>
+
+<script>
+  import { pagefindUserConfig } from "virtual:starlight/pagefind-config";
+
+  class SiteSearch extends HTMLElement {
+    constructor() {
+      super();
+      const openBtn = this.querySelector<HTMLButtonElement>("button[data-open-modal]");
+      const closeBtn = this.querySelector<HTMLButtonElement>("button[data-close-modal]");
+      const dialog = this.querySelector("dialog");
+      const dialogFrame = this.querySelector(".dialog-frame");
+      if (!openBtn || !closeBtn || !dialog || !dialogFrame) return;
+
+      /** Close the modal if a user clicks on a link or outside of the modal. */
+      const onClick = (event: MouseEvent) => {
+        const isLink = "href" in (event.target || {});
+        if (
+          isLink ||
+          (document.body.contains(event.target as Node) &&
+            !dialogFrame.contains(event.target as Node))
+        ) {
+          closeModal();
+        }
+      };
+
+      const openModal = (event?: MouseEvent) => {
+        dialog.showModal();
+        document.body.toggleAttribute("data-search-modal-open", true);
+        this.querySelector("input")?.focus();
+        event?.stopPropagation();
+        window.addEventListener("click", onClick);
+      };
+
+      const closeModal = () => dialog.close();
+
+      openBtn.addEventListener("click", openModal);
+      openBtn.disabled = false;
+      closeBtn.addEventListener("click", closeModal);
+
+      dialog.addEventListener("close", () => {
+        document.body.toggleAttribute("data-search-modal-open", false);
+        window.removeEventListener("click", onClick);
+      });
+
+      // Listen for `ctrl + k` and `cmd + k` keyboard shortcuts.
+      window.addEventListener("keydown", (e) => {
+        if ((e.metaKey === true || e.ctrlKey === true) && e.key === "k") {
+          dialog.open ? closeModal() : openModal();
+          e.preventDefault();
+        }
+      });
+
+      let translations = {};
+      try {
+        translations = JSON.parse(this.dataset.translations || "{}");
+      } catch {}
+
+      const shouldStrip = this.dataset.stripTrailingSlash !== undefined;
+      const stripTrailingSlash = (path: string) => path.replace(/(.)\/(#.*)?$/, "$1$2");
+      const formatURL = shouldStrip ? stripTrailingSlash : (path: string) => path;
+
+      window.addEventListener("DOMContentLoaded", () => {
+        if (import.meta.env.DEV) return;
+        const onIdle = window.requestIdleCallback || ((cb) => setTimeout(cb, 1));
+        onIdle(async () => {
+          // @ts-expect-error — Missing types for @pagefind/default-ui package.
+          const { PagefindUI } = await import("@pagefind/default-ui");
+          new PagefindUI({
+            ...pagefindUserConfig,
+            element: "#starlight__search",
+            baseUrl: import.meta.env.BASE_URL,
+            bundlePath: import.meta.env.BASE_URL.replace(/\/$/, "") + "/pagefind/",
+            showImages: false,
+            translations,
+            showSubResults: true,
+            processResult: (result: { url: string; sub_results: Array<{ url: string }> }) => {
+              result.url = formatURL(result.url);
+              result.sub_results = result.sub_results.map((sub_result) => {
+                sub_result.url = formatURL(sub_result.url);
+                return sub_result;
+              });
+            },
+          });
+        });
+      });
+    }
+  }
+  customElements.define("site-search", SiteSearch);
+</script>
+
+<style>
+  @layer starlight.core {
+    site-search {
+      display: contents;
+    }
+
+    dialog {
+      margin: 0;
+      background-color: var(--sl-color-gray-6);
+      border: 1px solid var(--sl-color-gray-5);
+      width: 100%;
+      max-width: 100%;
+      height: 100%;
+      max-height: 100%;
+      box-shadow: var(--sl-shadow-lg);
+    }
+    dialog[open] {
+      display: flex;
+    }
+
+    dialog::backdrop {
+      background-color: var(--sl-color-backdrop-overlay);
+      -webkit-backdrop-filter: blur(0.25rem);
+      backdrop-filter: blur(0.25rem);
+    }
+
+    .dialog-frame {
+      position: relative;
+      overflow: auto;
+      flex-direction: column;
+      flex-grow: 1;
+      gap: 1rem;
+      padding: 1rem;
+    }
+
+    button[data-close-modal] {
+      position: absolute;
+      z-index: 1;
+      align-items: center;
+      align-self: flex-end;
+      height: calc(64px * var(--pagefind-ui-scale));
+      padding: 0.25rem;
+      border: 0;
+      background: transparent;
+      cursor: pointer;
+      color: var(--sl-color-text-accent);
+    }
+
+    #starlight__search {
+      --pagefind-ui-primary: var(--sl-color-text);
+      --pagefind-ui-text: var(--sl-color-gray-2);
+      --pagefind-ui-font: var(--__sl-font);
+      --pagefind-ui-background: var(--sl-color-black);
+      --pagefind-ui-border: var(--sl-color-gray-5);
+      --pagefind-ui-border-width: 1px;
+      --pagefind-ui-tag: var(--sl-color-gray-5);
+      --sl-search-cancel-space: 5rem;
+    }
+
+    :root[data-theme="light"] #starlight__search {
+      --pagefind-ui-tag: var(--sl-color-gray-6);
+    }
+
+    @media (min-width: 50rem) {
+      #starlight__search {
+        --sl-search-cancel-space: 0px;
+      }
+
+      dialog {
+        margin: 4rem auto auto;
+        border-radius: 0.5rem;
+        width: 90%;
+        max-width: 40rem;
+        height: max-content;
+        min-height: 15rem;
+        max-height: calc(100% - 8rem);
+      }
+
+      .dialog-frame {
+        padding: 1.5rem;
+      }
+    }
+  }
+</style>
+

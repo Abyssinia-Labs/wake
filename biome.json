@@ -41,10 +41,16 @@
       }
     },
     {
-      "includes": ["site/src/components/ui/**"],
+      "includes": ["site/src/styles/search.css"],
+      "linter": { "rules": { "style": { "noDescendingSpecificity": "off" } } }
+    },
+    {
+      "includes": ["site/src/components/ui/**", "site/src/hooks/**"],
       "linter": {
         "rules": {
-          "a11y": { "useSemanticElements": "off", "useFocusableInteractive": "off" }
+          "a11y": { "useSemanticElements": "off", "useFocusableInteractive": "off" },
+          "correctness": { "useExhaustiveDependencies": "off" },
+          "suspicious": { "noDocumentCookie": "off" }
         }
       }
     }

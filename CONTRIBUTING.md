@@ -44,11 +44,14 @@ issue for it.
 `site/` is wakectl.dev: Astro Starlight, its chrome shadcn/ui on Tailwind in
 the risograph inks of `site/src/styles/riso.css`. The shadcn components live
 in `site/src/components/ui` (added with `bunx shadcn@latest add <name>`, then
-pinned exactly in `site/package.json`); Starlight's overridden parts in
-`site/src/components/starlight`. `bun run --cwd site dev` serves it locally;
-`bun run --cwd site deploy` builds it and deploys the Cloudflare Worker that
-serves it, on the Abyssinia Labs account. The spec page is copied from
-`docs/spec/wake-v1.md` at build time: edit the spec there.
+pinned exactly in `site/package.json`); those files keep their upstream shape,
+even over the 300-line rule, so a later `add` is a clean diff. Starlight's
+overridden parts are in `site/src/components/starlight`; markdown tables and
+asides take shadcn's recipes in `site/src/markdown/shadcn.ts`, and code
+blocks' copy button comes from `site/src/ec/copy-button.mjs`. `bun run --cwd
+site dev` serves it locally; `bun run --cwd site deploy` builds it and deploys
+the Cloudflare Worker that serves it, on the Abyssinia Labs account. The spec
+page is copied from `docs/spec/wake-v1.md` at build time: edit the spec there.
 
 ## Pull requests
 

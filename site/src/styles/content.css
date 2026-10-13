@@ -1,7 +1,8 @@
 /*
- * Content: Starlight's markdown restyled to shadcn's measures. Tables sit
- * in a 1px rounded rule, asides read as Alerts, Expressive Code frames
- * take the print's rule colour, and the page's meta line sits on a rule.
+ * Content: Starlight's markdown restyled to shadcn's measures. Tables and
+ * asides take shadcn's recipes in src/rehype/shadcn.ts; code blocks keep
+ * Expressive Code's frames, in the print's rule colour, with the copy
+ * button from src/ec/copy-button.ts. The page's meta line sits on a rule.
  */
 
 /* The landing page runs a 70rem container. Starlight sets this width
@@ -37,68 +38,6 @@ html[data-has-hero][data-theme] {
   .sl-markdown-content code:not(:where(.not-content *)) {
     border: 1px solid var(--border);
     border-radius: 0.25rem;
-  }
-
-  /* Tables: a rounded 1px rule, muted header, rows on hairlines. */
-  .sl-markdown-content table:not(:where(.not-content *)) {
-    display: table;
-    width: 100%;
-    border: 1px solid var(--border);
-    border-radius: 0.5rem;
-    border-collapse: separate;
-    border-spacing: 0;
-    font-size: 0.875rem;
-    overflow: hidden;
-  }
-  .sl-markdown-content :is(th, td):not(:where(.not-content *)) {
-    padding: 0.75rem;
-    border-bottom: 1px solid var(--border);
-    vertical-align: top;
-    overflow-wrap: anywhere;
-  }
-  .sl-markdown-content :is(th:first-child, td:first-child):not(:where(.not-content *)) {
-    padding-inline-start: 0.75rem;
-  }
-  .sl-markdown-content :is(th:last-child, td:last-child):not(:where(.not-content *)) {
-    padding-inline-end: 0.75rem;
-  }
-  .sl-markdown-content th:not(:where(.not-content *)) {
-    height: 2.5rem;
-    padding-block: 0;
-    vertical-align: middle;
-    font-weight: 500;
-    color: var(--muted-foreground);
-  }
-  .sl-markdown-content tr:last-child td:not(:where(.not-content *)) {
-    border-bottom: 0;
-  }
-  .sl-markdown-content tbody tr:hover:not(:where(.not-content *)) {
-    background: color-mix(in srgb, var(--muted) 50%, transparent);
-  }
-
-  /* Asides read as shadcn Alerts; a note takes the card ground and the first ink. */
-  .starlight-aside {
-    padding: 0.75rem 1rem;
-    border: 1px solid var(--sl-color-asides-border);
-    border-radius: 0.5rem;
-    font-size: 0.875rem;
-  }
-  .starlight-aside--note {
-    --sl-color-asides-text-accent: var(--foreground);
-    --sl-color-asides-border: var(--border);
-    background: var(--card);
-  }
-  .starlight-aside--note .starlight-aside__icon {
-    color: var(--ink-a);
-  }
-  .starlight-aside--note .starlight-aside__content {
-    color: var(--muted-foreground);
-  }
-  .starlight-aside__title {
-    font-size: 0.875rem;
-  }
-  .starlight-aside__title + .starlight-aside__content {
-    margin-top: 0.25rem;
   }
 
   /* Code blocks: the print's rule, no window shadow, the second ink for the dots. */

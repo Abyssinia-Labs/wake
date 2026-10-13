@@ -4,7 +4,7 @@ import { Mark } from "@/components/site/mark";
 import { ThemeToggle } from "@/components/site/theme-toggle";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-// The site header: brand, the four site links, Starlight's search and theme
+// The site header: brand, the five site links, Starlight's search and theme
 // picker, GitHub, and a Get started button. Starlight's own pieces keep
 // their scripts; chrome.css dresses them.
 import Search from "./Search.astro";
@@ -16,6 +16,9 @@ const links = [
   { label: "Guides", href: "/guides/github/", under: ["/guides/"] },
   { label: "For apps", href: "/apps/overview/", under: ["/apps/"] },
   { label: "Spec", href: "/spec/wake-v1/", under: ["/spec/"] },
+  // From 60rem only: below it five links and the search button don't fit,
+  // and the sidebar, footer and hero all link to it anyway.
+  { label: "Changelog", href: "/changelog/", under: ["/changelog/"], wide: true },
 ];
 const isCurrent = (under: string[]): boolean => under.some((prefix) => path.startsWith(prefix));
 ---
@@ -27,8 +30,12 @@ const isCurrent = (under: string[]): boolean => under.some((prefix) => path.star
   </a>
   <nav aria-label="Site" class="site-nav">
     {
-      links.map(({ label, href, under }) => (
-        <a href={href} aria-current={isCurrent(under) ? "page" : undefined}>
+      links.map(({ label, href, under, wide }) => (
+        <a
+          href={href}
+          aria-current={isCurrent(under) ? "page" : undefined}
+          data-wide={wide ? "" : undefined}
+        >
           {label}
         </a>
       ))

@@ -1,0 +1,56 @@
+---
+// What changed in the two packages an app serves wake/v1 with, from each
+// package's CHANGELOG.md at build time, one section each.
+import StarlightPage from "@astrojs/starlight/components/StarlightPage.astro";
+import { ChangelogRelease } from "@/components/site/changelog-release";
+import { convexLog, serverLog } from "@/lib/changelog";
+
+const packages = [
+  {
+    id: "convex",
+    title: "The Convex component",
+    name: "@abyssinia-labs/wake-convex",
+    href: "/apps/convex/",
+    log: convexLog,
+  },
+  {
+    id: "server",
+    title: "The HTTP server",
+    name: "@abyssinia-labs/wake-server",
+    href: "/apps/postgres/",
+    log: serverLog,
+  },
+];
+
+const headings = packages.flatMap(({ id, title, log }) => [
+  { depth: 2, slug: id, text: title },
+  ...log.releases.map((release) => ({ depth: 3, slug: release.anchor, text: release.version })),
+]);
+---
+
+<StarlightPage
+  frontmatter={{
+    title: "Changelog for apps",
+    description: "What changed in the Convex component and the HTTP server, release by release.",
+  }}
+  headings={headings}
+>
+  <p>
+    What changed in <code>wakectl</code> itself is in <a href="/changelog/">its own changelog</a>.
+  </p>
+  {
+    packages.map(({ id, title, name, href, log }) => (
+      <section>
+        <h2 id={id}>{title}</h2>
+        <p>
+          <a href={href}>
+            <code>{name}</code>
+          </a>
+        </p>
+        {log.releases.map((release, index) => (
+          <ChangelogRelease release={release} level={3} newest={index === 0} />
+        ))}
+      </section>
+    ))
+  }
+</StarlightPage>

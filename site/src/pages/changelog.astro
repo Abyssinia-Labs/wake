@@ -1,0 +1,33 @@
+---
+// What changed in wakectl, from CHANGELOG.md at build time. A page of its
+// own rather than a copied Markdown file, so each version gets the plain
+// anchor `wakectl update` links to (#v0-4-0) and its categories their badges.
+import StarlightPage from "@astrojs/starlight/components/StarlightPage.astro";
+import { ChangelogRelease } from "@/components/site/changelog-release";
+import { wakeLog } from "@/lib/changelog";
+
+const headings = wakeLog.releases.map((release) => ({
+  depth: 2,
+  slug: release.anchor,
+  text: release.version,
+}));
+---
+
+<StarlightPage
+  frontmatter={{
+    title: "Changelog",
+    description: "What changed in wakectl, and in Wake for GitHub, release by release.",
+    editUrl: "https://github.com/Abyssinia-Labs/wake/edit/main/CHANGELOG.md",
+  }}
+  headings={headings}
+>
+  <p>
+    <code>wake update</code> installs the newest release. Wake for GitHub has no versions of its own, so its changes are listed with the release they
+    shipped beside. Apps that serve wake/v1 have <a href="/apps/changelog/">their own changelog</a>.
+  </p>
+  {
+    wakeLog.releases.map((release, index) => (
+      <ChangelogRelease release={release} newest={index === 0} />
+    ))
+  }
+</StarlightPage>

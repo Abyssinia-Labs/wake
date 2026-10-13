@@ -25,7 +25,9 @@ if (project.trailingSlash === "never") dataAttributes["data-strip-trailing-slash
 
 const trigger = cn(
   buttonVariants({ variant: "outline" }),
-  "w-9 justify-center px-0 text-muted-foreground md:w-56 md:justify-start md:px-3",
+  // The full trigger only from xl: below it the header's five links leave
+  // it no room, and a fixed-width button spilled left over them.
+  "w-9 justify-center px-0 text-muted-foreground xl:w-56 xl:justify-start xl:px-3",
 );
 ---
 
@@ -38,8 +40,8 @@ const trigger = cn(
     class={trigger}
   >
     <SearchIcon />
-    <span class="hidden md:inline" aria-hidden="true">{Astro.locals.t("search.label")}</span>
-    <KbdGroup className="ml-auto hidden md:inline-flex" style={{ display: "none" }}>
+    <span class="hidden xl:inline" aria-hidden="true">{Astro.locals.t("search.label")}</span>
+    <KbdGroup className="ml-auto hidden xl:inline-flex" style={{ display: "none" }}>
       <Kbd>{Astro.locals.t("search.ctrlKey")}</Kbd><Kbd>K</Kbd>
     </KbdGroup>
   </button>

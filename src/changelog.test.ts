@@ -9,11 +9,14 @@ import {
   releasesBetween,
 } from "./changelog";
 import {
+  bumpManifest,
   checkChangelog,
+  cutRelease,
   LOGS,
   logOfFile,
   logOfTag,
   missingEntries,
+  nextVersion,
   releaseProblems,
   unreleasedChanged,
 } from "./changelog-check";
@@ -159,6 +162,47 @@ describe("what CI holds it to", () => {
       missingEntries(["src/run.ts", "packages/server/src/wake.ts", "src/run.test.ts"], wrote),
     ).toEqual(["CHANGELOG.md"]);
     expect(missingEntries(["src/run.test.ts", "README.md"], () => false)).toEqual([]);
+  });
+});
+
+describe("preparing a release", () => {
+  test("the next version, by bump or outright", () => {
+    expect(nextVersion("0.3.1", "patch")).toBe("0.3.2");
+    expect(nextVersion("0.3.1", "minor")).toBe("0.4.0");
+    expect(nextVersion("0.3.1", "major")).toBe("1.0.0");
+    expect(nextVersion("0.3.1", "0.10.0")).toBe("0.10.0");
+    expect(() => nextVersion("0.3.1", "0.3.1")).toThrow("isn't newer");
+    expect(() => nextVersion("0.3.1", "v0.4")).toThrow("isn't patch");
+  });
+
+  test("Unreleased becomes the version's section, and a release then passes", () => {
+    const cut = cutRelease(LOG, "0.3.0", "2026-10-14");
+    expect(cut).toContain(
+      "## Unreleased\n\n## 0.3.0 — 2026-10-14\n\n### Added\n\n- **Something new.**",
+    );
+    expect(checkChangelog(cut, "0.3.0")).toEqual([]);
+    expect(releaseProblems(cut, "0.3.0")).toEqual([]);
+    expect(releaseOf(parseChangelog(cut), "0.3.0")?.groups[0]?.entries[0]?.headline).toBe(
+      "Something new.",
+    );
+  });
+
+  test("nothing to release, or a version already out, is refused", () => {
+    const empty = LOG.replace("### Added\n\n- **Something new.** Not out yet.\n", "");
+    expect(() => cutRelease(empty, "0.3.0", "2026-10-14")).toThrow("Unreleased is empty");
+    expect(() => cutRelease(LOG, "0.2.0", "2026-10-14")).toThrow("already has a section");
+  });
+
+  test("package.json keeps everything but its version", () => {
+    const manifest =
+      '{\n  "name": "x",\n  "version": "0.3.1",\n  "dependencies": { "y": "1.0.0" }\n}\n';
+    expect(bumpManifest(manifest, "0.4.0")).toBe(manifest.replace("0.3.1", "0.4.0"));
+    expect(() => bumpManifest('{ "name": "x" }', "0.4.0")).toThrow("no version");
+  });
+
+  test("the repository's own tooling is never news", () => {
+    expect(logOfFile("src/changelog-check.ts")).toBeNull();
+    expect(logOfFile("src/changelog.ts")).toBe("CHANGELOG.md");
   });
 });
 

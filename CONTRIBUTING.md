@@ -52,6 +52,8 @@ blocks' copy button comes from `site/src/ec/copy-button.mjs`. `bun run --cwd
 site dev` serves it locally; `bun run --cwd site deploy` builds it and deploys
 the Cloudflare Worker that serves it, on the Abyssinia Labs account. The spec
 page is copied from `docs/spec/wake-v1.md` at build time: edit the spec there.
+Both scripts pass `--force`: Astro caches rendered Markdown, and a change to
+the Markdown or code-block plugins would otherwise not reach the pages.
 
 ## Pull requests
 

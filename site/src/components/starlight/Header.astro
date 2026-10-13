@@ -1,7 +1,7 @@
 ---
 import SocialIcons from "@astrojs/starlight/components/SocialIcons.astro";
-import ThemeSelect from "@astrojs/starlight/components/ThemeSelect.astro";
 import { Mark } from "@/components/site/mark";
+import { ThemeToggle } from "@/components/site/theme-toggle";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 // The site header: brand, the four site links, Starlight's search and theme
@@ -39,7 +39,7 @@ const isCurrent = (under: string[]): boolean => under.some((prefix) => path.star
   </div>
   <div class="right print:hidden">
     <SocialIcons />
-    <ThemeSelect />
+    <ThemeToggle client:load />
     <a href="/start/getting-started/" class={cn(buttonVariants({ size: "sm" }), "no-underline")}>Get started</a>
   </div>
 </div>

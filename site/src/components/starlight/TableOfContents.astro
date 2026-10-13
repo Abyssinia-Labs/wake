@@ -1,0 +1,107 @@
+---
+// "On this page" on shadcn's Sidebar primitives (DocsToc). The element
+// below marks the heading in view, as Starlight's own table of contents
+// does, on shadcn's `data-active` rather than a class of its own.
+import { DocsToc } from "@/components/site/docs-toc";
+
+const { toc } = Astro.locals.starlightRoute;
+---
+
+{
+  toc && (
+    <wake-toc data-min-h={toc.minHeadingLevel} data-max-h={toc.maxHeadingLevel}>
+      <nav aria-labelledby="starlight__on-this-page">
+        <DocsToc items={toc.items} label={Astro.locals.t("tableOfContents.onThisPage")} />
+      </nav>
+    </wake-toc>
+  )
+}
+
+<script>
+  // A port of Starlight's starlight-toc element (components-internals/
+  // TableOfContents/starlight-toc.ts): the heading whose content is in view
+  // owns the current link.
+  const PAGE_TITLE_ID = "_top";
+
+  class WakeToc extends HTMLElement {
+    private current: HTMLAnchorElement | null = null;
+    private minH = Number.parseInt(this.dataset.minH || "2", 10);
+    private maxH = Number.parseInt(this.dataset.maxH || "3", 10);
+    private headingSelector = `h1#${PAGE_TITLE_ID},:where(${Array.from(
+      { length: 1 + this.maxH - this.minH },
+      (_, index) => `h${this.minH + index}`,
+    ).join()})[id]`;
+
+    constructor() {
+      super();
+      (window.requestIdleCallback || ((cb: () => void) => setTimeout(cb, 1)))(() => this.init());
+    }
+
+    private setCurrent(link: HTMLAnchorElement): void {
+      if (link === this.current) return;
+      if (this.current) {
+        this.current.removeAttribute("aria-current");
+        delete this.current.dataset.active;
+      }
+      link.setAttribute("aria-current", "true");
+      link.dataset.active = "true";
+      this.current = link;
+    }
+
+    private init(): void {
+      const links = [...this.querySelectorAll("a")];
+      const isHeading = (el: Element): boolean => el.matches(this.headingSelector);
+      const headingOf = (start: Element): Element | null => {
+        let el: Element | null = start;
+        while (el) {
+          if (el.matches(".sl-markdown-content, main > *")) return document.getElementById(PAGE_TITLE_ID);
+          if (isHeading(el)) return el;
+          const child = el.querySelector(this.headingSelector);
+          if (child) return child;
+          let prev: Element | null = el.previousElementSibling;
+          while (prev?.lastElementChild) prev = prev.lastElementChild;
+          el = prev ?? el.parentElement;
+        }
+        return null;
+      };
+      const onIntersect = (entries: IntersectionObserverEntry[]): void => {
+        for (const { isIntersecting, target } of entries) {
+          if (!isIntersecting) continue;
+          const heading = headingOf(target);
+          if (!heading) continue;
+          const link = links.find((one) => one.hash === `#${encodeURIComponent(heading.id)}`);
+          if (link) {
+            this.setCurrent(link);
+            break;
+          }
+        }
+      };
+      const watched = document.querySelectorAll(
+        [
+          `main :where(${this.headingSelector})`,
+          `main :where(${this.headingSelector}, .sl-heading-wrapper) ~ *:not(:has(${this.headingSelector}))`,
+          `main .sl-markdown-content > *:not(:has(${this.headingSelector}))`,
+          `main > *:not(:has(${this.headingSelector}))`,
+        ].join(),
+      );
+      let observer: IntersectionObserver | undefined;
+      const observe = (): void => {
+        if (observer) return;
+        const top = (document.querySelector("header")?.getBoundingClientRect().height || 0) + 32;
+        observer = new IntersectionObserver(onIntersect, {
+          rootMargin: `-${top}px 0% ${top + 53 - document.documentElement.clientHeight}px`,
+        });
+        watched.forEach((el) => observer?.observe(el));
+      };
+      observe();
+      let timer: ReturnType<typeof setTimeout> | undefined;
+      window.addEventListener("resize", () => {
+        observer?.disconnect();
+        observer = undefined;
+        clearTimeout(timer);
+        timer = setTimeout(observe, 200);
+      });
+    }
+  }
+  customElements.define("wake-toc", WakeToc);
+</script>

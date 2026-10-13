@@ -1,45 +1,14 @@
 /*
- * The chrome that is still Starlight's markup (the table of contents, the
- * header's frame, the theme picker and the GitHub link) restyled to
- * shadcn's measures: 36px controls, 6px radii, 1px rules. The search
- * trigger and the sidebar are shadcn components now (Search.astro,
- * Sidebar.astro). The `components` layer sits after Starlight's own, so
+ * The little of Starlight's chrome that is still its own markup (the
+ * header's frame and the GitHub link), restyled to shadcn's measures, and
+ * the two resets shadcn's Sidebar lists and links would get from
+ * Tailwind's preflight, which Starlight runs without. The search trigger,
+ * the sidebar, the table of contents and the theme picker are shadcn
+ * components now. The `components` layer sits after Starlight's own, so
  * these win without !important, and a Tailwind utility on the same
- * element still wins over these. Blocks run from the least to the most
- * specific selector, as Biome asks.
+ * element still wins over these.
  */
 @layer components {
-  /* On this page: a hairline with a 2px marker in the first ink on the current heading. */
-  starlight-toc > nav > ul {
-    border-inline-start: 1px solid var(--border);
-  }
-  starlight-toc a {
-    margin-inline-start: -1px;
-    border-inline-start: 2px solid transparent;
-    border-radius: 0;
-    padding-block: 0.375rem;
-    padding-inline: calc(1rem * var(--depth) + 0.75rem) 0.75rem;
-    font-size: 0.875rem;
-    line-height: 1.3;
-    color: var(--muted-foreground);
-  }
-  starlight-toc a:hover {
-    color: var(--foreground);
-  }
-  starlight-toc a[aria-current="true"] {
-    border-color: var(--ink-a);
-    color: var(--foreground);
-    font-weight: 500;
-  }
-  .right-sidebar-panel h2 {
-    margin-bottom: 0.75rem;
-    font-family: var(--font-sans);
-    font-size: 0.75rem;
-    font-weight: 600;
-    letter-spacing: 0;
-    color: var(--foreground);
-  }
-
   /* Header (Header.astro). On the landing page it shares the content's container. */
   .site-header {
     display: flex;
@@ -102,7 +71,7 @@
     }
   }
 
-  /* The GitHub link and the theme picker read as ghost buttons. */
+  /* The GitHub link reads as a ghost icon button, like the theme picker beside it. */
   .site-header .right a[rel="me"] {
     display: inline-flex;
     align-items: center;
@@ -118,37 +87,22 @@
     background: var(--accent);
     color: var(--foreground);
   }
-  .site-header starlight-theme-select label {
-    height: 2.25rem;
-    padding-inline: 0.5rem;
-    border-radius: 0.375rem;
-    color: var(--muted-foreground);
-  }
-  .site-header starlight-theme-select label:hover {
-    background: var(--accent);
-    color: var(--foreground);
-  }
-  .site-header starlight-theme-select select {
-    padding-block: 0;
-    height: 100%;
-  }
 
-  /* Starlight's sidebar pane around the shadcn Sidebar, and the two resets
-     its lists and links would get from Tailwind's preflight. */
+  /* Starlight's sidebar pane around the shadcn Sidebar. */
   .sidebar-content {
     padding-top: 1.5rem;
   }
-  .sidebar-content [data-slot="sidebar-menu"],
-  .sidebar-content [data-slot="sidebar-menu-sub"] {
+
+  /* shadcn's Sidebar menus are lists and its buttons are links here; without
+     Tailwind's preflight they would keep the browser's bullets and underlines. */
+  ul[data-slot="sidebar-menu"],
+  ul[data-slot="sidebar-menu-sub"] {
     margin: 0;
-    padding-inline-start: 0;
+    padding: 0;
     list-style: none;
   }
-  .sidebar-content [data-slot="sidebar-menu-sub"] {
-    padding-inline: 0.625rem;
-  }
-  .sidebar-content a[data-slot="sidebar-menu-button"],
-  .sidebar-content a[data-slot="sidebar-menu-sub-button"] {
+  a[data-slot="sidebar-menu-button"],
+  a[data-slot="sidebar-menu-sub-button"] {
     text-decoration: none;
   }
 }

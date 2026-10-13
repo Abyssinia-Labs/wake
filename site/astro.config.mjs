@@ -39,6 +39,8 @@ export default defineConfig({
         PageTitle: "./src/components/starlight/PageTitle.astro",
         Sidebar: "./src/components/starlight/Sidebar.astro",
         Search: "./src/components/starlight/Search.astro",
+        TableOfContents: "./src/components/starlight/TableOfContents.astro",
+        MobileMenuFooter: "./src/components/starlight/MobileMenuFooter.astro",
       },
       head: [
         { tag: "link", attrs: { rel: "preconnect", href: "https://fonts.googleapis.com" } },

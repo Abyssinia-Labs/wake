@@ -24,9 +24,10 @@ const el = (tagName, properties, children = []) => ({
   children,
 });
 
-// `buttonVariants({ variant: "ghost", size: "icon-xs" })`, as a string.
+// `buttonVariants({ variant: "ghost", size: "icon-xs" })`, as a string, plus the
+// border, background, padding and cursor Starlight reverts inside a code block.
 const BUTTON =
-  "inline-flex shrink-0 items-center justify-center gap-2 rounded-md text-sm font-medium whitespace-nowrap transition-all outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 hover:bg-accent hover:text-accent-foreground size-6 [&_svg:not([class*='size-'])]:size-3 text-muted-foreground";
+  "inline-flex shrink-0 items-center justify-center gap-2 rounded-md text-sm font-medium whitespace-nowrap transition-all outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 hover:bg-accent hover:text-accent-foreground size-6 cursor-pointer border-0 bg-transparent p-0 [&_svg:not([class*='size-'])]:size-3 text-muted-foreground";
 
 /** @param {Hast[]} paths */
 const icon = (paths) =>

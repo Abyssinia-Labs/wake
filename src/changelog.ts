@@ -95,10 +95,13 @@ export function releaseOf(log: Changelog, version: string): Release | undefined 
   return log.releases.find((one) => one.version === version);
 }
 
+/** A version's section, as opposed to Unreleased. */
+export type Released = Release & { version: string };
+
 /** The releases after `from`, up to and including `to`, newest first. */
-export function releasesBetween(log: Changelog, from: string, to: string): Release[] {
+export function releasesBetween(log: Changelog, from: string, to: string): Released[] {
   return log.releases.filter(
-    (one) =>
+    (one): one is Released =>
       one.version !== null &&
       compareVersions(one.version, from) > 0 &&
       compareVersions(one.version, to) <= 0,

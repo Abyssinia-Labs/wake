@@ -14,6 +14,9 @@ own: [the Convex component](packages/convex/CHANGELOG.md) and
   or answer the new question in `wakectl setup`, which offers Claude Code's aliases, the models
   Codex lists, and the ones `cursor-agent models` lists for your account. With nothing picked, a
   run uses its tool's own default, as before. `wakectl status` shows the choice.
+- **`wakectl update` says what changed since your version.** The headline of each release in
+  between, security fixes marked, and a link to the rest. You'll see it from your next update after
+  this one, since the version being replaced is the one that runs it.
 - **Wake for GitHub: plans, with organisation policy and an audit on Team.** The basic loop stays
   free. On Team, an organisation's admins choose which repositories may summon an agent and who
   may, and see the organisation's runs, at `github.wakectl.dev/org/<login>`.

@@ -8,6 +8,8 @@ own: [the Convex component](packages/convex/CHANGELOG.md) and
 
 ## Unreleased
 
+## 0.4.0 — 2026-10-13
+
 ### Added
 
 - **Pick the model each of your agents runs with.** `wakectl model claude opus --effort high`,

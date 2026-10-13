@@ -1,6 +1,7 @@
-// `wakectl update`: the newest @abyssinia-labs/wake from npm, and the
-// listener restarted onto it. A copy run from a checkout of the repository
-// is the person's to update with git, so it is told so and left alone.
+// `wakectl update`: the newest @abyssinia-labs/wake from npm, the listener
+// restarted onto it, and what changed since the version it replaced. A
+// copy run from a checkout of the repository is the person's to update
+// with git, so it is told so and left alone.
 import { readFile } from "node:fs/promises";
 import pkg from "../../package.json";
 import { paths } from "../config";
@@ -9,6 +10,7 @@ import { type Exec, exec } from "../exec";
 import { say } from "../log";
 import { isAlive, readState } from "../state";
 import { bold, cyan, dim, mark, spin, tildify } from "../ui";
+import { installedNotes, whatsNew } from "../whats-new";
 
 const PACKAGE = "@abyssinia-labs/wake";
 const GLOBAL_MARK = `/install/global/node_modules/${PACKAGE}/`;
@@ -103,4 +105,7 @@ export async function update(run: Exec = exec): Promise<void> {
   }
   say(`${mark.ok()} Updated Wake ${current} → ${bold(latest)}`);
   if (script) await restartListener(run, script);
+  // Read from the files just installed, which are the new version's.
+  const notes = whatsNew(script ? await installedNotes(script) : null, current, latest);
+  if (notes.length > 0) say(`\n${notes.join("\n")}`);
 }

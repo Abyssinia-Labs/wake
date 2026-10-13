@@ -67,3 +67,17 @@ says what changed for a person using `wakectl`, and so does an entry under
 that changes code people use with no entry, unless a maintainer labels it
 `no changelog`. CLAUDE.md says what an entry looks like. Commit subjects are
 imperative and under 72 characters; the body says why.
+
+## Releases
+
+```bash
+bun run release minor            # wakectl; or patch, major, 1.2.3
+bun run release patch --package server
+```
+
+From an up-to-date `main`, this makes a `release-<tag>` branch whose one
+commit turns Unreleased into the version's dated section and bumps the
+version, and prints what to do next: open its pull request, and once it
+merges, push the tag from `main`. The release workflow refuses a tag whose
+notes are missing, publishes to npm once a maintainer approves the `npm`
+environment, and posts the notes as a GitHub release.

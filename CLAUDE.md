@@ -26,9 +26,14 @@ against the spec.
 - Scripts: `bun test`, `bun run typecheck` (TypeScript 7 `tsc`),
   `bun run lint` (Biome), `bun run format`, `bun run wakectl <command>`.
 - Published to npm as `@abyssinia-labs/wake` (owner's call, 2026-10-09).
-  A release is a `vX.Y.Z` tag matching `package.json`; the release
-  workflow publishes it through npm's trusted publishing. Never publish
-  from a machine.
+  A release is a `vX.Y.Z` tag matching `package.json` (`convex-v`,
+  `server-v` for the packages). `bun run release <patch|minor|major>
+  [--package convex|server]` prepares it on a branch: Unreleased becomes
+  the version's section, the version is bumped, one commit. After its pull
+  request merges, a person tags main and pushes the tag; the release
+  workflow checks the notes, publishes through npm's trusted publishing
+  once the npm environment is approved, and makes the GitHub release.
+  Never publish from a machine.
 
 ## Code standards
 

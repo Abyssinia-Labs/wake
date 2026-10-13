@@ -36,6 +36,8 @@ jobs:
           GIT_AUTHOR_EMAIL: ci@example.com
           GIT_COMMITTER_NAME: ci
           GIT_COMMITTER_EMAIL: ci@example.com
+      - name: The changelogs keep their format, at their packages' versions
+        run: bun run changelog check
       - name: No file over the ceiling (CLAUDE.md)
         run: |
           over=$(find src -name '*.ts' -exec wc -l {} + | awk '$2 != "total" && $1 > 350')

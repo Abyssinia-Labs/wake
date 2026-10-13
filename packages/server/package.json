@@ -26,6 +26,7 @@
     "src",
     "!src/**/*.test.ts",
     "!src/test-*.ts",
+    "CHANGELOG.md",
     "LICENSE",
     "README.md"
   ],

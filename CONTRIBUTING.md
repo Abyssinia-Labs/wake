@@ -57,6 +57,10 @@ the Markdown or code-block plugins would otherwise not reach the pages.
 
 ## Pull requests
 
-`bun test`, `bun run typecheck` and `bun run lint` pass, and the README
-says what changed for a person using `wakectl`. Commit subjects are
+`bun test`, `bun run typecheck` and `bun run lint` pass, the README
+says what changed for a person using `wakectl`, and so does an entry under
+`## Unreleased` in the changelog (`CHANGELOG.md`, or the package's own).
+`bun run changelog check` checks their format; CI also fails a pull request
+that changes code people use with no entry, unless a maintainer labels it
+`no changelog`. CLAUDE.md says what an entry looks like. Commit subjects are
 imperative and under 72 characters; the body says why.

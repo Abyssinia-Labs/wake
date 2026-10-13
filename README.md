@@ -40,7 +40,8 @@ wakectl setup
 
 `wake` is the same command, shorter to type (`wake status`, `wake logs -f`).
 `wakectl update` installs the newest version from npm and restarts the
-listener onto it.
+listener onto it. What changed in each release is in
+[CHANGELOG.md](CHANGELOG.md).
 
 Or from source: clone this repository, then `bun install` and `bun link`,
 which puts `wakectl` on your PATH.

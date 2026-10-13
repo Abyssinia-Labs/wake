@@ -61,4 +61,18 @@ Imperative subjects under 72 characters; the body says why. Keep the
 ## Definition of done
 
 `bun test`, `bun run typecheck` and `bun run lint` pass; no file over the
-ceiling; the README says what changed for a person using `wakectl`.
+ceiling; the README says what changed for a person using `wakectl`; and the
+changelog says it too.
+
+## The changelog
+
+A change someone would notice gets an entry under `## Unreleased`, in the
+same pull request: `CHANGELOG.md` for `wakectl` and Wake for GitHub,
+`packages/*/CHANGELOG.md` for each package. An entry is
+`- **A headline that stands alone.** What it means for the person.`, under
+`### Added`, `Changed`, `Deprecated`, `Removed`, `Fixed` or `Security`:
+`wakectl update` and wakectl.dev show the headline alone. CI fails a pull
+request that changes `src/`, `packages/*/src` or `apps/github/src` with
+nothing under Unreleased, and a release whose version has no section.
+Only a person adds the `no changelog` label, for a change nobody would
+notice. `src/changelog-check.ts` is the whole rule.

@@ -7,7 +7,9 @@ import { machineChecks, type Probe, realProbe, wakeChecks } from "../doctor";
 import { exec } from "../exec";
 import { say } from "../log";
 import { terminalIo } from "../prompt";
+import { cursorChecks } from "../runners/cursor-signin";
 import { isAlive, readState } from "../state";
+import { toolOf } from "../tools";
 import { bold } from "../ui";
 import { pair } from "./pair";
 import { install } from "./service";
@@ -24,8 +26,16 @@ async function probe(): Promise<Probe> {
 }
 
 export async function doctor(): Promise<void> {
+  const config = await loadConfig();
   const machine = await machineChecks(exec, await probe());
-  const wake = wakeChecks(await loadConfig(), await probe());
+  // The MCP server each Cursor pairing's runs read the app through (WAK-14).
+  const cursorServers = Object.values(config.apps)
+    .filter((app) => toolOf(app) === "cursor")
+    .map((app) => app.mcpServer ?? app.app);
+  const wake = [
+    ...wakeChecks(config, await probe()),
+    ...(await cursorChecks([...new Set(cursorServers)])),
+  ];
   say(
     [bold("This machine"), ...checkLines(machine), "", bold("Wake"), ...checkLines(wake)].join(
       "\n",

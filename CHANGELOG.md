@@ -8,6 +8,14 @@ own: [the Convex component](packages/convex/CHANGELOG.md) and
 
 ## Unreleased
 
+### Fixed
+
+- **A Cursor run that isn't signed in to the app no longer starts blind.** Cursor keeps MCP
+  sign-ins per folder, so a run on a new branch started signed out and couldn't read what it was
+  asked. Wake now checks first: the ticket says why the run didn't start, `wakectl logs` gives
+  the one command that signs that folder in, and `wakectl doctor` checks that Cursor has the
+  app's MCP server.
+
 ## 0.4.0 — 2026-10-13
 
 ### Added

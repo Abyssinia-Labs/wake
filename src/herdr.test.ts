@@ -126,6 +126,8 @@ describe("a question before the agent is ready", () => {
     const calls: string[][] = [];
     const exec: Exec = async (cmd) => {
       calls.push(cmd);
+      // Signed in to the app's server in the run's folder (WAK-14).
+      if (cmd[0] === "cursor-agent") return { code: 0, stdout: "gatherd: ready\n", stderr: "" };
       if (cmd[2] === "start") {
         return {
           code: 1,
@@ -161,6 +163,8 @@ describe("a start herdr timed out on", () => {
     const calls: string[][] = [];
     const exec: Exec = async (cmd) => {
       calls.push(cmd);
+      // Signed in to the app's server in the run's folder (WAK-14).
+      if (cmd[0] === "cursor-agent") return { code: 0, stdout: "gatherd: ready\n", stderr: "" };
       if (cmd[2] === "start") {
         return {
           code: 1,

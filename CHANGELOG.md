@@ -8,6 +8,8 @@ own: [the Convex component](packages/convex/CHANGELOG.md) and
 
 ## Unreleased
 
+## 0.4.1 — 2026-10-14
+
 ### Fixed
 
 - **A Cursor run that isn't signed in to the app no longer starts blind.** Cursor keeps MCP

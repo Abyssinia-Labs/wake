@@ -42,10 +42,20 @@ it may have exited with an error herdr didn't pass on.
 
 ## Cursor can't reach the app
 
-Cursor keeps its MCP sign-ins per folder, so a new worktree can start
-signed out of the app. In a herdr tab, run `/mcp login <app>` there; in the
-background, the run can't sign in and fails. This is Cursor's behaviour;
-Claude Code and Codex sign in once.
+Cursor keeps its MCP sign-ins per folder, and each run on a new branch gets a
+new worktree, so it starts signed out of the app and couldn't read what it
+was asked. Wake checks before it starts Cursor, and when the folder isn't
+signed in it doesn't start the run: the ticket says so, and `wake logs`
+shows the one command that signs that folder in:
+
+```bash
+cd '<the run's worktree>' && cursor-agent mcp login '<app>'
+```
+
+Then ask again. Later runs on the same branch use the same folder, so they
+stay signed in. `wake doctor` also checks that Cursor has the app's MCP
+server at all. This is Cursor's behaviour; Claude Code and Codex sign in
+once.
 
 ## The ticket says it couldn't finish
 

@@ -114,7 +114,10 @@ and made again. Interactive Codex asks whether to trust
 each new folder; `wakectl trust codex on` has Wake add the run's worktree to
 `~/.codex/config.toml` first, marked as Wake's, and `wakectl prune` takes it
 out again. Cursor is started with `--trust` for the run's worktree, in herdr
-as headless. If an agent in herdr stops on a question before it is ready,
+as headless. Cursor keeps MCP sign-ins per folder, so a run on a new branch
+starts signed out of the app: Wake checks first and refuses such a run
+rather than start it unable to read the ask, and `wakectl logs` gives the
+command that signs that folder in. If an agent in herdr stops on a question before it is ready,
 Wake waits for you to answer it in the tab rather than failing the run.
 
 `wakectl pause` stops new claims (a run already going finishes) and

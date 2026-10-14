@@ -16,6 +16,7 @@ import { gitOk } from "../exec";
 import { cursorPermissions } from "../fence";
 import { modelArgs } from "../models";
 import { excludeFromGit } from "../worktree";
+import { requireCursorSignIn } from "./cursor-signin";
 
 function isRecord(v: unknown): v is Record<string, unknown> {
   return typeof v === "object" && v !== null && !Array.isArray(v);
@@ -124,6 +125,7 @@ export async function runCursor(
   spawn: Spawn = spawnClaude,
 ): Promise<ClaudeResult> {
   await writeCursorPermissions(run, o);
+  await requireCursorSignIn(run, o);
   let result: Record<string, unknown> | null = null;
   let session = false;
   const approve = !(await branchListsMcps(o.cwd));

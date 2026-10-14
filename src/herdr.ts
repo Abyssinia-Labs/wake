@@ -18,6 +18,7 @@ import { claudeSettings } from "./fence";
 import { promptUntilTurnEnds } from "./herdr-prompt";
 import { modelArgs } from "./models";
 import { branchListsMcps, cursorModeArgs, writeCursorPermissions } from "./runners/cursor";
+import { requireCursorSignIn } from "./runners/cursor-signin";
 
 const WORKSPACE = "Wake";
 /** No spaces in it, unlike Application Support, so a path is one plain argument. */
@@ -214,6 +215,8 @@ export async function runInHerdr(o: HerdrRun, run: Exec): Promise<ClaudeResult> 
   let approveMcps = true;
   if (tool === "cursor") {
     await writeCursorPermissions(run, o);
+    // Before a tab opens: a signed-out run would only sit there, unable to read the ask.
+    await requireCursorSignIn(run, o);
     approveMcps = !(await branchListsMcps(o.cwd));
   }
   if (tool === "codex" && o.trustFolder) {

@@ -43,6 +43,10 @@ export type RunJson = {
   resume: string | null;
   /** A run in herdr stopped on a question: since when, and the question as its tab shows it. */
   waiting: Waiting | null;
+  /** The summons's target on the app; null in an older state file. */
+  url: string | null;
+  /** In a herdr tab (true) or headless (false); null in an older state file. */
+  herdr: boolean | null;
 };
 
 export type StatusJson = {
@@ -112,6 +116,8 @@ export function statusJson(input: {
       startedAt: run.startedAt,
       resume: run.sessionId ? resumeLine(tool, run.sessionId) : null,
       waiting: run.waiting ?? null,
+      url: run.url ?? null,
+      herdr: run.herdr ?? null,
     };
   });
   return {

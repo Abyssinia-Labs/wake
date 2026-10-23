@@ -17,7 +17,10 @@ own: [the Convex component](packages/convex/CHANGELOG.md) and
   ask, with today's answers: this machine's checks, the folders it offers, the clones there and
   which apps asked for each, run modes, models and whether the listener starts at login. It
   changes nothing, and no key is ever in it.
-
+- **Each run keeps the link to what it was summoned for.** `wakectl status --json` and
+  `wakectl open --json` give each run's `url`, the page on the app it works on, and `herdr`,
+  whether it runs in a herdr tab or headless, so a program can link to the ask and offer the
+  right way back in. Runs kept by an older Wake have neither.
 - **`wakectl status` shows a run in herdr waiting on you.** When a run stops on a question in its
   tab, a tool asking permission or a folder to trust, `status` says so with the question as the
   tab shows it, `status --json` gives the run's `waiting` (`since` and `what`), and the log says
@@ -56,6 +59,11 @@ own: [the Convex component](packages/convex/CHANGELOG.md) and
 
 ### Changed
 
+- **`wakectl open` never starts a run that is still going a second time.** For a run going in
+  herdr, it brings the run's tab to the front and opens herdr in your terminal (from inside
+  herdr, the tab alone). For one going headless, it says so and that `wakectl stop` ends it,
+  where it used to resume the session beside the run and fight it. A run that has ended resumes
+  in your terminal as before.
 - **`wakectl install` leaves an app's listener alone.** When an app on your Mac runs the listener
   itself, as its own login item, `install` writes no second LaunchAgent under the same name and
   `uninstall` doesn't stop it: each says an app runs it, and that start at login is that app's

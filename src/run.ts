@@ -13,7 +13,7 @@ import { installDependencies } from "./install";
 import { madeWorktrees, rememberWorktree } from "./made";
 import { describeModel } from "./models";
 import { findClone } from "./repos";
-import { runName } from "./run-name";
+import { runName, runTitle } from "./run-name";
 import { runCodex } from "./runners/codex";
 import { runCursor } from "./runners/cursor";
 import { STOPPED } from "./stop";
@@ -21,10 +21,19 @@ import { toolOf } from "./tools";
 import { isMade, prepareWorktree, worktreeRoot } from "./worktree";
 
 /** A run under way; `sessionId` is empty until a tool that picks its own has said it. */
-export type Started = { sessionId: string; cwd: string; tool: AgentTool; name: string };
+export type Started = {
+  sessionId: string;
+  cwd: string;
+  tool: AgentTool;
+  name: string;
+  /** In a herdr tab rather than headless. */
+  herdr: boolean;
+};
 
 export type RunDeps = {
   exec: Exec;
+  /** Whether a herdr server is up to take a tab (herdr.ts). */
+  herdrUp: () => Promise<boolean>;
   claude: (
     run: ClaudeRun,
     how: { mode: RunMode; ref: string; tool: AgentTool },
@@ -34,11 +43,9 @@ export type RunDeps = {
 
 export const realDeps = (exec: Exec): RunDeps => ({
   exec,
+  herdrUp: () => herdrRunning(exec),
   claude: async (run, how) => {
-    if (how.mode === "herdr") {
-      if (await herdrRunning(exec)) return await runInHerdr({ ...run, ref: how.ref }, exec);
-      run.onEvent?.("herdr is not running, so this run is headless");
-    }
+    if (how.mode === "herdr") return await runInHerdr({ ...run, ref: how.ref }, exec);
     // The tool that paired the agent runs it (GAT-68): Claude Code, Codex or Cursor.
     if (how.tool === "codex") return await runCodex(run);
     if (how.tool === "cursor") return await runCursor(run, exec);
@@ -157,7 +164,13 @@ async function runOne(
   // Claude Code takes Wake's session id; Codex and Cursor pick their own and say it.
   const ours = tool === "claude";
   const name = runName(sessionId);
-  o.onStart({ sessionId: ours ? sessionId : "", cwd, tool, name });
+  // Settled before it starts, so the state says where it runs from the first
+  // write: `wakectl open` shows a herdr run's tab, never a second process.
+  const herdr = o.config.run === "herdr" && (await o.deps.herdrUp());
+  if (o.config.run === "herdr" && !herdr) {
+    o.onEvent?.("herdr is not running, so this run is headless");
+  }
+  o.onStart({ sessionId: ours ? sessionId : "", cwd, tool, name, herdr });
   const acknowledged =
     (await o.report?.({ name, tool, ...(ours ? { session: sessionId } : {}) })) ?? false;
   const model = o.config.models[tool];
@@ -170,7 +183,7 @@ async function runOne(
       tool,
       acknowledged,
       onSession: (id) => {
-        o.onStart({ sessionId: id, cwd, tool, name });
+        o.onStart({ sessionId: id, cwd, tool, name, herdr });
         void o.report?.({ name, tool, session: id });
       },
       prompt: composePrompt(run, summons, ours ? sessionId : null),
@@ -179,7 +192,7 @@ async function runOne(
       ...(summons.branch ? { branch: summons.branch } : {}),
       extraAllowedTools: o.config.extraAllowedTools,
       timeoutMs: o.config.runTimeoutMinutes * 60_000,
-      name: `${summons.target.ref} · ${name}`,
+      name: runTitle(summons.target.ref, name),
       runName: name,
       permissionMode: o.config.permissionMode,
       ...(model ? { model } : {}),
@@ -188,7 +201,7 @@ async function runOne(
       ...(o.signal ? { signal: o.signal } : {}),
       ...(o.onWaiting ? { onWaiting: o.onWaiting } : {}),
     },
-    { mode: o.config.run, ref: summons.target.ref, tool },
+    { mode: herdr ? "herdr" : "headless", ref: summons.target.ref, tool },
   );
   if (result.ok) return { id: summons.id, outcome: "done" };
   // A tool ended by `wakectl stop` exits like a failure; the app hears why.

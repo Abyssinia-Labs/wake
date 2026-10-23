@@ -151,3 +151,8 @@ export function runName(id: string): string {
   const h = hash(id);
   return `${FIRST[h % FIRST.length]}-${SECOND[(h >>> 8) % SECOND.length]}`;
 }
+
+/** What `/resume` and the run's herdr tab show: the ticket, then the name. */
+export function runTitle(ref: string, name: string): string {
+  return `${ref} · ${name}`;
+}

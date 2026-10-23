@@ -1,25 +1,29 @@
 // The server half of wake/v1 for any TypeScript app (the spec, and the
 // Convex component's rules, as `@abyssinia-labs/wake-convex` keeps them):
 // the host decides what summons an agent and writes the prompt; this keeps
-// pairing, places, the summons's life and the four calls Wake makes. It
-// has no notion of who is signed in: the host checks who may, first.
+// pairing, places, the summons's life, the calls Wake makes and the calls a
+// device that watches makes (`watchCalls`). It has no notion of who is
+// signed in: the host checks who may, first.
 import { type Changes, localChanges } from "./changes";
-import { WakeError } from "./errors";
-import { CODE_TTL_MS, hashSecret, newPairCode, newPlaceKey, normalizeCode } from "./keys";
+import { type CodeFor, forget, issueCode, type Paired, pair, type Watched, watch } from "./pairing";
 import { forOwner, forScope, forSubject } from "./reads";
 import { APP, checkSummons } from "./shape";
-import type { PlaceRow, State, Target, Tool, WakeStore } from "./store";
+import type { AlertKind, PlaceRow, Platform, State, Target, WakeStore } from "./store";
 import { type PendingSummons, type PlaceView, placeViewOf, type SummonsView } from "./views";
+import { answerAsk, WatchCalls } from "./watch";
+import { type AlertTarget, alertTargetOf, type DeviceView, deviceViewOf } from "./watched";
 import {
   type ClaimResult,
   claim,
   finish,
+  type PlanHook,
   pending,
   placeOf,
   type RunReport,
   started,
   type WakeContext,
   type WakeHooks,
+  waiting,
 } from "./wire";
 
 export type WakeOptions = {
@@ -32,12 +36,8 @@ export type WakeOptions = {
   now?: () => number;
   /** Told when a run starts and when it ends, after the change is kept. */
   hooks?: WakeHooks;
-};
-
-export type Paired = {
-  placeKey: string;
-  app: string;
-  agent: { id: string; name: string; tool?: Tool };
+  /** What an agent's plan includes, asked at each watch call; without it, everything is. */
+  plan?: PlanHook;
 };
 
 const LIVE: readonly State[] = ["asking", "open", "claimed"];
@@ -47,20 +47,12 @@ const SCOPE_BATCH = 200;
 export class Wake {
   readonly app: string;
   readonly changes: Changes;
+  /** The calls a device that watches makes, each with its watch key. */
+  readonly watchCalls: WatchCalls;
   private readonly store: WakeStore;
   private readonly keyPrefix: string;
   private readonly now: () => number;
-  private readonly hooks: WakeHooks | undefined;
-
-  private get context(): WakeContext {
-    return {
-      app: this.app,
-      store: this.store,
-      changes: this.changes,
-      now: this.now,
-      ...(this.hooks ? { hooks: this.hooks } : {}),
-    };
-  }
+  private readonly context: WakeContext;
 
   constructor(o: WakeOptions) {
     if (!APP.test(o.app)) throw new Error(`wake/v1 app names are ${APP}; "${o.app}" is not one.`);
@@ -69,73 +61,63 @@ export class Wake {
     this.keyPrefix = o.keyPrefix ?? "wk_";
     this.changes = o.changes ?? localChanges();
     this.now = o.now ?? Date.now;
-    this.hooks = o.hooks;
+    this.context = {
+      app: this.app,
+      store: this.store,
+      changes: this.changes,
+      now: this.now,
+      ...(o.hooks ? { hooks: o.hooks } : {}),
+      ...(o.plan ? { plan: o.plan } : {}),
+    };
+    this.watchCalls = new WatchCalls(this.context);
   }
 
-  // Pairing (the spec's "Pairing").
+  // Pairing and watching (the spec's "Pairing" and "Devices that watch").
 
   /** A pair code for the calling agent, to answer its "pair Wake" request. */
-  async issueCode(o: {
-    agent: string;
-    agentName: string;
-    owner: string;
-    scope?: string;
-    tool?: Tool;
-  }): Promise<{ code: string; expiresAt: number }> {
-    const code = newPairCode();
-    const expiresAt = this.now() + CODE_TTL_MS;
-    await this.store.insertCode({
-      id: crypto.randomUUID(),
-      ...o,
-      codeHash: await hashSecret(normalizeCode(code)),
-      expiresAt,
-    });
-    return { code, expiresAt };
+  issueCode(o: CodeFor): Promise<{ code: string; expiresAt: number }> {
+    return issueCode(this.context, o, "place");
+  }
+
+  /**
+   * A watch code for an agent's owner, signed in to your app, to add a
+   * device. Make one only in your own interface, for the owner: nothing a
+   * run can reach may make one (the spec's principle 5). Show it with
+   * `watchLink`. NOT_IN_PLAN where the plan has no devices.
+   */
+  issueWatchCode(o: CodeFor): Promise<{ code: string; expiresAt: number }> {
+    return issueCode(this.context, o, "device");
   }
 
   /** `POST /wake/v1/pair`: one use of a live code makes the place, and its key, once. */
-  async pair(o: { code: string; machine: { name: string; platform: string } }): Promise<Paired> {
-    const code = await this.store.useCode(await hashSecret(normalizeCode(o.code)), this.now());
-    if (!code) throw new WakeError("CODE_INVALID");
-    const placeKey = newPlaceKey(this.keyPrefix);
-    await this.store.insertPlace({
-      id: crypto.randomUUID(),
-      agent: code.agent,
-      owner: code.owner,
-      ...(code.scope === undefined ? {} : { scope: code.scope }),
-      ...(code.tool === undefined ? {} : { tool: code.tool }),
-      machine: o.machine.name,
-      platform: o.machine.platform,
-      keyHash: await hashSecret(placeKey),
-      pairedAt: this.now(),
-    });
-    return {
-      placeKey,
-      app: this.app,
-      agent: { id: code.agent, name: code.agentName, ...(code.tool ? { tool: code.tool } : {}) },
-    };
+  pair(o: { code: string; machine: { name: string; platform: string } }): Promise<Paired> {
+    return pair(this.context, this.keyPrefix, o);
   }
 
-  /** `POST /wake/v1/forget`: the key stops working. False when it already had. */
-  async forget(key: string): Promise<boolean> {
-    const place = await this.store.placeByKeyHash(await hashSecret(key));
-    if (!place || place.forgottenAt !== undefined) return false;
-    await this.store.patchPlace(place.id, { forgottenAt: this.now() });
-    return true;
+  /** `POST /wake/v1/watch`: one use of a live watch code makes the device, and its key, once. */
+  watch(o: { code: string; device: { name: string; platform: Platform } }): Promise<Watched> {
+    return watch(this.context, this.keyPrefix, o);
+  }
+
+  /** `POST /wake/v1/forget`: a place or watch key stops working. False when it already had. */
+  forget(key: string): Promise<boolean> {
+    return forget(this.context, key);
   }
 
   // The summons's life (the spec's "A summons's life").
 
   /**
    * A person asked `agent` about `subject`. The owner asking opens it;
-   * anyone else's ask waits for the owner (`answer`). A live one for the
-   * same agent and subject is joined, not doubled. Only for a person's
-   * action: an agent's own write never summons.
+   * anyone else's ask waits for the owner (`answer`), and `askerName` is
+   * how the owner's devices say who asks. A live one for the same agent and
+   * subject is joined, not doubled. Only for a person's action: an agent's
+   * own write never summons.
    */
   async summon(o: {
     agent: string;
     owner: string;
     askedBy: string;
+    askerName?: string;
     scope?: string;
     subject: string;
     kind: string;
@@ -156,7 +138,7 @@ export class Wake {
         updatedAt: now,
         ...(opens ? { state: "open", openedAt: now } : {}),
       });
-      if (opens) this.changes.publish(live.agent);
+      this.changes.publish(live.agent);
       return live.id;
     }
     const id = crypto.randomUUID();
@@ -169,21 +151,14 @@ export class Wake {
       updatedAt: now,
       ...(opens ? { openedAt: now } : {}),
     });
-    if (opens) this.changes.publish(o.agent);
+    // An ask too: places don't see it, but the owner's devices do.
+    this.changes.publish(o.agent);
     return id;
   }
 
   /** The owner's answer to a summons someone else made. Check it is the owner first. */
-  async answer(o: { id: string; yes: boolean }): Promise<void> {
-    const now = this.now();
-    const row = await this.store.moveSummons(
-      o.id,
-      ["asking"],
-      o.yes
-        ? { state: "open", openedAt: now, updatedAt: now }
-        : { state: "dropped", reason: "The owner said no.", updatedAt: now },
-    );
-    if (row && o.yes) this.changes.publish(row.agent);
+  answer(o: { id: string; yes: boolean }): Promise<void> {
+    return answerAsk(this.context, o.id, o.yes);
   }
 
   /**
@@ -245,7 +220,33 @@ export class Wake {
     return true;
   }
 
-  /** The host revoked an agent: its keys, codes and waiting summonses end with it. */
+  // Devices, for their owner in your app.
+  async devices(agent: string): Promise<DeviceView[]> {
+    return (await this.store.devicesOf(agent))
+      .filter((device) => device.forgottenAt === undefined)
+      .map(deviceViewOf);
+  }
+
+  /** The owner removed a device: its watch key opens nothing after. Check who may first. */
+  async forgetDevice(o: { agent: string; device: string }): Promise<boolean> {
+    const device = (await this.store.devicesOf(o.agent)).find((one) => one.id === o.device);
+    if (!device || device.forgottenAt !== undefined) return false;
+    await this.store.patchDevice(device.id, { forgottenAt: this.now() });
+    return true;
+  }
+
+  /** The devices to alert of `kind`; send only while the plan includes alerts, and no text. */
+  async alertTargets(o: {
+    agent: string;
+    kind: AlertKind;
+    summons?: string;
+  }): Promise<AlertTarget[]> {
+    return (await this.store.devicesOf(o.agent))
+      .filter((one) => one.forgottenAt === undefined && one.push?.kinds.includes(o.kind))
+      .map((one) => alertTargetOf(one, o.summons));
+  }
+
+  /** The host revoked an agent: its keys, codes, devices and waiting summonses end with it. */
   async revokeAgent(agent: string): Promise<void> {
     const now = this.now();
     await this.store.retireAgent(agent, now);
@@ -267,7 +268,7 @@ export class Wake {
     return { deleted, done: deleted < SCOPE_BATCH };
   }
 
-  // The four calls Wake makes (the spec's "The functions" and "The HTTP
+  // The calls Wake makes (the spec's "The functions" and "The HTTP
   // transport"), in wire.ts.
 
   /** The place a key opens, or UNPAIRED. */
@@ -285,5 +286,8 @@ export class Wake {
   }
   finish(key: string, id: string, outcome: "done" | "failed", reason?: string): Promise<void> {
     return finish(this.context, key, id, outcome, reason);
+  }
+  waiting(key: string, id: string, waits: boolean): Promise<void> {
+    return waiting(this.context, key, id, waits);
   }
 }

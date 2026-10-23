@@ -1,8 +1,9 @@
-// `GET /wake/v1/pending` as server-sent events (the spec's "The HTTP
-// transport"): the whole list on connect and whenever it changes, a ping
-// while it doesn't, ended after `maxStreamMs` with a `retry:` so Wake
-// comes back. A change made in this process is sent at once; one made by
-// another instance shows within `pollMs`, when the list is read again.
+// `GET /wake/v1/pending` and a device's `GET /wake/v1/runs` as server-sent
+// events (the spec's "The HTTP transport"): the whole list on connect and
+// whenever it changes, a ping while it doesn't, ended after `maxStreamMs`
+// with a `retry:` so the caller comes back. A change made in this process
+// is sent at once; one made by another instance shows within `pollMs`,
+// when the list is read again.
 import type { Wake } from "./wake";
 
 export type StreamOptions = {
@@ -16,7 +17,25 @@ export type StreamOptions = {
 
 const encoder = new TextEncoder();
 
+/** A list's stream: `read` it again whenever `subscribe` hears of a change, and on a timer. */
+export type ListSource = {
+  event: string;
+  read: () => Promise<unknown>;
+  subscribe: (listener: () => void) => () => void;
+};
+
 export function pendingStream(wake: Wake, key: string, agent: string, o: StreamOptions): Response {
+  return listStream(
+    {
+      event: "pending",
+      read: () => wake.pending(key),
+      subscribe: (listener) => wake.changes.subscribe(agent, listener),
+    },
+    o,
+  );
+}
+
+export function listStream(source: ListSource, o: StreamOptions): Response {
   const pollMs = o.pollMs ?? 10_000;
   const pingMs = Math.min(o.pingMs ?? 25_000, 30_000);
   const maxStreamMs = o.maxStreamMs ?? 5 * 60_000;
@@ -41,17 +60,17 @@ export function pendingStream(wake: Wake, key: string, agent: string, o: StreamO
       };
       const look = async (): Promise<void> => {
         try {
-          const list = JSON.stringify(await wake.pending(key));
+          const list = JSON.stringify(await source.read());
           if (list === last) return;
           last = list;
-          send(`event: pending\ndata: ${list}\n\n`);
+          send(`event: ${source.event}\ndata: ${list}\n\n`);
         } catch {
-          // The key stopped working (forgotten, revoked): end, and the
-          // reconnect is answered 401.
+          // The key stopped working (forgotten, revoked) or the plan did:
+          // end, and the reconnect is answered 401 or 402.
           end();
         }
       };
-      const unsubscribe = wake.changes.subscribe(agent, () => void look());
+      const unsubscribe = source.subscribe(() => void look());
       const poll = setInterval(() => void look(), pollMs);
       const ping = setInterval(() => send(": ping\n\n"), pingMs);
       const limit = setTimeout(() => {

@@ -22,6 +22,7 @@ const p: Paths = {
   asked: join(home, "asked-repos.json"),
   history: join(home, "runs.json"),
   stops: join(home, "stop"),
+  activity: join(home, "runs"),
   rooms: join(home, "rooms"),
   log: join(home, "wake.log"),
 };

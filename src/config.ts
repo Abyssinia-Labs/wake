@@ -74,6 +74,8 @@ export type Paths = {
   history: string;
   /** Requests from `wakectl stop`, one file per summons (stop.ts). */
   stops: string;
+  /** Each run's steps, a file per run (activity.ts). */
+  activity: string;
   rooms: string;
   log: string;
 };
@@ -105,6 +107,7 @@ export function paths(env: NodeJS.ProcessEnv = process.env, platform = process.p
     asked: join(home, "asked-repos.json"),
     history: join(home, "runs.json"),
     stops: join(home, "stop"),
+    activity: join(home, "runs"),
     rooms: join(home, "rooms"),
     log,
   };
@@ -205,11 +208,13 @@ export async function keepPrivate(p: Paths): Promise<void> {
   const quietly = (path: string, mode: number) => chmod(path, mode).catch(() => undefined);
   await mkdir(p.home, { recursive: true, mode: 0o700 });
   await mkdir(dirname(p.log), { recursive: true, mode: 0o700 });
+  await mkdir(p.activity, { recursive: true, mode: 0o700 });
   // launchd makes the log 0644 when it is missing; made here first, it is kept as is.
   await writeFile(p.log, "", { flag: "a", mode: 0o600 });
   await Promise.all([
     quietly(p.home, 0o700),
     quietly(dirname(p.log), 0o700),
+    quietly(p.activity, 0o700),
     ...[p.log, p.config, p.state, p.made, p.history, join(p.home, "keys.json")].map((path) =>
       quietly(path, 0o600),
     ),

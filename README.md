@@ -124,8 +124,14 @@ Wake waits for you to answer it in the tab rather than failing the run.
 or its session id: a headless run's tool is stopped, a run in herdr is
 interrupted (Esc) and its tab kept, and the app shows it couldn't finish,
 stopped by its owner. `wakectl pause` stops new claims (a run already going
-finishes) and `wakectl resume` goes on. `wakectl prune` removes run worktrees untouched
-for 14 days, and keeps any with uncommitted work.
+finishes) and `wakectl resume` goes on. `wakectl prune` removes run
+worktrees untouched for 14 days, and keeps any with uncommitted work.
+
+**Each run's steps** are kept beside the log, in `runs/` in Wake's folder:
+a file per run, `<app>.<summons>.ndjson`, one `{ "at", "line" }` a line,
+the same lines `wakectl logs` shows for it. They are yours alone, never
+sent anywhere, and a run's file goes when Wake forgets the run, after its
+last 200.
 
 **For a program.** `wakectl status --json` prints what `status` shows as
 JSON: the listener, each pairing's connection, the runs with their resume
@@ -211,6 +217,16 @@ the summonses one of two ways. On Convex, three functions (`wake:pending`,
 called with the place key as an argument. Anywhere else, the same four as
 HTTP routes, with the pending list as server-sent events and the place key
 as a bearer token (`transport: "http"` in discovery). Wake speaks both.
+
+The spec also has devices that watch: a phone, a browser or a desktop app
+the agent's owner adds from your app, which lists the agent's runs and
+answers asks. Each holds a watch key, traded at `POST /wake/v1/watch` for a
+code your app shows only to its signed-in owner, so nothing a run can reach
+can say yes for them. The key opens `wake:runs`, `wake:answer`,
+`wake:places`, `wake:watching`, `wake:push` and `wake:activity`, and no
+place call; a place key opens none of them. An optional `wake:waiting`
+lets Wake say a run waits on its owner. Neither package serves these yet,
+and `wakectl check` doesn't probe them yet.
 
 - **The spec**: [docs/spec/wake-v1.md](docs/spec/wake-v1.md).
 - **On Convex**: [`@abyssinia-labs/wake-convex`](packages/convex) is the

@@ -22,6 +22,7 @@ test("Wake's files are the person's alone, an older install's included", async (
     asked: join(home, "asked-repos.json"),
     history: join(home, "runs.json"),
     stops: join(home, "stop"),
+    activity: join(home, "runs"),
     rooms: join(home, "rooms"),
     log: join(dir, "logs", "wake.log"),
   };

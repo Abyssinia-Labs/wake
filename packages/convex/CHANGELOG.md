@@ -6,6 +6,14 @@ that serves wake/v1 from Convex. What changed in `wakectl` is in
 
 ## Unreleased
 
+### Added
+
+- **wake/v1 has calls for devices that watch, which this component doesn't serve yet.** The spec
+  adds a watch key, which an agent's owner trades for a code your app shows them, and the calls it
+  opens, for a phone or a browser that lists the agent's runs and answers asks. The component
+  checks what a device may send by the spec's rules; serving the calls comes in a later release,
+  and until then it serves wake/v1 as before.
+
 ## 0.3.0 — 2026-10-09
 
 ### Added

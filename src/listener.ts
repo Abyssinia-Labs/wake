@@ -3,10 +3,11 @@
 // half minute, so a `wakectl pair` or `forget` takes effect without a
 // restart.
 import { existsSync } from "node:fs";
+import { activityIn } from "./activity";
 import { recordAsked } from "./asked";
 import { type Config, keepPrivate, loadConfig, paths } from "./config";
 import { exec } from "./exec";
-import { type RunRecord, recordRun } from "./history";
+import { type RunRecord, readHistory, recordRun } from "./history";
 import { messageOf, note } from "./log";
 import { connectPlace, type LivePlace } from "./place";
 import { realDeps, runSummons } from "./run";
@@ -59,6 +60,19 @@ export async function listen(): Promise<void> {
   const keep = (run: RunRecord): Promise<void> =>
     recordRun(p.history, run).catch((e) => note(`Could not record the run: ${messageOf(e)}`));
 
+  // Each run's steps, for a program that shows them; a run's file goes when the history lets the run go.
+  const activity = activityIn(p.activity);
+  const step = (app: string, summons: string, line: string): void => {
+    void activity
+      .append(app, summons, line)
+      .catch((e) => note(`Could not keep a step of ${summons}: ${messageOf(e)}`));
+  };
+  const forgetOld = async (): Promise<void> => {
+    await activity
+      .prune(await readHistory(p.history))
+      .catch((e) => note(`Could not prune run steps: ${messageOf(e)}`));
+  };
+
   const scheduler = new Scheduler({
     maxRuns: config.maxRuns,
     isPaused: () => existsSync(p.paused),
@@ -72,7 +86,10 @@ export async function listen(): Promise<void> {
           config,
           paths: p,
           deps,
-          onEvent: (line) => note(`${summons.target.ref}: ${line}`),
+          onEvent: (line) => {
+            note(`${summons.target.ref}: ${line}`);
+            step(app.app, summons.id, line);
+          },
           onStart: ({ sessionId, cwd, tool, name }) => {
             const known = runs.get(summons.id);
             note(
@@ -104,7 +121,7 @@ export async function listen(): Promise<void> {
             summons: summons.id,
             finishedAt: Date.now(),
             outcome: outcome.outcome,
-          });
+          }).then(forgetOld);
         }
         return outcome;
       } finally {

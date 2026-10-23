@@ -8,6 +8,13 @@ own: [the Convex component](packages/convex/CHANGELOG.md) and
 
 ## Unreleased
 
+### Added
+
+- **Each run's steps are kept on your machine, a file per run.** The lines `wakectl logs` shows
+  for a run also go to its own file under `runs/` in Wake's folder, as JSON lines, so a program
+  can show one run's steps without reading the whole log. Readable by you alone, never sent
+  anywhere, and removed when Wake forgets the run after its last 200.
+
 ## 0.4.1 — 2026-10-14
 
 ### Fixed

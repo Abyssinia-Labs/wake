@@ -124,6 +124,12 @@ Wake waits for you to answer it in the tab rather than failing the run.
 `wakectl resume` goes on. `wakectl prune` removes run worktrees untouched
 for 14 days, and keeps any with uncommitted work.
 
+**Each run's steps** are kept beside the log, in `runs/` in Wake's folder:
+a file per run, `<app>.<summons>.ndjson`, one `{ "at", "line" }` a line,
+the same lines `wakectl logs` shows for it. They are yours alone, never
+sent anywhere, and a run's file goes when Wake forgets the run, after its
+last 200.
+
 Place keys live in the macOS Keychain or Linux's Secret Service
 (`dev.abyssinia.wake`), never in the config at
 `~/Library/Application Support/Wake/config.json` (`~/.config/wake` on

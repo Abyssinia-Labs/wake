@@ -46,6 +46,12 @@ jobs:
           if [ -n "$over" ]; then echo "$over"; exit 1; fi
       - name: What the package would ship
         run: bun pm pack --dry-run
+      # What each release attaches for anyone who'd rather not install Bun.
+      - name: A single binary builds and runs
+        run: |
+          bun run build
+          test "$(./dist/wakectl --version)" = "$(bun -e 'console.log((await Bun.file("package.json").json()).version)')"
+          ./dist/wakectl help > /dev/null
       # The Convex component (packages/convex), tested in the edge runtime
       # with convex-test. Its _generated code is committed: codegen needs a
       # deployment.
@@ -82,3 +88,8 @@ jobs:
           GIT_AUTHOR_EMAIL: ci@example.com
           GIT_COMMITTER_NAME: ci
           GIT_COMMITTER_EMAIL: ci@example.com
+      # Apple silicon starts nothing unsigned: built on a Mac, the binary has the linker's ad hoc signature.
+      - name: A single binary builds and runs
+        run: |
+          bun run build
+          ./dist/wakectl --version

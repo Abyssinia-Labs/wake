@@ -1,7 +1,8 @@
 // `wakectl update`: the newest @abyssinia-labs/wake from npm, the listener
 // restarted onto it, and what changed since the version it replaced. A
 // copy run from a checkout of the repository is the person's to update
-// with git, so it is told so and left alone.
+// with git, and a single binary is whatever installed it's to update, so
+// each is told so and left alone.
 import { readFile } from "node:fs/promises";
 import pkg from "../../package.json";
 import { paths } from "../config";
@@ -16,8 +17,13 @@ const PACKAGE = "@abyssinia-labs/wake";
 const GLOBAL_MARK = `/install/global/node_modules/${PACKAGE}/`;
 const VERSION = /^\d+\.\d+\.\d+$/;
 
-/** A global Bun install, or a checkout of the repository. */
-export function installKindOf(script: string | undefined): "global" | "source" {
+/**
+ * A global Bun install, a checkout of the repository, or a single binary
+ * (`bun build --compile`), whose script lives in Bun's embedded files:
+ * `/$bunfs/` on macOS and Linux.
+ */
+export function installKindOf(script: string | undefined): "global" | "source" | "binary" {
+  if (script?.startsWith("/$bunfs/")) return "binary";
   return script?.includes(GLOBAL_MARK) ? "global" : "source";
 }
 
@@ -84,7 +90,8 @@ export async function update(run: Exec = exec): Promise<void> {
   const script = process.argv[1];
   const current = pkg.version;
   const latest = await spin("Asking npm for the latest Wake", () => latestVersion());
-  if (installKindOf(script) === "source") {
+  const kind = installKindOf(script);
+  if (kind === "source") {
     say(
       `${mark.warn()} This wakectl runs from a checkout (${tildify(script ?? "?")}), at ${current}; npm has ${latest}.`,
     );
@@ -93,6 +100,17 @@ export async function update(run: Exec = exec): Promise<void> {
   }
   if (!isNewer(latest, current)) {
     say(`${mark.ok()} Wake ${bold(current)} is the latest`);
+    return;
+  }
+  if (kind === "binary") {
+    say(
+      `${mark.warn()} This wakectl is a single binary (${tildify(process.execPath)}), at ${current}; ${latest} is out.`,
+    );
+    say(
+      dim(
+        "  Whatever installed it updates it: the app that carries it, or a new binary from the release on GitHub.",
+      ),
+    );
     return;
   }
   const result = await spin(`Installing Wake ${latest}`, () =>

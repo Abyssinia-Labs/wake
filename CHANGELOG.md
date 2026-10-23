@@ -10,6 +10,10 @@ own: [the Convex component](packages/convex/CHANGELOG.md) and
 
 ### Added
 
+- **wakectl as a single file, no Bun needed.** Each release on GitHub now carries a binary for
+  macOS (Apple silicon and Intel) and Linux (x64 and arm64), each with its SHA-256. `wakectl
+  install` starts the listener from it, and `wakectl update` tells you when a newer one is out
+  rather than reaching for npm.
 - **Stop a run now: `wakectl stop amber-heron`.** It ends a run going on this machine, found by
   its name, its ticket or its session id. A headless run's tool is stopped; a run in herdr is
   interrupted with Esc and its tab kept. The app shows the run couldn't finish, stopped by its

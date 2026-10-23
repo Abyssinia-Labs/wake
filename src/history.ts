@@ -19,6 +19,10 @@ export type RunRecord = {
   startedAt: number;
   finishedAt?: number;
   outcome?: "done" | "failed";
+  /** The summons's target on the app, for a program to link to; absent in an older record. */
+  url?: string;
+  /** Whether it ran in a herdr tab, which stays open after the run; absent in an older record. */
+  herdr?: boolean;
 };
 
 const KEEP = 200;
@@ -34,7 +38,10 @@ function isRecord(v: unknown): v is RunRecord {
     AGENT_TOOLS.some((tool) => tool === r.tool) &&
     typeof r.sessionId === "string" &&
     typeof r.cwd === "string" &&
-    typeof r.startedAt === "number"
+    typeof r.startedAt === "number" &&
+    // A record kept before runs had them has neither.
+    (r.url === undefined || typeof r.url === "string") &&
+    (r.herdr === undefined || typeof r.herdr === "boolean")
   );
 }
 

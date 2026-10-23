@@ -1,5 +1,5 @@
 import { afterAll, expect, test } from "bun:test";
-import { mkdtemp, rm } from "node:fs/promises";
+import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { resumeArgs } from "./commands/open";
@@ -29,6 +29,24 @@ test("a run is kept by name, its session and outcome merged in as they come", as
   expect(findRun(all, "Amber-Heron ")?.summons).toBe("s1");
   expect(findRun(all, "0199-ABC")?.name).toBe("amber-heron");
   expect(findRun(all, "nobody")).toBeUndefined();
+});
+
+test("a run keeps its target's url and where it ran; older records have neither", async () => {
+  const path = join(home, "with-url.json");
+  const linked = { ...run, summons: "s3", url: "https://gatherd.dev/t/GAT-31", herdr: true };
+  await writeFile(
+    path,
+    JSON.stringify([
+      run,
+      { ...run, summons: "s4", url: 7 },
+      { ...run, summons: "s5", herdr: "yes" },
+    ]),
+  );
+  await recordRun(path, linked);
+  const all = await readHistory(path);
+  // A record from before runs had them still opens; one with either mangled is dropped.
+  expect(all).toEqual([run, linked]);
+  expect(all[0]).not.toHaveProperty("url");
 });
 
 test("the latest of two runs with one name is the one opened", () => {

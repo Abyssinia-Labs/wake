@@ -87,7 +87,11 @@ name, tool and session id, so the agent doesn't comment just to say it is
 on it; the app shows it, and shows you how to get back in: `wakectl open
 amber-heron` starts the run's tool on its session, in its folder, in your
 terminal (`wakectl open` lists recent runs). An app that doesn't support
-it gets the agent's comment, as before.
+it gets the agent's comment, as before. A run still going is never started
+a second time, since two processes on one session would fight: one in
+herdr has its tab brought to the front and herdr opened in your terminal
+(from inside herdr, the tab alone), and one going headless is left to
+finish, with `wakectl stop amber-heron` to end it.
 
 **How runs start, and what they may do.** `wakectl mode herdr` opens each
 run as a tab in herdr's Wake workspace, an interactive session you can watch
@@ -157,7 +161,10 @@ JSON: the listener, each pairing's connection, the runs with their resume
 commands and any question they wait on, the approved repositories and the
 settings. `repos`, `model`,
 `doctor` and `open` (the runs this machine remembers, newest first) take
-`--json` too, in the forms that change nothing. No key is ever in it.
+`--json` too, in the forms that change nothing. No key is ever in it. Each
+run in `status --json` and `open --json` carries `url`, the page on the app
+it was summoned for, and `herdr`, whether it runs in a herdr tab; a run kept
+by an older Wake has neither (`null` in `status`, absent in `open`).
 
 Place keys live in the macOS Keychain or Linux's Secret Service
 (`dev.abyssinia.wake`), never in the config at

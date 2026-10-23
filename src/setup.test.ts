@@ -70,6 +70,7 @@ test("a first setup: folders, pairing, repositories, runs, install", async () =>
     bunVersion: "1.3.3",
     exists: (path) => (path === "/p.plist" ? plist : existsSync(path)),
     plist: "/p.plist",
+    appAgent: null,
     listener: plist ? 7 : null,
     paused: false,
   });
@@ -127,6 +128,7 @@ test("a machine without an agent stops at the checks, saying how to fix it", asy
       bunVersion: "1.3.3",
       exists: () => true,
       plist: "/p",
+      appAgent: null,
       listener: null,
       paused: false,
     }),
@@ -160,23 +162,30 @@ test("approving more than ten repositories at once is confirmed, and no asks aga
     "1 2", // so it asks again
     "", // runs: herdr
     "", // permissions: as they are
+    "", // the model: as it is
+    "y", // and yes, were it asked to install
   ]);
   await setupFlow({
     io,
     run: ready,
+    // An app runs the listener here, so setup has nothing to install.
     probe: async () => ({
       platform: "darwin",
       bunVersion: "1.3.3",
-      exists: (path) => path === "/p.plist" || existsSync(path),
+      exists: (path) => existsSync(path),
       plist: "/p.plist",
+      appAgent: { app: "com.example.listener" },
       listener: 9,
       paused: false,
     }),
     home: dir,
     pair: async () => {},
-    install: async () => {},
+    install: async () => {
+      throw new Error("setup installed beside an app's listener");
+    },
     askedPath: join(dir, "asked-none.json"),
   });
   expect((await loadConfig()).repos).toEqual({ "app.example.com": ["acme/r00", "acme/r01"] });
   expect(io.said.join("\n")).not.toContain("acme/r00, acme/r01, acme/r02, acme/r03");
+  expect(io.said.join("\n")).toContain("Listening (pid 9)");
 });

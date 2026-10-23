@@ -36,6 +36,13 @@ own: [the Convex component](packages/convex/CHANGELOG.md) and
   it does what Free does. Team stays the organisation's plan, with its policy and audit; like
   Team, Pro isn't on sale yet.
 
+### Changed
+
+- **`wakectl install` leaves an app's listener alone.** When an app on your Mac runs the listener
+  itself, as its own login item, `install` writes no second LaunchAgent under the same name and
+  `uninstall` doesn't stop it: each says an app runs it, and that start at login is that app's
+  setting. `doctor` and `setup` count it as installed, and `pair` no longer says to install.
+
 ## 0.4.1 — 2026-10-14
 
 ### Fixed

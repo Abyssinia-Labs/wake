@@ -71,7 +71,11 @@ also has its own command:
 3. **Listen.** `wakectl install` starts the listener now and at every
    login, as a LaunchAgent on macOS (`dev.abyssinia.wake`) or a systemd
    user service on Linux (`wake.service`), with the PATH of the shell you
-   ran it from, so it finds your agents, `git` and `gh`.
+   ran it from, so it finds your agents, `git` and `gh`. When an app on
+   your Mac runs the listener itself, registering `dev.abyssinia.wake` as
+   its own login item, `wakectl install` and `uninstall` leave it alone
+   and say so: start at login is that app's setting. `wakectl doctor`
+   and `setup` count it as installed.
 4. **Check.** `wakectl status` shows what is paired, connected and
    running, with the resume line for each run; `wakectl logs -f` follows
    the log; `wakectl doctor` lists anything missing, with its fix.

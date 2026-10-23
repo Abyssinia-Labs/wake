@@ -6,7 +6,7 @@
 import { readFile } from "node:fs/promises";
 import pkg from "../../package.json";
 import { paths } from "../config";
-import { daemonFor } from "../daemon";
+import { appRunsIt, daemonFor } from "../daemon";
 import { type Exec, exec } from "../exec";
 import { say } from "../log";
 import { isAlive, readState } from "../state";
@@ -53,6 +53,11 @@ export async function latestVersion(fetcher: typeof fetch = fetch): Promise<stri
 /** Restarts the listener when it runs this install and nothing is running; says what it did. */
 async function restartListener(run: Exec, script: string): Promise<void> {
   const daemon = daemonFor();
+  const app = await daemon?.appAgent(run);
+  if (app) {
+    say(dim(`  ${appRunsIt(app)}, with the wakectl it carries: the app updates that one.`));
+    return;
+  }
   let plist = "";
   try {
     if (!daemon) throw new Error("no service on this platform");

@@ -27,10 +27,10 @@ deleted.
 
 **It keeps everything on your machine.** Its config (the apps you paired,
 their agents' names, the repositories you approved for each, your
-settings), the listener's state, the list of worktrees it made, the
-repositories apps have asked for, its log, and a history of your last 200
-runs (each run's name, what it was about, the app, the tool, its session
-and its folder) live in Wake's folder: `~/Library/Application Support/Wake`
+settings), the listener's state (with any question a run waits on), the
+list of worktrees it made, the repositories apps have asked for, its log,
+and a history of your last 200 runs (each run's name, what it was about,
+the app, the tool, its session and its folder) live in Wake's folder: `~/Library/Application Support/Wake`
 and `~/Library/Logs/Wake` on macOS, `~/.config/wake` and
 `~/.local/state/wake` on Linux. They are readable by you alone. The keys
 that pair it with apps live in the macOS Keychain or Linux's Secret
@@ -43,8 +43,10 @@ crash reports. It talks to:
   platform (`darwin`, `linux`). While it listens, it asks the app what
   your agent has been asked; when it starts a run it tells the app the
   run's name, the tool and the tool's session id, so the app can show it
-  to you; when a run ends it says whether it finished, and why not in
-  words written to be shared, never paths or command output.
+  to you; when a run in herdr stops on a question for you, it says only
+  that the run waits, and when it goes on, never the question; when a run
+  ends it says whether it finished, and why not in words written to be
+  shared, never paths or command output.
 - **The npm registry**, when you run `wake update`, to learn the newest
   version.
 - **GitHub, through your own `gh` and `git`**, for what a run does there.

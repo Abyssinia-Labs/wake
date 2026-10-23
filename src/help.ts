@@ -18,7 +18,7 @@ const GROUPS: readonly { title: string; entries: readonly Entry[] }[] = [
       },
       { use: "repos allow <owner/name>", what: "Let an app run in one of your repositories" },
       { use: "install", what: "Start listening now and at every login" },
-      { use: "status", what: "What is paired, connected and running" },
+      { use: "status", what: "What is paired, connected, running and waiting on you" },
       {
         use: "  --json",
         what: "As JSON for a program; status, repos, model, doctor and open take it",

@@ -36,6 +36,17 @@ test("running: the listener, each app's connection, the runs and how they are se
           cwd: "/w/gat-20",
           startedAt: 10 * 60_000,
         },
+        {
+          app: "gatherd",
+          ref: "GAT-21",
+          sessionId: "s-2",
+          cwd: "/w/gat-21",
+          startedAt: 20 * 60_000,
+          waiting: {
+            since: 27 * 60_000,
+            what: "Bash command · git push · Do you want to proceed?",
+          },
+        },
       ],
     },
   }).join("\n");
@@ -44,6 +55,11 @@ test("running: the listener, each app's connection, the runs and how they are se
   expect(lines).toMatch(/● gatherd\.dev\s+Claude\s+Claude Code\s+listening/);
   expect(lines).toMatch(/GAT-20\s+20 min/);
   expect(lines).toContain("claude --resume s-1");
+  expect(lines).toContain("! GAT-21");
+  expect(lines).toContain(
+    "waiting for you in herdr, 3 min: Bash command · git push · Do you want to proceed?",
+  );
+  expect(lines.match(/waiting for you/g)).toHaveLength(1);
   expect(lines).toMatch(/permissions\s+acceptEdits/);
   expect(lines).toMatch(/model\s+Claude Code's default/);
   const chosen = statusLines({

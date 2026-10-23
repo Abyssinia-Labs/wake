@@ -28,6 +28,7 @@ function fakePlace(domain: string, answer: (id: string) => Claim | Error): FakeP
       place.finished.push(o);
     },
     started: async () => false,
+    waiting: async () => false,
   };
   return place;
 }

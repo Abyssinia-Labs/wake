@@ -101,12 +101,14 @@ test("the pending stream lists summonses, with the key as a bearer token", async
   });
 });
 
-test("claim, started and finish are POSTs; started may be missing", async () => {
+test("claim, started, waiting and finish are POSTs; started and waiting may be missing", async () => {
+  let serves = true;
   const { calls, deps } = server((call) => {
     if (call.url.endsWith("/claim")) {
       return Response.json({ claimed: true, run: { prompt: "Read ACME-1." } });
     }
     if (call.url.endsWith("/started")) return new Response(null, { status: 404 });
+    if (call.url.endsWith("/waiting")) return new Response(null, { status: serves ? 204 : 404 });
     if (call.url.endsWith("/finish")) return new Response(null, { status: 204 });
     return stream(`event: pending\ndata: []\n\n`);
   });
@@ -115,12 +117,17 @@ test("claim, started and finish are POSTs; started may be missing", async () => 
   const place = run.place();
   expect(await place?.claim("s1")).toEqual({ claimed: true, run: { prompt: "Read ACME-1." } });
   expect(await place?.started("s1", { name: "amber-heron", tool: "claude" })).toBe(false);
+  expect(await place?.waiting("s1", true)).toBe(true);
+  serves = false;
+  expect(await place?.waiting("s1", false)).toBe(false);
   await place?.finish({ id: "s1", outcome: "done" });
   await run.close();
   const posts = calls.filter((c) => c.method === "POST");
   expect(posts.map((c) => [c.url.split("/").pop(), c.body])).toEqual([
     ["claim", { id: "s1" }],
     ["started", { id: "s1", run: { name: "amber-heron", tool: "claude" } }],
+    ["waiting", { id: "s1", waiting: true }],
+    ["waiting", { id: "s1", waiting: false }],
     ["finish", { id: "s1", outcome: "done" }],
   ]);
 });

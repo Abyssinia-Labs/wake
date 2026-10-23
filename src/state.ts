@@ -2,6 +2,7 @@
 // read by the command, never by the apps.
 import { writeJson } from "./config";
 import type { AgentTool } from "./contract";
+import type { Waiting } from "./herdr-waiting";
 
 export type RunState = {
   app: string;
@@ -15,6 +16,8 @@ export type RunState = {
   name?: string;
   /** The summons it runs, so `wakectl stop` can name it; absent in an older state file. */
   summons?: string;
+  /** Since when a run in herdr waits on its owner, and the question; absent while it works. */
+  waiting?: Waiting;
 };
 
 export type ListenerState = {

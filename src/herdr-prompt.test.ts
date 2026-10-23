@@ -66,3 +66,58 @@ test("after a question before startup it waits before the first prompt; other er
   expect(result.ok).toBe(false);
   expect(result.reason).toContain("agent_not_found");
 });
+
+/** herdr whose turn ends when `end` is called, its agent blocking once meanwhile. */
+function blocking(waits: { code: number; stdout: string; stderr: string }[]) {
+  let end: () => void = () => {};
+  const turn = new Promise<void>((resolve) => {
+    end = resolve;
+  });
+  const run: Exec = async (cmd) => {
+    if (cmd[2] === "prompt") return await turn.then(() => ({ code: 0, stdout: "{}", stderr: "" }));
+    if (cmd[2] === "read")
+      return { code: 0, stdout: `${"─".repeat(9)}\n Run git push?\n 1. Yes`, stderr: "" };
+    if (cmd[2] === "wait") return waits.shift() ?? (await new Promise(() => {}));
+    return { code: 0, stdout: "{}", stderr: "" };
+  };
+  return { run, end: () => end() };
+}
+
+const reached = { code: 0, stdout: "{}", stderr: "" };
+
+test("a question during the turn is logged and heard, and its answer too", async () => {
+  const { run, end } = blocking([reached, reached]);
+  const said: string[] = [];
+  const heard: unknown[] = [];
+  const turn = promptUntilTurnEnds(run, {
+    ...base,
+    settle: false,
+    onEvent: (line) => said.push(line),
+    onWaiting: (w) => heard.push(w),
+  });
+  await Bun.sleep(5);
+  end();
+  expect(await turn).toEqual({ ok: true });
+  expect(heard).toEqual([{ since: expect.any(Number), what: "Run git push?" }, null]);
+  expect(said.slice(0, 2)).toEqual([
+    "waiting for you in herdr: Run git push?",
+    "no longer waiting for you",
+  ]);
+});
+
+test("a turn that ends on its question clears it without saying it went on", async () => {
+  const { run, end } = blocking([reached]);
+  const said: string[] = [];
+  const heard: unknown[] = [];
+  const turn = promptUntilTurnEnds(run, {
+    ...base,
+    settle: false,
+    onEvent: (line) => said.push(line),
+    onWaiting: (w) => heard.push(w),
+  });
+  await Bun.sleep(5);
+  end();
+  await turn;
+  expect(heard).toEqual([{ since: expect.any(Number), what: "Run git push?" }, null]);
+  expect(said).not.toContain("no longer waiting for you");
+});

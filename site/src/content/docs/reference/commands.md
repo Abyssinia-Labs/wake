@@ -19,7 +19,7 @@ the output isn't a terminal.
 | `wake pair <domain> <code> [--tool claude\|codex\|cursor]` | Pair with an app. Your agent gives you this command. `--tool` when the app couldn't tell which tool asked. |
 | `wake repos [allow\|remove <owner/name>] [--app <domain>]` | Which repositories each app may run in on this machine. `--app` when more than one app is paired. |
 | `wake install` | Start listening now and at every login (a LaunchAgent). |
-| `wake status` | What is paired, connected and running: each run by its name, with its resume line. |
+| `wake status` | What is paired, connected and running: each run by its name, with its resume line, and the question it waits on in herdr. |
 
 ## Watch
 

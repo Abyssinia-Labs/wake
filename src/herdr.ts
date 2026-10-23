@@ -16,6 +16,7 @@ import { trustCodexFolder } from "./codex-trust";
 import type { Exec } from "./exec";
 import { claudeSettings } from "./fence";
 import { promptUntilTurnEnds } from "./herdr-prompt";
+import { readQuestion } from "./herdr-waiting";
 import { modelArgs } from "./models";
 import { branchListsMcps, cursorModeArgs, writeCursorPermissions } from "./runners/cursor";
 import { requireCursorSignIn } from "./runners/cursor-signin";
@@ -250,9 +251,14 @@ export async function runInHerdr(o: HerdrRun, run: Exec): Promise<ClaudeResult> 
     // and every worktree is one): the person is watching here, so wait for
     // their answer rather than fail the run (GAT-31, 2026-10-08).
     if (!startBlocked(error)) throw error;
+    const since = Date.now();
+    const what = await readQuestion(run, name);
     o.onEvent?.(
-      `waiting for you in herdr: the ${o.ref} tab may be asking a question before it starts (whether to trust the folder, say)`,
+      what
+        ? `waiting for you in herdr before it starts: ${what}`
+        : `waiting for you in herdr: the ${o.ref} tab may be asking a question before it starts (whether to trust the folder, say)`,
     );
+    o.onWaiting?.({ since, what });
     const ready = await run([
       "herdr",
       "agent",
@@ -263,6 +269,7 @@ export async function runInHerdr(o: HerdrRun, run: Exec): Promise<ClaudeResult> 
       "--timeout",
       String(o.timeoutMs),
     ]);
+    o.onWaiting?.(null);
     if (ready.code !== 0) {
       const why = (ready.stderr || ready.stdout).trim().split("\n").at(-1) ?? "";
       return {
@@ -283,5 +290,6 @@ export async function runInHerdr(o: HerdrRun, run: Exec): Promise<ClaudeResult> 
     settle: answered,
     ...(o.onEvent ? { onEvent: o.onEvent } : {}),
     ...(o.signal ? { signal: o.signal } : {}),
+    ...(o.onWaiting ? { onWaiting: o.onWaiting } : {}),
   });
 }

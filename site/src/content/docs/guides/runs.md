@@ -13,6 +13,12 @@ wake mode herdr      # each run opens as a tab in herdr's "Wake" workspace
 In [herdr](https://herdr.dev) you can watch a run, answer its questions and
 type into it. If herdr isn't running, a run goes to the background.
 
+When a run in herdr stops on a question (a tool asking permission, a
+folder to trust), `wake status` shows it waiting for you, with the question
+as its tab shows it, until the run goes on. The question stays on your
+machine; an app that supports it hears only that the run waits. A run in
+the background never waits: what isn't allowed is denied.
+
 ## Which tool, and where
 
 A pairing names the tool that runs its agent: Claude Code, Codex or Cursor.

@@ -9,6 +9,7 @@
 // sent again, at most twice.
 import type { ClaudeResult } from "./claude";
 import type { Exec } from "./exec";
+import { type Waiting, watchWaiting } from "./herdr-waiting";
 import { STOPPED } from "./stop";
 
 export const SETTLE_MS = 2_500;
@@ -23,6 +24,8 @@ export type PromptRun = {
   onEvent?: (line: string) => void;
   /** Aborted when its owner stops the run: the agent's turn is interrupted, its tab kept. */
   signal?: AbortSignal;
+  /** Hears when the turn stops on a question for its owner, and when it goes on. */
+  onWaiting?: (waiting: Waiting | null) => void;
 };
 
 /** Resolves when the signal aborts; never, without one. */
@@ -43,6 +46,31 @@ export async function promptUntilTurnEnds(
   pause: (ms: number) => Promise<unknown> = Bun.sleep,
 ): Promise<ClaudeResult> {
   if (o.settle) await pause(SETTLE_MS);
+  // The wait below is on the turn's end; a question meanwhile is watched beside it.
+  const onWaiting = o.onWaiting;
+  const unwatch = onWaiting
+    ? watchWaiting(run, o.name, (waiting) => {
+        o.onEvent?.(
+          waiting
+            ? `waiting for you in herdr${waiting.what ? `: ${waiting.what}` : ""}`
+            : "no longer waiting for you",
+        );
+        onWaiting(waiting);
+      })
+    : undefined;
+  try {
+    return await untilTurnEnds(run, o, pause);
+  } finally {
+    // A turn that ended on its question (stopped, or out of time) waits on nobody now.
+    if (unwatch?.()) onWaiting?.(null);
+  }
+}
+
+async function untilTurnEnds(
+  run: Exec,
+  o: PromptRun,
+  pause: (ms: number) => Promise<unknown>,
+): Promise<ClaudeResult> {
   const stopped = whenAborted(o.signal);
   for (let attempt = 0; ; attempt++) {
     const waiting = run([

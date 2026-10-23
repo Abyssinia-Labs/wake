@@ -18,6 +18,14 @@ export type RunState = {
   summons?: string;
   /** Since when a run in herdr waits on its owner, and the question; absent while it works. */
   waiting?: Waiting;
+  /** The summons's target on the app (contract.ts checked it); absent in an older state file. */
+  url?: string;
+  /**
+   * Whether it runs in a herdr tab rather than headless, so `wakectl open`
+   * shows the tab instead of starting a second process on its session;
+   * absent in an older state file.
+   */
+  herdr?: boolean;
 };
 
 export type ListenerState = {

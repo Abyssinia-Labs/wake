@@ -54,6 +54,8 @@ test("status: the listener, each pairing's connection, the runs and the settings
           cwd: "/w/gat-20",
           startedAt: 150,
           name: "amber-heron",
+          url: "https://gatherd.dev/t/GAT-20",
+          herdr: true,
         },
         {
           app: "gatherd",
@@ -90,6 +92,8 @@ test("status: the listener, each pairing's connection, the runs and the settings
       startedAt: 150,
       resume: "claude --resume s-1",
       waiting: null,
+      url: "https://gatherd.dev/t/GAT-20",
+      herdr: true,
     },
     {
       app: "gatherd",
@@ -101,6 +105,8 @@ test("status: the listener, each pairing's connection, the runs and the settings
       startedAt: 160,
       resume: null,
       waiting: { since: 170, what: "Run this command? · git push" },
+      url: null,
+      herdr: null,
     },
   ]);
   expect(out.repos).toEqual({ "gatherd.dev": ["acme/widgets"] });
@@ -143,11 +149,12 @@ test("open's list: newest first, with the resume command once there is a session
   };
   const out = historyJson([
     { ...run, name: "brisk-lark", sessionId: "t-1", outcome: "done" },
-    { ...run, name: "misty-finch", sessionId: "" },
+    { ...run, name: "misty-finch", sessionId: "", url: "https://gatherd.dev/t/GAT-1", herdr: true },
   ]);
-  expect(out.map((one) => [one.name, one.resume])).toEqual([
-    ["misty-finch", null],
-    ["brisk-lark", "codex resume t-1"],
+  expect(out.map((one) => [one.name, one.resume, one.url, one.herdr])).toEqual([
+    ["misty-finch", null, "https://gatherd.dev/t/GAT-1", true],
+    // A run kept before runs had them.
+    ["brisk-lark", "codex resume t-1", undefined, undefined],
   ]);
 });
 

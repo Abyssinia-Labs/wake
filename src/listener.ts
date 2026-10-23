@@ -110,7 +110,7 @@ export async function listen(): Promise<void> {
             note(`${summons.target.ref}: ${line}`);
             step(app.app, summons.id, line);
           },
-          onStart: ({ sessionId, cwd, tool, name }) => {
+          onStart: ({ sessionId, cwd, tool, name, herdr }) => {
             const known = runs.get(summons.id);
             note(
               known
@@ -126,6 +126,8 @@ export async function listen(): Promise<void> {
               name,
               startedAt: known?.startedAt ?? Date.now(),
               summons: summons.id,
+              url: summons.target.url,
+              herdr,
             };
             // A session id learnt later keeps a question the run waits on.
             runs.set(summons.id, withWaiting(now, known?.waiting ?? null));

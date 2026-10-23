@@ -45,6 +45,7 @@ const page: Summons = {
 function deps(seen: ClaudeRun[], ok = true): RunDeps {
   return {
     exec,
+    herdrUp: async () => false,
     newId: () => "11111111-2222-4333-8444-555555555555",
     claude: async (run) => {
       seen.push(run);
@@ -230,5 +231,50 @@ describe("a run its owner stops", () => {
       signal: stopper.signal,
     });
     expect(outcome).toEqual({ id: "s1", outcome: "failed", reason: STOPPED });
+  });
+});
+
+describe("where a run goes", () => {
+  async function started(run: "headless" | "herdr", herdrUp: boolean) {
+    const modes: string[] = [];
+    const herdr: boolean[] = [];
+    const events: string[] = [];
+    await runSummons(page, { prompt: "x" }, app, {
+      config: { ...defaults(), run },
+      paths: p,
+      deps: {
+        ...deps([]),
+        herdrUp: async () => herdrUp,
+        claude: async (claudeRun, how) => {
+          modes.push(how.mode);
+          claudeRun.onSession?.("t-1");
+          return { ok: true };
+        },
+      },
+      onStart: (s) => herdr.push(s.herdr),
+      onEvent: (line) => events.push(line),
+    });
+    return { modes, herdr, events };
+  }
+
+  test("in herdr while it runs, the state says so from the start", async () => {
+    const { modes, herdr, events } = await started("herdr", true);
+    expect(modes).toEqual(["herdr"]);
+    // The first start and the one when the session id is learnt.
+    expect(herdr).toEqual([true, true]);
+    expect(events).not.toContain("herdr is not running, so this run is headless");
+  });
+
+  test("herdr asked for but not running: headless, and said so", async () => {
+    const { modes, herdr, events } = await started("herdr", false);
+    expect(modes).toEqual(["headless"]);
+    expect(herdr).toEqual([false, false]);
+    expect(events).toContain("herdr is not running, so this run is headless");
+  });
+
+  test("headless asked for: herdr isn't looked for", async () => {
+    const { modes, herdr } = await started("headless", true);
+    expect(modes).toEqual(["headless"]);
+    expect(herdr).toEqual([false, false]);
   });
 });

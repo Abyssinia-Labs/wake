@@ -8,11 +8,31 @@ that serves wake/v1 over HTTP. What changed in `wakectl` is in
 
 ### Added
 
-- **wake/v1 has calls for devices that watch, which this server doesn't serve yet.** The spec adds
-  a watch key, which an agent's owner trades for a code your app shows them, and the calls it
-  opens, for a phone or a browser that lists the agent's runs and answers asks. The server checks
-  what a device may send by the spec's rules; serving the calls comes in a later release, and until
-  then it serves wake/v1 as before.
+- **The server serves wake/v1's calls for devices that watch.** An agent's owner adds a phone or a
+  browser with a code `issueWatchCode` makes in your own interface, and the device lists the
+  agent's runs and answers asks. `wakeHandler` serves `POST /wake/v1/watch` and the watch routes
+  (`runs`, as server-sent events like `pending`, `answer`, `places`, `watching`, `push`,
+  `activity`), with CORS for a browser. A place key opens none of them, and a watch key none of
+  Wake's.
+- **`plan` says what an agent's plan includes.** It is asked at each watch call. On a plan without
+  devices, every watch route but `watching` answers `402 not-in-plan`; without `plan`, everything
+  is included.
+- **`POST /wake/v1/waiting`: Wake can say a run waits on its owner.** The owner's devices see it,
+  and `forSubject`, `forOwner` and `forScope` answer `waiting: true`.
+- **`summon` takes `askerName`.** The owner's devices show who asks.
+- **`devices`, `forgetDevice` and `alertTargets`.** An agent's devices for its owner to see and
+  remove, and which of them want an alert, and how to reach each.
+
+### Changed
+
+- **New tables and columns: migrate before you deploy.** `wake_watch_codes` and
+  `wake_devices` are new, and `wake_places.last_claim_at`, `wake_summonses.asker_name` and
+  `wake_summonses.waiting` are added. drizzle-kit finds them, `WAKE_TABLES_SQL` run again adds
+  them, and on SQLite `WAKE_SQLITE_DEVICES_UPGRADE` does, once.
+- **A `WakeStore` of your own needs the device methods.** `insertWatchCode`, `useWatchCode`,
+  `insertDevice`, `deviceByKeyHash`, `devicesOf`, `patchDevice` and `latestOf`.
+- **Pairing takes control characters out of a machine's name.** A device shows the name as it
+  reads.
 
 ## 0.4.0 — 2026-10-12
 

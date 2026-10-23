@@ -35,6 +35,7 @@ export function isBranch(text: string): boolean {
 }
 
 export type SummonsShape = {
+  askerName?: string;
   kind: string;
   target: { kind: string; ref: string; url: string };
   repo?: string;
@@ -47,6 +48,7 @@ export function checkSummons(s: SummonsShape): void {
   const bad = (field: string): never => {
     throw new WakeError("INVALID_SUMMONS", field);
   };
+  if (s.askerName !== undefined && !LABEL.test(s.askerName)) bad("askerName");
   if (!KIND.test(s.kind)) bad("kind");
   if (!KIND.test(s.target.kind)) bad("target.kind");
   if (!LABEL.test(s.target.ref)) bad("target.ref");
@@ -72,6 +74,15 @@ export function isRunReport(r: { name: string; session?: string }): boolean {
 export const PLATFORMS = ["ios", "darwin", "web"] as const;
 /** A device's name: shown in the app's list of them, so no control characters. */
 const NAME = /^[^\p{Cc}\p{Cf}]{1,100}$/u;
+
+/**
+ * A machine's name as a device shows it (`wake:runs`, `wake:places`). Wake
+ * pairs with the host's own name for itself, so a control character is
+ * taken out rather than refused; empty after that, it is "A machine".
+ */
+export function cleanName(text: string): string {
+  return text.replace(/[\p{Cc}\p{Cf}]/gu, "").trim() || "A machine";
+}
 
 /** `POST /wake/v1/watch`'s `device`. */
 export function isDevice(d: { name: string; platform: string }): boolean {

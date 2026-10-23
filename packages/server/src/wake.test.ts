@@ -166,12 +166,14 @@ for (const kind of STORES) {
     test("the host hears a run start and end, and a hook that throws changes nothing", async () => {
       const heard: string[] = [];
       const { wake } = await testWake(kind, {
-        started: (row) => {
-          heard.push(`started ${row.run?.name}`);
-          throw new Error("GitHub is down");
-        },
-        finished: (row) => {
-          heard.push(`finished ${row.state}`);
+        hooks: {
+          started: (row) => {
+            heard.push(`started ${row.run?.name}`);
+            throw new Error("GitHub is down");
+          },
+          finished: (row) => {
+            heard.push(`finished ${row.state}`);
+          },
         },
       });
       const key = await pairedKey(wake);

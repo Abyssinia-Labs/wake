@@ -5,17 +5,10 @@
 // the WHERE settles which.
 import { and, asc, desc, eq, gte, inArray, isNull } from "drizzle-orm";
 import type { BaseSQLiteDatabase } from "drizzle-orm/sqlite-core";
+import { present } from "../rows";
 import type { CodeRow, PlaceRow, State, SummonsPatch, SummonsRow, WakeStore } from "../store";
-import { wakeCodes, wakePlaces, wakeSummonses } from "./schema";
-
-/** Drizzle answers null for an empty column; the store's rows leave it out. */
-function present<T extends Record<string, unknown>>(
-  row: T,
-): { [K in keyof T]: Exclude<T[K], null> } {
-  const out: Record<string, unknown> = {};
-  for (const [key, value] of Object.entries(row)) if (value !== null) out[key] = value;
-  return out as { [K in keyof T]: Exclude<T[K], null> };
-}
+import { sqliteDeviceStore } from "./device-store";
+import { wakeCodes, wakeDevices, wakePlaces, wakeSummonses, wakeWatchCodes } from "./schema";
 
 /** D1, libSQL and other async drivers; a sync one (bun:sqlite) goes through `drizzle-orm/sqlite-proxy`. */
 export function sqliteStore<R, S extends Record<string, unknown>>(
@@ -26,6 +19,7 @@ export function sqliteStore<R, S extends Record<string, unknown>>(
   const summons = (row: typeof wakeSummonses.$inferSelect): SummonsRow => present(row);
 
   return {
+    ...sqliteDeviceStore(db),
     async insertCode(row) {
       await db.insert(wakeCodes).values(row);
     },
@@ -58,14 +52,18 @@ export function sqliteStore<R, S extends Record<string, unknown>>(
       await db.update(wakePlaces).set(patch).where(eq(wakePlaces.id, id));
     },
     async retireAgent(agent, now) {
-      await db
-        .update(wakePlaces)
-        .set({ forgottenAt: now })
-        .where(and(eq(wakePlaces.agent, agent), isNull(wakePlaces.forgottenAt)));
-      await db
-        .update(wakeCodes)
-        .set({ usedAt: now })
-        .where(and(eq(wakeCodes.agent, agent), isNull(wakeCodes.usedAt)));
+      for (const table of [wakePlaces, wakeDevices] as const) {
+        await db
+          .update(table)
+          .set({ forgottenAt: now })
+          .where(and(eq(table.agent, agent), isNull(table.forgottenAt)));
+      }
+      for (const table of [wakeCodes, wakeWatchCodes] as const) {
+        await db
+          .update(table)
+          .set({ usedAt: now })
+          .where(and(eq(table.agent, agent), isNull(table.usedAt)));
+      }
     },
     async insertSummons(row) {
       await db.insert(wakeSummonses).values(row);
@@ -93,6 +91,15 @@ export function sqliteStore<R, S extends Record<string, unknown>>(
         .from(wakeSummonses)
         .where(and(eq(wakeSummonses.agent, agent), eq(wakeSummonses.state, state)))
         .orderBy(asc(wakeSummonses.at))
+        .limit(limit);
+      return rows.map(summons);
+    },
+    async latestOf(agent, limit) {
+      const rows = await db
+        .select()
+        .from(wakeSummonses)
+        .where(eq(wakeSummonses.agent, agent))
+        .orderBy(desc(wakeSummonses.at))
         .limit(limit);
       return rows.map(summons);
     },
@@ -130,7 +137,8 @@ export function sqliteStore<R, S extends Record<string, unknown>>(
     },
     async deleteScope(scope, limit) {
       let deleted = 0;
-      for (const table of [wakeSummonses, wakeCodes, wakePlaces] as const) {
+      const tables = [wakeSummonses, wakeCodes, wakePlaces, wakeWatchCodes, wakeDevices] as const;
+      for (const table of tables) {
         if (deleted >= limit) break;
         const ids = db
           .select({ id: table.id })

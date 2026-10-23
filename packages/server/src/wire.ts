@@ -1,11 +1,11 @@
-// The four calls Wake makes (the spec's "The functions" and "The HTTP
-// transport"), each with the place key: wake:pending, claim, started and
-// finish. Each finds the place by its key's hash and answers for that
-// place's agent only; a key that opens nothing is UNPAIRED.
+// The calls Wake makes (the spec's "The functions" and "The HTTP
+// transport"), each with the place key: wake:pending, claim, started,
+// finish and waiting. Each finds the place by its key's hash and answers
+// for that place's agent only; a key that opens nothing is UNPAIRED.
 import type { Changes } from "./changes";
 import { WakeError } from "./errors";
 import { hashSecret, KEY_SHAPE } from "./keys";
-import { isRunReport } from "./shape";
+import { type Inclusion, isRunReport } from "./shape";
 import type { PlaceRow, SummonsRow, Tool, WakeStore } from "./store";
 import { type PendingSummons, pendingOf } from "./views";
 
@@ -19,12 +19,20 @@ export type WakeHooks = {
   finished?: (summons: SummonsRow) => void | Promise<void>;
 };
 
+/** What an agent's plan includes: devices that watch, and alerts sent to them. */
+export type Plan = { devices: Inclusion; alerts: Inclusion };
+/** Whose plan: the agent a device watches, its owner, and its scope when it has one. */
+export type WatchedAgent = { agent: string; owner: string; scope?: string };
+/** The host's say on an agent's plan, asked at each watch call; without it, everything is included. */
+export type PlanHook = (watched: WatchedAgent) => Plan | Promise<Plan>;
+
 export type WakeContext = {
   app: string;
   store: WakeStore;
   changes: Changes;
   now: () => number;
   hooks?: WakeHooks;
+  plan?: PlanHook;
 };
 
 async function tell(
@@ -71,7 +79,7 @@ export async function claim(c: WakeContext, key: string, id: string): Promise<Cl
     updatedAt: now,
   });
   if (!won) return { claimed: false };
-  await c.store.patchPlace(place.id, { lastSeenAt: now });
+  await c.store.patchPlace(place.id, { lastSeenAt: now, lastClaimAt: now });
   c.changes.publish(place.agent);
   return { claimed: true, run: { prompt: won.prompt } };
 }
@@ -104,6 +112,7 @@ export async function started(
     place.id,
   );
   await c.store.patchPlace(place.id, { lastSeenAt: now });
+  if (moved) c.changes.publish(place.agent);
   await tell(c.hooks?.started, moved);
 }
 
@@ -129,5 +138,29 @@ export async function finish(
     place.id,
   );
   await c.store.patchPlace(place.id, { lastSeenAt: now });
+  if (ended) c.changes.publish(place.agent);
   await tell(c.hooks?.finished, ended);
+}
+
+/**
+ * The run this place claimed stops on a question for its owner, or goes on.
+ * Not a word of the question: it stays on the machine, and the owner's
+ * devices see only that it waits (`wake:runs`).
+ */
+export async function waiting(
+  c: WakeContext,
+  key: string,
+  id: string,
+  waits: boolean,
+): Promise<void> {
+  const place = await placeOf(c, key);
+  const now = c.now();
+  const moved = await c.store.moveSummons(
+    id,
+    ["claimed"],
+    { waiting: waits, updatedAt: now },
+    place.id,
+  );
+  await c.store.patchPlace(place.id, { lastSeenAt: now });
+  if (moved) c.changes.publish(place.agent);
 }

@@ -21,6 +21,8 @@ export type SummonsView = {
   unclaimed: boolean;
   /** Its run once Wake said it started. `session` is the owner's to see. */
   run?: RunInfo;
+  /** True while its run waits on its owner (`wake:waiting`). */
+  waiting?: boolean;
 };
 
 export type PendingSummons = {
@@ -59,6 +61,7 @@ export function viewOf(row: SummonsRow, now: number): SummonsView {
     // Worked out when read, so no scheduler is needed to mark it.
     unclaimed: row.state === "open" && now - (row.openedAt ?? row.at) >= UNCLAIMED_MS,
     ...(row.run === undefined ? {} : { run: row.run }),
+    ...(row.state === "claimed" && row.waiting ? { waiting: true } : {}),
   };
 }
 

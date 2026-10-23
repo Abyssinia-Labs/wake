@@ -129,6 +129,11 @@ a file per run, `<app>.<summons>.ndjson`, one `{ "at", "line" }` a line,
 the same lines `wakectl logs` shows for it. They are yours alone, never
 sent anywhere, and a run's file goes when Wake forgets the run, after its
 last 200.
+**For a program.** `wakectl status --json` prints what `status` shows as
+JSON: the listener, each pairing's connection, the runs with their resume
+commands, the approved repositories and the settings. `repos`, `model`,
+`doctor` and `open` (the runs this machine remembers, newest first) take
+`--json` too, in the forms that change nothing. No key is ever in it.
 
 Place keys live in the macOS Keychain or Linux's Secret Service
 (`dev.abyssinia.wake`), never in the config at

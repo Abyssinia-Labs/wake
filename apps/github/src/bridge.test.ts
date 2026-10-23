@@ -173,6 +173,7 @@ test("closing the issue lets a waiting summons go; an unsigned webhook is refuse
   expect(forged.status).toBe(401);
 });
 
+// Three benches, each a fresh PGlite at about 1.5 s on CI's runners: past bun's default 5 s.
 test("someone who can't push, hasn't paired, or asks on a fork's pull request wakes nothing", async () => {
   const reader = await bench("read");
   await pairClaude(reader);
@@ -199,4 +200,4 @@ test("someone who can't push, hasn't paired, or asks on a fork's pull request wa
       comment: { ...comment, body: "/wake" },
     }),
   ).toEqual({ did: "refused: fork" });
-});
+}, 15_000);

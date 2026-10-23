@@ -18,6 +18,10 @@ own: [the Convex component](packages/convex/CHANGELOG.md) and
   listener, each pairing's connection, the runs with their resume commands, the approved
   repositories and the settings as JSON; `repos`, `model`, `doctor` and `open` take it too. Only
   the forms that change nothing do, and no key is ever in it.
+- **Wake for GitHub: Pro, a plan for your own account.** $8 a month or $80 a year, for what Wake's
+  paid apps need: your runs, and what they ask you, on your other devices. Until those apps come,
+  it does what Free does. Team stays the organisation's plan, with its policy and audit; like
+  Team, Pro isn't on sale yet.
 
 ## 0.4.1 — 2026-10-14
 

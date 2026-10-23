@@ -45,18 +45,35 @@ installation, so uninstalling the app deletes its summonses.
 
 ## Plans
 
-**Free**: a label or `/wake` wakes your own agent on your own machine, on
-any repository you can push to. **Team**, per organisation, adds a policy
-(which repositories may summon, and who: anyone who can push, or admins
-and maintainers only) and an audit of every run, at
-`github.wakectl.dev/org/<login>`, for the organisation's admins (WAK-23).
-Cloud fallback comes later (WAK-24).
+**Free**, for anyone: a label or `/wake` wakes your own agent on your own
+machine, on any repository you can push to.
+
+**Pro**, for a personal account, $8 a month or $80 a year, is the plan
+Wake's paid apps need: your runs, and what they ask you, on your other
+devices, and cloud fallback and routing when they arrive (WAK-24). Until
+then it does what Free does. It has nothing of an organisation's: no policy
+and no audit.
+
+**Team**, per organisation, adds a policy (which repositories may summon,
+and who: anyone who can push, or admins and maintainers only) and an audit
+of every run, at `github.wakectl.dev/org/<login>`, for the organisation's
+admins (WAK-23). Cloud fallback comes later (WAK-24).
+
+A personal account has the same page, at its own login, for its person:
+it shows the plan.
 
 A plan is set by GitHub Marketplace's `marketplace_purchase` events, sent to
 `/github/webhook` and signed with the listing's secret
-(`MARKETPLACE_WEBHOOK_SECRET`). Until the app can sell there (a verified
+(`MARKETPLACE_WEBHOOK_SECRET`). The listing's name says which: Pro or Team,
+and any other paid listing is Team. Until the app can sell there (a verified
 publisher, and GitHub asks for about 100 installations), the owner grants
-one by hand:
+one by hand, Pro to a person's account:
+
+```bash
+bunx wrangler d1 execute wake-github --remote --command "INSERT OR REPLACE INTO github_kv (key, value) VALUES ('plan:<account id>', '{\"name\":\"pro\",\"source\":\"granted\"}')"
+```
+
+or Team to an organisation's:
 
 ```bash
 bunx wrangler d1 execute wake-github --remote --command "INSERT OR REPLACE INTO github_kv (key, value) VALUES ('plan:<account id>', '{\"name\":\"team\",\"source\":\"granted\"}')"

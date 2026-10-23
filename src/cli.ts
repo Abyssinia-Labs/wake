@@ -11,6 +11,7 @@ import { forget, pair } from "./commands/pair";
 import { prune } from "./commands/prune";
 import { read } from "./commands/read";
 import { repos } from "./commands/repos";
+import { roots } from "./commands/roots";
 import { install, logs, pause, resume, uninstall } from "./commands/service";
 import { allow, mode, permissions, trust } from "./commands/settings";
 import { status } from "./commands/status";
@@ -108,6 +109,8 @@ async function main(argv: string[]): Promise<void> {
       return allow(rest[0], values.remove);
     case "repos":
       return repos(rest[0], rest[1], values.app);
+    case "roots":
+      return roots(rest[0], rest[1]);
     case "trust":
       return trust(rest[0], rest[1]);
     case "prune": {

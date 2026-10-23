@@ -245,8 +245,8 @@ code your app shows only to its signed-in owner, so nothing a run can reach
 can say yes for them. The key opens `wake:runs`, `wake:answer`,
 `wake:places`, `wake:watching`, `wake:push` and `wake:activity`, and no
 place call; a place key opens none of them. An optional `wake:waiting`
-lets Wake say a run waits on its owner. Neither package serves these yet,
-and `wakectl check` doesn't probe them yet.
+lets Wake say a run waits on its owner. Both packages serve these, and
+`wakectl check` probes them.
 
 - **The spec**: [docs/spec/wake-v1.md](docs/spec/wake-v1.md).
 - **On Convex**: [`@abyssinia-labs/wake-convex`](packages/convex) is the
@@ -257,6 +257,9 @@ and `wakectl check` doesn't probe them yet.
   over the HTTP transport, with Drizzle.
 - **Check it**: `wakectl check <your domain>` probes an app the way Wake
   will, with inputs it must refuse, so it pairs nothing and changes nothing.
+  Where the app makes watch codes, it checks that every watch call refuses
+  a key that opens nothing, and this machine's own place key when it is
+  paired with the app.
 
 ## Names
 

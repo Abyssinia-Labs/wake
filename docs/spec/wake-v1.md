@@ -11,10 +11,9 @@ An app built on Convex can take the server half whole from
 the same protocol over plain HTTP ([The HTTP transport](#the-http-transport)).
 `wakectl check <domain>` tests an app against this document.
 
-[Devices that watch](#devices-that-watch) and `wake:waiting` are new, and
-written here first: neither package serves them yet and `wakectl check` does
-not probe them yet. Wake calls `wake:waiting` from its next release. Each
-follows in its own release.
+[Devices that watch](#devices-that-watch) and `wake:waiting` are new. Both
+packages serve them and `wakectl check` probes them; Wake calls
+`wake:waiting` from its next release.
 
 ## Terms
 

@@ -5,6 +5,7 @@ import pkg from "../package.json";
 import { check } from "./commands/check";
 import { doctor, setup } from "./commands/doctor";
 import { JSON_COMMANDS, printJson, takesJson } from "./commands/json";
+import { limits } from "./commands/limits";
 import { model } from "./commands/model";
 import { open } from "./commands/open";
 import { forget, pair } from "./commands/pair";
@@ -111,6 +112,8 @@ async function main(argv: string[]): Promise<void> {
       return repos(rest[0], rest[1], values.app);
     case "roots":
       return roots(rest[0], rest[1]);
+    case "limits":
+      return limits(rest[0], rest[1]);
     case "trust":
       return trust(rest[0], rest[1]);
     case "prune": {

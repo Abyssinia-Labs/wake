@@ -19,7 +19,8 @@ export type Place = {
 export type Work = (place: Place, summons: Summons, run: Run) => Promise<Outcome>;
 
 export type SchedulerOptions = {
-  maxRuns: number;
+  /** Asked before each claim, so `wakectl limits runs` takes without a restart. */
+  maxRuns: () => number;
   isPaused: () => boolean;
   work: Work;
   note: (line: string) => void;
@@ -77,7 +78,7 @@ export class Scheduler {
       .flatMap(({ place, summonses }) => summonses.map((summons) => ({ place, summons })))
       .sort((a, b) => a.summons.at - b.summons.at);
     for (const { place, summons } of queue) {
-      if (this.running >= this.o.maxRuns) return;
+      if (this.running >= this.o.maxRuns()) return;
       const key = keyOf(place.domain, summons.id);
       if (this.busy.has(key) || this.passed.has(key)) continue;
       if ((this.retryAt.get(key) ?? 0) > now) continue;

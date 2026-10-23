@@ -48,6 +48,10 @@ const GROUPS: readonly { title: string; entries: readonly Entry[] }[] = [
         what: "The model each tool runs with, or its own default",
       },
       { use: "allow [rule] [--remove]", what: "Tools a run may use beyond Wake's own" },
+      {
+        use: "limits [runs 1|2] [stop-after <min>]",
+        what: "Runs at once, and how long one may take",
+      },
       { use: "trust codex [on|off]", what: "Let Codex runs in herdr skip 'trust this folder?'" },
     ],
   },
@@ -87,6 +91,7 @@ export const COMMANDS = [
   "trust",
   "repos",
   "roots",
+  "limits",
   "prune",
   "listen",
   "help",

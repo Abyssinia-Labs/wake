@@ -4,6 +4,11 @@ export function say(line: string): void {
   process.stdout.write(`${line}\n`);
 }
 
+/** A `--json` answer: one value, indented, on stdout. */
+export function sayJson(value: unknown): void {
+  say(JSON.stringify(value, null, 2));
+}
+
 export function warn(line: string): void {
   process.stderr.write(`${line}\n`);
 }

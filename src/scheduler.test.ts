@@ -37,7 +37,7 @@ const won: Claim = { claimed: true, run: { prompt: "go" } };
 const settle = () => Bun.sleep(5);
 
 function scheduler(o: Partial<SchedulerOptions> & Pick<SchedulerOptions, "work">): Scheduler {
-  return new Scheduler({ maxRuns: 2, isPaused: () => false, note: () => {}, ...o });
+  return new Scheduler({ maxRuns: () => 2, isPaused: () => false, note: () => {}, ...o });
 }
 
 describe("Scheduler", () => {
@@ -46,7 +46,7 @@ describe("Scheduler", () => {
     const gates: Array<() => void> = [];
     let peak = 0;
     const sch = scheduler({
-      maxRuns: 1,
+      maxRuns: () => 1,
       work: (_p, summons) => {
         order.push(summons.id);
         peak = Math.max(peak, sch.active);

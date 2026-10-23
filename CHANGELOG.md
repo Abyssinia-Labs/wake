@@ -10,6 +10,9 @@ own: [the Convex component](packages/convex/CHANGELOG.md) and
 
 ### Added
 
+- **`wakectl limits` sets runs at once and when a run is stopped.** `wakectl limits runs 1` lets
+  one run go at a time (two at most, as before), and `wakectl limits stop-after 90` stops a run
+  after 90 minutes rather than 120. Both take within half a minute, with no restart.
 - **`wakectl roots` sets where Wake looks for your clones.** `wakectl roots add ~/code` and
   `wakectl roots remove ~/code` change the folders setup asks about, one and two folders down;
   `wakectl roots` lists them.

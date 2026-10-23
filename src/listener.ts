@@ -90,7 +90,8 @@ export async function listen(): Promise<void> {
   };
 
   const scheduler = new Scheduler({
-    maxRuns: config.maxRuns,
+    // The config is read again every half minute (reconcile).
+    maxRuns: () => config.maxRuns,
     isPaused: () => existsSync(p.paused),
     note,
     work: async (place, summons, run) => {

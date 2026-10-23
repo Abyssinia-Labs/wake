@@ -179,9 +179,10 @@ Place keys live in the macOS Keychain or Linux's Secret Service
 Linux). A Linux machine with no Secret Service (a server, a container)
 keeps them in `~/.config/wake/keys.json`, readable by you alone. Its settings:
 `roots` (where to look for clones, `~/Projects` by default; `wakectl roots
-add ~/code` and `wakectl roots remove` change them), `maxRuns` (2),
-`runTimeoutMinutes` (120), `extraAllowedTools` for a run, and `models`,
-as `wakectl model` sets it.
+add ~/code` and `wakectl roots remove` change them), `maxRuns` (2, and
+never more) and `runTimeoutMinutes` (120), which `wakectl limits runs 1`
+and `wakectl limits stop-after 90` change with no restart,
+`extraAllowedTools` for a run, and `models`, as `wakectl model` sets it.
 
 ## What a run does
 

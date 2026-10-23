@@ -8,6 +8,7 @@ const probe = (over: Partial<Probe> = {}): Probe => ({
   bunVersion: "1.3.3",
   exists: () => true,
   plist: "/p.plist",
+  appAgent: null,
   listener: 42,
   paused: false,
   ...over,
@@ -43,6 +44,19 @@ test("a ready machine passes; gh signed out is a warning with its fix", async ()
   expect(checks.filter((check) => check.level === "fail")).toEqual([]);
   expect(checks.find((check) => check.what === "GitHub CLI")?.fix).toBe("gh auth login");
   expect(checks.some((check) => check.what === "Agents: Claude Code")).toBe(true);
+});
+
+test("a listener an app runs is installed: running, or said not to be", () => {
+  const app = { app: "com.example.listener" };
+  const running = wakeChecks(defaults(), probe({ exists: () => false, appAgent: app }));
+  expect(running.find((check) => check.what === "Listening (pid 42)")?.detail).toBe(
+    "An app on this Mac runs the listener (com.example.listener); start at login is its setting.",
+  );
+  expect(running.map((check) => check.what)).not.toContain("Not installed");
+  const stopped = wakeChecks(defaults(), probe({ appAgent: {}, listener: null }));
+  expect(stopped.find((check) => check.what === "Run by an app, but not running")?.level).toBe(
+    "fail",
+  );
 });
 
 test("Wake's own state: unpaired, unapproved, not installed, paused", () => {

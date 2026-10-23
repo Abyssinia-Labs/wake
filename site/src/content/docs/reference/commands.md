@@ -47,5 +47,5 @@ the output isn't a terminal.
 | `wake prune [--days 14]` | Remove run worktrees untouched that long; never one with uncommitted work. |
 | `wake forget <domain>` | Unpair an app's agents, here and on the app. |
 | `wake update` | Install the newest Wake from npm, restart the listener onto it, and list what changed since your version ([the changelog](/changelog/) has it all). |
-| `wake uninstall` | Stop, and don't start at login. |
+| `wake uninstall` | Stop, and don't start at login. Like `install`, it leaves alone a listener an app on your Mac runs as its own login item: start at login is that app's setting. |
 | `wake check <domain>` | Test an app against the [wake/v1 spec](/spec/wake-v1/). Pairs nothing, changes nothing. |

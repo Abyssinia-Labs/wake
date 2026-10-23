@@ -77,10 +77,10 @@ record also holds the run's name, the tool, its session id and your
 machine's name. How it ended, and why not, is kept with it.
 
 **Organisations.** For each account the app is installed on: its id,
-login, type and installation. On Team, its plan as GitHub Marketplace
-reports it (the plan, the number of seats, a trial's end) or as we granted
-it, and its Wake policy (which repositories may summon, who may, and who
-last set it). Payment is GitHub's: we never see a card.
+login, type and installation. On Pro or Team, its plan as GitHub
+Marketplace reports it (the plan, the number of seats, a trial's end) or as
+we granted it, and on Team its Wake policy (which repositories may summon,
+who may, and who last set it). Payment is GitHub's: we never see a card.
 
 **What it does on GitHub.** It reacts to the issue or comment that asked
 (👀), and writes one comment per run, edited as the run goes, with the

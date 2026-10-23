@@ -18,7 +18,7 @@ import { CODE_TTL_MS, hashSecret, newPairCode, normalizeCode } from "../componen
 import { type ALERT_KINDS, APP } from "../component/shape.js";
 
 export { registerRoutes } from "./routes.js";
-export { exposeWatchApi, type Plan, type PlanOf, type Watched } from "./watch.js";
+export { exposeWatchApi, type Plan, type PlanOf, type WatchedAgent } from "./watch.js";
 export type { ComponentApi };
 
 type RunQuery = Pick<GenericQueryCtx<GenericDataModel>, "runQuery">;

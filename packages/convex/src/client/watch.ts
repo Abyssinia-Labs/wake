@@ -21,10 +21,10 @@ import { APP, type Inclusion, NOT_IN_PLAN, pushArgs } from "../component/shape.j
 /** What an agent's plan includes: devices that watch, and alerts sent to them. */
 export type Plan = { devices: Inclusion; alerts: Inclusion };
 /** Whose plan: the agent a device watches, its owner, and its scope when it has one. */
-export type Watched = { agent: string; owner: string; scope?: string };
+export type WatchedAgent = { agent: string; owner: string; scope?: string };
 export type PlanOf<DataModel extends GenericDataModel> = (
   ctx: GenericQueryCtx<DataModel>,
-  watched: Watched,
+  watched: WatchedAgent,
 ) => Plan | Promise<Plan>;
 
 const EVERYTHING: Plan = { devices: "included", alerts: "included" };
@@ -40,7 +40,7 @@ export function exposeWatchApi<DataModel extends GenericDataModel = GenericDataM
   const watchedBy = async (ctx: GenericQueryCtx<DataModel>, key: string) => {
     // UNPAIRED first: a key that opens nothing learns nothing of a plan.
     const device = await ctx.runQuery(component.watch.device, { key });
-    const watched: Watched = {
+    const watched: WatchedAgent = {
       agent: device.agent,
       owner: device.owner,
       ...(device.scope === undefined ? {} : { scope: device.scope }),

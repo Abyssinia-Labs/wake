@@ -8,11 +8,24 @@ that serves wake/v1 from Convex. What changed in `wakectl` is in
 
 ### Added
 
-- **wake/v1 has calls for devices that watch, which this component doesn't serve yet.** The spec
-  adds a watch key, which an agent's owner trades for a code your app shows them, and the calls it
-  opens, for a phone or a browser that lists the agent's runs and answers asks. The component
-  checks what a device may send by the spec's rules; serving the calls comes in a later release,
-  and until then it serves wake/v1 as before.
+- **The component serves wake/v1's calls for devices that watch.** An agent's owner adds a phone or
+  a browser with a code `issueWatchCode` makes in your own interface, and the device lists the
+  agent's runs and answers asks. `exposeWatchApi` names `wake:runs`, `wake:answer`, `wake:places`,
+  `wake:watching`, `wake:push` and `wake:activity`, and `registerRoutes` adds
+  `POST /wake/v1/watch`. A place key opens none of these calls, and a watch key none of Wake's.
+- **`plan` says what an agent's plan includes.** `exposeWatchApi` reads it from your own tables at
+  each call. On a plan without devices, every watch call but `wake:watching` throws
+  `ConvexError("not-in-plan")`; without `plan`, everything is included.
+- **`wake:waiting`: Wake can say a run waits on its owner.** It's optional, in `exposeApi`. The
+  owner's devices see it, and `forSubject` and `forOwner` answer `waiting: true`.
+- **`summon` takes `askerName`.** The owner's devices show who asks.
+- **`devices`, `forgetDevice` and `alertTargets`.** An agent's devices for its owner to see and
+  remove, and which of them want an alert, and how to reach each.
+
+### Changed
+
+- **Pairing takes control characters out of a machine's name.** A device shows the name as it
+  reads.
 
 ## 0.3.0 — 2026-10-09
 

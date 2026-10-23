@@ -9,7 +9,9 @@ You decide **what** summons an agent (an assignment, a mention) and write
 the prompt. The component keeps everything wake/v1 requires: pair codes and
 place keys (stored as hashes), places, the summons's life (asking, open,
 claimed, done, failed, dropped), the race to claim, the thirty-minute
-unclaimed notice, and the functions and two routes Wake calls.
+unclaimed notice, and the functions and routes Wake calls. It also serves
+the calls of [devices that watch](#devices-that-watch): a phone or a
+browser where an agent's owner sees its runs and answers asks.
 
 ## Install
 
@@ -31,13 +33,16 @@ export default app;
 ## Serve wake/v1
 
 **The functions** must be called `wake:pending`, `wake:claim`,
-`wake:started` and `wake:finish`, so they go in `convex/wake.ts`:
+`wake:started`, `wake:finish` and `wake:waiting`, so they go in
+`convex/wake.ts`:
 
 ```ts
 import { exposeApi } from "@abyssinia-labs/wake-convex";
 import { components } from "./_generated/api";
 
-export const { pending, claim, started, finish } = exposeApi(components.wake, { app: "acme" });
+export const { pending, claim, started, finish, waiting } = exposeApi(components.wake, {
+  app: "acme",
+});
 ```
 
 They take no auth: the place key is the credential, and the component
@@ -45,7 +50,7 @@ checks it. `app` is your app's name in wake/v1: lower case, digits and
 dashes. Wake uses it as a folder name and as the name of your MCP server in
 the agent.
 
-**The two routes**, in `convex/http.ts`:
+**The routes** (pair, watch and forget), in `convex/http.ts`:
 
 ```ts
 import { httpRouter } from "convex/server";
@@ -101,7 +106,8 @@ await wake.summon(ctx, {
 ```
 
 When the owner asks, it opens at once. When someone else asks, it waits for
-the owner's `wake.answer(ctx, { id, yes })`. A summons Wake would refuse (a
+the owner's `wake.answer(ctx, { id, yes })`, or their yes from a device;
+pass `askerName` (the asker's name) so the device can say who asks. A summons Wake would refuse (a
 control character in `ref`, a non-https `url`, a branch like `../main`) is
 refused here with `INVALID_SUMMONS`. Never name a repository's default
 branch: Wake refuses to run on it.
@@ -114,11 +120,61 @@ branch: Wake refuses to run on it.
 | `wake.forSubject(ctx, subject)` | Show each agent's latest summons where it was made: state, reason, `unclaimed` after thirty minutes, and `run` once Wake says it started (`name`, `tool`, `machine`, `startedAt`, and `session`, which only the agent's owner should see). |
 | `wake.forOwner(ctx, { owner, scope?, limit? })` | A person's runs list, outside the comments: their agents' summonses, newest first, without the dropped, each with its `target` and `run`. Check the caller is `owner`. |
 | `wake.places(ctx, agent)` / `wake.forgetPlace(ctx, { agent, place })` | An agent's machines, on your agents screen. |
+| `wake.devices(ctx, agent)` / `wake.forgetDevice(ctx, { agent, device })` | The devices watching an agent, for its owner to see and remove. |
 | `wake.revokeAgent(ctx, agent)` | In the same mutation that revokes an agent: its keys, codes and waiting summonses end. |
 | `wake.deleteScope(ctx, scope)` | A tenant (workspace) is deleted: one batch of its rows; call again until `done`. Pass `scope` when you pair and summon. |
 
 The component has no `ctx.auth`: check who may do what in your functions
 before you call it.
+
+## Devices that watch
+
+An agent's owner can follow its runs and say yes or no to an ask from a
+phone, a browser or a desktop app (the spec's
+[Devices that watch](../../docs/spec/wake-v1.md#devices-that-watch)). Each
+device holds a watch key for one agent. A watch key opens only these calls,
+and a place key opens none of them, so nothing a run can reach can say yes.
+
+**The functions**, beside Wake's in `convex/wake.ts`:
+
+```ts
+import { exposeWatchApi } from "@abyssinia-labs/wake-convex";
+import type { DataModel } from "./_generated/dataModel";
+
+export const { runs, answer, places, watching, push, activity } = exposeWatchApi<DataModel>(
+  components.wake,
+  {
+    app: "acme",
+    // What the agent's plan includes, read from your tables at each call.
+    plan: async (ctx, { owner }) => {
+      const paid = await isOnPaidPlan(ctx, owner);
+      return { devices: paid ? "included" : "not-in-plan", alerts: "not-in-plan" };
+    },
+  },
+);
+```
+
+Without `plan`, devices and alerts are included. On a plan without
+devices, every watch call but `wake:watching` throws
+`ConvexError("not-in-plan")`, and forget still forgets. `registerRoutes`
+already serves `POST /wake/v1/watch`, with CORS, so a device in a browser
+can call it.
+
+**The watch code.** Make one only in your own interface, for the agent's
+owner signed in there, when they ask to add a device, and only where the
+plan includes devices. There is no public function for it, so nothing a run
+can reach makes one. It needs real randomness, so call it from an action:
+
+```ts
+const { code } = await wake.issueWatchCode(ctx, { agent, agentName, owner, tool });
+return { code, link: watchLink("acme.dev", code) }; // show the link as a QR code too
+```
+
+**Alerts.** A device tells you where it takes alerts (`wake:push`). Send
+them only while the plan includes alerts, and only what the spec allows (no
+text): `wake.alertTargets(ctx, { agent, kind, summons? })` lists the devices
+that want an alert of that kind, how to reach each, and the summons's Live
+Activity token on each that has one.
 
 ## Check it
 

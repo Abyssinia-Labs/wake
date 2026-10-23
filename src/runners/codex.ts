@@ -76,6 +76,7 @@ export async function runCodex(o: ClaudeRun, spawn: Spawn = spawnClaude): Promis
     cwd: o.cwd,
     stdin: codexPrompt(o),
     timeoutMs: o.timeoutMs,
+    ...(o.signal ? { signal: o.signal } : {}),
     onLine: (line) => {
       try {
         const event: unknown = JSON.parse(line);

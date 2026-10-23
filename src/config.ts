@@ -72,6 +72,8 @@ export type Paths = {
   asked: string;
   /** The runs this machine made, by name, for `wakectl open` (history.ts). */
   history: string;
+  /** Requests from `wakectl stop`, one file per summons (stop.ts). */
+  stops: string;
   /** Each run's steps, a file per run (activity.ts). */
   activity: string;
   rooms: string;
@@ -104,6 +106,7 @@ export function paths(env: NodeJS.ProcessEnv = process.env, platform = process.p
     made: join(home, "worktrees.json"),
     asked: join(home, "asked-repos.json"),
     history: join(home, "runs.json"),
+    stops: join(home, "stop"),
     activity: join(home, "runs"),
     rooms: join(home, "rooms"),
     log,

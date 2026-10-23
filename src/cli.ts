@@ -14,6 +14,7 @@ import { repos } from "./commands/repos";
 import { install, logs, pause, resume, uninstall } from "./commands/service";
 import { allow, mode, permissions, trust } from "./commands/settings";
 import { status } from "./commands/status";
+import { stop } from "./commands/stop";
 import { update } from "./commands/update";
 import { COMMANDS, help } from "./help";
 import { listen } from "./listener";
@@ -86,6 +87,11 @@ async function main(argv: string[]): Promise<void> {
       return logs(values.follow);
     case "read":
       return read(rest[0]);
+    case "stop": {
+      const [name] = rest;
+      if (!name) throw new Usage("stop <name>");
+      return stop(name);
+    }
     case "open":
       return open(rest[0]);
     case "pause":

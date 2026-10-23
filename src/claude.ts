@@ -37,6 +37,8 @@ export type ClaudeRun = {
   trustFolder?: boolean;
   /** The tool's own session id, for a tool that picks it rather than taking Wake's. */
   onSession?: (id: string) => void;
+  /** Aborted when its owner stops the run (`wakectl stop`, stop.ts). */
+  signal?: AbortSignal;
 };
 
 export type ClaudeResult = { ok: boolean; reason?: string };
@@ -132,7 +134,14 @@ export function readResult(code: number, result: Record<string, unknown> | null)
 
 export type Spawn = (
   args: string[],
-  o: { cwd: string; stdin: string; timeoutMs: number; onLine: (line: string) => void },
+  o: {
+    cwd: string;
+    stdin: string;
+    timeoutMs: number;
+    onLine: (line: string) => void;
+    /** Ends the tool when aborted; run.ts then reports the run as stopped. */
+    signal?: AbortSignal;
+  },
 ) => Promise<{ code: number; timedOut: boolean }>;
 
 /** Calls `onLine` with each whole line of a byte stream as it arrives. */
@@ -164,8 +173,12 @@ export const spawnClaude: Spawn = async (args, o) => {
     timedOut = true;
     proc.kill();
   }, o.timeoutMs);
+  const end = (): void => proc.kill();
+  if (o.signal?.aborted) end();
+  o.signal?.addEventListener("abort", end, { once: true });
   const [, code] = await Promise.all([eachLine(proc.stdout, o.onLine), proc.exited]);
   clearTimeout(timer);
+  o.signal?.removeEventListener("abort", end);
   return { code, timedOut };
 };
 
@@ -175,6 +188,7 @@ export async function runClaude(o: ClaudeRun, spawn: Spawn = spawnClaude): Promi
     cwd: o.cwd,
     stdin: o.prompt,
     timeoutMs: o.timeoutMs,
+    ...(o.signal ? { signal: o.signal } : {}),
     onLine: (line) => {
       result = resultOf(line) ?? result;
       const said = describeEvent(line);

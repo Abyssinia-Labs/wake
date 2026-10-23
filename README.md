@@ -120,15 +120,19 @@ rather than start it unable to read the ask, and `wakectl logs` gives the
 command that signs that folder in. If an agent in herdr stops on a question before it is ready,
 Wake waits for you to answer it in the tab rather than failing the run.
 
-`wakectl pause` stops new claims (a run already going finishes) and
-`wakectl resume` goes on. `wakectl prune` removes run worktrees untouched
-for 14 days, and keeps any with uncommitted work.
+`wakectl stop amber-heron` ends one run now, found by its name, its ticket
+or its session id: a headless run's tool is stopped, a run in herdr is
+interrupted (Esc) and its tab kept, and the app shows it couldn't finish,
+stopped by its owner. `wakectl pause` stops new claims (a run already going
+finishes) and `wakectl resume` goes on. `wakectl prune` removes run
+worktrees untouched for 14 days, and keeps any with uncommitted work.
 
 **Each run's steps** are kept beside the log, in `runs/` in Wake's folder:
 a file per run, `<app>.<summons>.ndjson`, one `{ "at", "line" }` a line,
 the same lines `wakectl logs` shows for it. They are yours alone, never
 sent anywhere, and a run's file goes when Wake forgets the run, after its
 last 200.
+
 **For a program.** `wakectl status --json` prints what `status` shows as
 JSON: the listener, each pairing's connection, the runs with their resume
 commands, the approved repositories and the settings. `repos`, `model`,

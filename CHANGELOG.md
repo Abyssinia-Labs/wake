@@ -10,6 +10,10 @@ own: [the Convex component](packages/convex/CHANGELOG.md) and
 
 ### Added
 
+- **Each run's steps are kept on your machine, a file per run.** The lines `wakectl logs` shows
+  for a run also go to its own file under `runs/` in Wake's folder, as JSON lines, so a program
+  can show one run's steps without reading the whole log. Readable by you alone, never sent
+  anywhere, and removed when Wake forgets the run after its last 200.
 - **`--json` for scripts and apps that drive wakectl.** `wakectl status --json` prints the
   listener, each pairing's connection, the runs with their resume commands, the approved
   repositories and the settings as JSON; `repos`, `model`, `doctor` and `open` take it too. Only
@@ -19,6 +23,10 @@ own: [the Convex component](packages/convex/CHANGELOG.md) and
   made only from a code the app shows its signed-in owner, so nothing a run can reach can say yes
   for them. An optional `wake:waiting` lets Wake say a run waits on its owner. The spec has them
   now; Wake, `wakectl check` and the server packages take them up in later releases.
+- **Wake for GitHub: Pro, a plan for your own account.** $8 a month or $80 a year, for what Wake's
+  paid apps need: your runs, and what they ask you, on your other devices. Until those apps come,
+  it does what Free does. Team stays the organisation's plan, with its policy and audit; like
+  Team, Pro isn't on sale yet.
 
 ## 0.4.1 — 2026-10-14
 

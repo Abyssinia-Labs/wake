@@ -1,12 +1,14 @@
-// A GitHub account's plan (WAK-22): Free, or Team, which adds the org
-// policy and the audit (and, later, cloud fallback). It is set by GitHub
-// Marketplace's `marketplace_purchase` events, or granted by the owner
-// until the app can sell on Marketplace (a verified publisher, about a
-// hundred installations): see the README, "Plans".
+// A GitHub account's plan (WAK-22): Free; Pro, a personal account's, which
+// adds what Wake's paid apps need and nothing of an organisation's; or
+// Team, which adds the org policy and the audit (and, later, cloud
+// fallback). It is set by GitHub Marketplace's `marketplace_purchase`
+// events, or granted by the owner until the app can sell on Marketplace (a
+// verified publisher, about a hundred installations): see the README,
+// "Plans".
 import type { Kv } from "./kv";
 import { num, type Obj, obj, str } from "./payload";
 
-export type PlanName = "free" | "team";
+export type PlanName = "free" | "pro" | "team";
 export type Plan = {
   name: PlanName;
   source: "marketplace" | "granted" | "none";
@@ -27,7 +29,7 @@ const FREE: Plan = { name: "free", source: "none" };
 export async function planOf(kv: Kv, account: number): Promise<Plan> {
   const kept = obj(await kv.get(`plan:${account}`));
   if (!kept) return FREE;
-  const name: PlanName = kept.name === "team" ? "team" : "free";
+  const name: PlanName = kept.name === "pro" || kept.name === "team" ? kept.name : "free";
   const source = kept.source === "marketplace" || kept.source === "granted" ? kept.source : "none";
   const units = num(kept.units);
   const trialEnds = str(kept.trialEnds);
@@ -65,11 +67,17 @@ export async function keepAccount(kv: Kv, account: Account): Promise<void> {
   await kv.set(`login:${account.login.toLowerCase()}`, account.id);
 }
 
-/** Marketplace's word for a plan, ours: anything not free is Team, until there are more. */
-function nameOfListing(plan: Obj | null): PlanName {
+/**
+ * Marketplace's word for a plan, ours, by the listing's name: Pro or Team.
+ * Any other paid listing is Team, as it was before there was Pro.
+ */
+export function nameOfListing(plan: Obj | null): PlanName {
   const price = num(plan?.monthly_price_in_cents) ?? 0;
   const title = (str(plan?.name) ?? "").toLowerCase();
-  return price > 0 || title.includes("team") ? "team" : "free";
+  if (title.includes("team")) return "team";
+  // The word, so a listing called "Projects" isn't Pro.
+  if (/\bpro\b/.test(title)) return "pro";
+  return price > 0 ? "team" : "free";
 }
 
 /** `marketplace_purchase`: purchased, changed, cancelled, pending changes; answers what it did. */

@@ -124,6 +124,11 @@ Wake waits for you to answer it in the tab rather than failing the run.
 `wakectl resume` goes on. `wakectl prune` removes run worktrees untouched
 for 14 days, and keeps any with uncommitted work.
 
+**Each run's steps** are kept beside the log, in `runs/` in Wake's folder:
+a file per run, `<app>.<summons>.ndjson`, one `{ "at", "line" }` a line,
+the same lines `wakectl logs` shows for it. They are yours alone, never
+sent anywhere, and a run's file goes when Wake forgets the run, after its
+last 200.
 **For a program.** `wakectl status --json` prints what `status` shows as
 JSON: the listener, each pairing's connection, the runs with their resume
 commands, the approved repositories and the settings. `repos`, `model`,

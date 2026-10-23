@@ -1,12 +1,13 @@
 // An organisation's page, github.wakectl.dev/org/<login> (WAK-23): its
-// plan, and on Team its policy and its audit. Its admins only: an org's
-// members with the admin role, or a user account's own person.
+// plan, and on Team its policy and its audit; Pro, a person's plan, has
+// neither. Its admins only: an org's members with the admin role, or a
+// user account's own person.
 import type { Wake } from "@abyssinia-labs/wake-server";
 import type { Asks } from "./db";
 import type { GitHub } from "./github";
 import type { Kv } from "./kv";
 import { esc, page } from "./pages";
-import { type Account, accountOf, type Plan, planOf } from "./plans";
+import { type Account, accountOf, type Plan, type PlanName, planOf } from "./plans";
 import { type Policy, policyOf, reposFrom, setPolicy } from "./policy";
 import type { Session } from "./session";
 
@@ -53,7 +54,7 @@ export async function orgPage(
     });
     return Response.redirect(`${c.origin}/org/${encodeURIComponent(account.login)}`, 303);
   }
-  if (plan.name !== "team") return page(`${account.login} · Wake`, freeBody(account, plan));
+  if (plan.name !== "team") return page(`${account.login} · Wake`, planBody(account, plan));
   const policy = await policyOf(c.kv, account.id);
   const runs =
     account.installation === undefined
@@ -68,13 +69,38 @@ export async function orgPage(
   return page(`${account.login} · Wake`, teamBody(account, plan, policy, rows));
 }
 
-function freeBody(account: Account, plan: Plan): string {
-  return `<h1>${esc(account.login)}</h1><p>On <strong>Free</strong>${plan.source === "none" ? "" : ` (${plan.source})`}: anyone who can push to a repository wakes their own agent from it.</p>
+const LABEL: Record<PlanName, string> = { free: "Free", pro: "Pro", team: "Team" };
+
+function askUs(plan: string, login: string): string {
+  return `${plan} isn't on sale yet. To try it, <a href="https://github.com/Abyssinia-Labs/wake/issues/new?title=${plan}%20plan%20for%20${encodeURIComponent(login)}">ask us</a>.`;
+}
+
+/** Free or Pro: what the plan does here, and what a paid plan would add. */
+function planBody(account: Account, plan: Plan): string {
+  const person = account.type === "User";
+  const source = plan.source === "none" ? "" : ` (${plan.source})`;
+  const does =
+    person && plan.name === "pro"
+      ? "you wake your own agent, as on Free, and the account has what Wake's paid apps need."
+      : "anyone who can push to a repository wakes their own agent from it.";
+  const on = `<h1>${esc(account.login)}</h1><p>On <strong>${LABEL[plan.name]}</strong>${source}: ${does}</p>`;
+  if (person && plan.name === "pro") return on;
+  if (person) {
+    return `${on}
+<div class="card"><p><strong>Pro</strong>, for your own account, adds:</p><ul>
+<li>what Wake's paid apps need: your runs, and what they ask you, on your other devices;</li>
+<li>cloud fallback, later: when no machine is awake, your own cloud agent.</li></ul>
+<p>$8 a month or $80 a year. ${askUs("Pro", account.login)}</p></div>`;
+  }
+  // Pro is a person's plan: an organisation that holds it has Free's page, and Team's offer.
+  const mine =
+    plan.name === "pro" ? "<p>Pro is for a personal account: it adds nothing here.</p>" : "";
+  return `${on}${mine}
 <div class="card"><p><strong>Team</strong> adds, for the whole organisation:</p><ul>
 <li>a policy: which repositories may summon, and who;</li>
 <li>an audit of every run: who asked, where, its name, how it ended;</li>
 <li>cloud fallback, later: when no machine is awake, the person's own cloud agent.</li></ul>
-<p>Team isn't on sale yet. To try it, <a href="https://github.com/Abyssinia-Labs/wake/issues/new?title=Team%20plan%20for%20${encodeURIComponent(account.login)}">ask us</a>.</p></div>`;
+<p>${askUs("Team", account.login)}</p></div>`;
 }
 
 const STATE: Record<string, string> = {

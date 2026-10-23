@@ -20,6 +20,8 @@ export const summonsView = v.object({
   unclaimed: v.boolean(),
   /** Its run once Wake said it started. `session` is the owner's to see. */
   run: v.optional(run),
+  /** True while its run waits on its owner (`wake:waiting`). */
+  waiting: v.optional(v.boolean()),
 });
 
 export function viewOf(row: Doc<"summonses">) {
@@ -38,5 +40,6 @@ export function viewOf(row: Doc<"summonses">) {
     ...(row.reason === undefined ? {} : { reason: row.reason }),
     unclaimed: row.state === "open" && row.noticedAt !== undefined,
     ...(row.run === undefined ? {} : { run: row.run }),
+    ...(row.state === "claimed" && row.waiting ? { waiting: true } : {}),
   };
 }

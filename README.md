@@ -71,7 +71,11 @@ also has its own command:
 3. **Listen.** `wakectl install` starts the listener now and at every
    login, as a LaunchAgent on macOS (`dev.abyssinia.wake`) or a systemd
    user service on Linux (`wake.service`), with the PATH of the shell you
-   ran it from, so it finds your agents, `git` and `gh`.
+   ran it from, so it finds your agents, `git` and `gh`. When an app on
+   your Mac runs the listener itself, registering `dev.abyssinia.wake` as
+   its own login item, `wakectl install` and `uninstall` leave it alone
+   and say so: start at login is that app's setting. `wakectl doctor`
+   and `setup` count it as installed.
 4. **Check.** `wakectl status` shows what is paired, connected and
    running, with the resume line for each run; `wakectl logs -f` follows
    the log; `wakectl doctor` lists anything missing, with its fix.
@@ -126,6 +130,15 @@ rather than start it unable to read the ask, and `wakectl logs` gives the
 command that signs that folder in. If an agent in herdr stops on a question before it is ready,
 Wake waits for you to answer it in the tab rather than failing the run.
 
+**When a run waits on you.** A run in herdr that stops on a question, a
+tool asking permission or a folder to trust, shows it in `wakectl status`
+(`waiting for you in herdr`, with the question as its tab shows it), in
+`--json` as the run's `waiting`, `{ "since", "what" }`, and in the log;
+it clears when the run goes on. The question stays on your machine: an app
+that supports it hears only that the run waits, and when it goes on, so it
+can tell you. A headless run never waits, since what isn't allowed is
+denied rather than asked.
+
 `wakectl stop amber-heron` ends one run now, found by its name, its ticket
 or its session id: a headless run's tool is stopped, a run in herdr is
 interrupted (Esc) and its tab kept, and the app shows it couldn't finish,
@@ -141,7 +154,8 @@ last 200.
 
 **For a program.** `wakectl status --json` prints what `status` shows as
 JSON: the listener, each pairing's connection, the runs with their resume
-commands, the approved repositories and the settings. `repos`, `model`,
+commands and any question they wait on, the approved repositories and the
+settings. `repos`, `model`,
 `doctor` and `open` (the runs this machine remembers, newest first) take
 `--json` too, in the forms that change nothing. No key is ever in it.
 

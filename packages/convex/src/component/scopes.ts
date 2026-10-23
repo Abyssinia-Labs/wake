@@ -12,7 +12,7 @@ export const deleteScope = mutation({
   returns: v.object({ deleted: v.number(), done: v.boolean() }),
   handler: async (ctx, args) => {
     let deleted = 0;
-    for (const table of ["summonses", "codes", "places"] as const) {
+    for (const table of ["summonses", "codes", "places", "watchCodes", "devices"] as const) {
       const rows = await ctx.db
         .query(table)
         .withIndex("by_scope", (q) => q.eq("scope", args.scope))

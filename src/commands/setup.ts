@@ -234,7 +234,8 @@ export async function setupFlow(d: SetupDeps): Promise<void> {
   config = await askModels(d.io, d.run, config, d.home);
   await saveConfig(config);
   d.io.say("");
-  if (!probe.exists(probe.plist)) {
+  // An app that runs the listener reads these answers as Wake's own would.
+  if (!probe.exists(probe.plist) && !probe.appAgent) {
     if (await confirm(d.io, "Start listening now and at every login?")) await d.install();
   } else {
     d.io.say(dim("The listener reads these answers within half a minute."));

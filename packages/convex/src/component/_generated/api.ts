@@ -8,6 +8,7 @@
  * @module
  */
 
+import type * as devices from "../devices.js";
 import type * as keys from "../keys.js";
 import type * as places from "../places.js";
 import type * as runs from "../runs.js";
@@ -15,6 +16,8 @@ import type * as scopes from "../scopes.js";
 import type * as shape from "../shape.js";
 import type * as summonses from "../summonses.js";
 import type * as views from "../views.js";
+import type * as watch from "../watch.js";
+import type * as watched from "../watched.js";
 import type * as wire from "../wire.js";
 
 import type {
@@ -25,6 +28,7 @@ import type {
 import { anyApi, componentsGeneric } from "convex/server";
 
 const fullApi: ApiFromModules<{
+  devices: typeof devices;
   keys: typeof keys;
   places: typeof places;
   runs: typeof runs;
@@ -32,6 +36,8 @@ const fullApi: ApiFromModules<{
   shape: typeof shape;
   summonses: typeof summonses;
   views: typeof views;
+  watch: typeof watch;
+  watched: typeof watched;
   wire: typeof wire;
 }> = anyApi as any;
 

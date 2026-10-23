@@ -18,8 +18,10 @@ import { checkLines, setupFlow } from "./setup";
 async function probe(): Promise<Probe> {
   const p = paths();
   const state = await readState(p.state);
+  const daemon = daemonFor();
   return realProbe({
-    plist: daemonFor()?.path ?? "",
+    plist: daemon?.path ?? "",
+    appAgent: (await daemon?.appAgent(exec)) ?? null,
     listener: state && isAlive(state.pid) ? state.pid : null,
     paused: existsSync(p.paused),
   });

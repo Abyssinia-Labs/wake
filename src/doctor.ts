@@ -5,8 +5,10 @@
 import { existsSync } from "node:fs";
 import type { Config } from "./config";
 import { AGENT_TOOLS, type AgentTool } from "./contract";
+import { appRunsIt } from "./daemon";
 import { linuxChecks } from "./doctor-linux";
 import type { Exec } from "./exec";
+import type { AppAgent } from "./launchd";
 import { programOf, TOOL_NAMES, toolInstalled } from "./tools";
 import { someOf, tildify } from "./ui";
 
@@ -19,6 +21,8 @@ export type Probe = {
   bunVersion: string;
   exists: (path: string) => boolean;
   plist: string;
+  /** An app that runs the listener itself (daemon.ts), in place of Wake's own plist; else null. */
+  appAgent: AppAgent | null;
   /** The running listener's pid, or null. */
   listener: number | null;
   paused: boolean;
@@ -147,7 +151,14 @@ export function wakeChecks(config: Config, probe: Probe): Check[] {
           },
     );
   }
-  if (!probe.exists(probe.plist)) {
+  if (probe.appAgent) {
+    const detail = `${appRunsIt(probe.appAgent)}; start at login is its setting.`;
+    checks.push(
+      probe.listener === null
+        ? { level: "fail", what: "Run by an app, but not running", detail }
+        : { level: "ok", what: `Listening (pid ${probe.listener})`, detail },
+    );
+  } else if (!probe.exists(probe.plist)) {
     checks.push({
       level: "warn",
       what: "Not installed",

@@ -2,10 +2,16 @@
 // any TypeScript app. Storage is yours to pick: `./drizzle` for Postgres.
 export { type Changes, localChanges } from "./changes";
 export { WakeError, type WakeErrorCode } from "./errors";
-export { discovery, type HandlerOptions, pairCommand, wakeHandler } from "./handler";
+export { discovery, type HandlerOptions, pairCommand, wakeHandler, watchLink } from "./handler";
+export type { CodeFor, Paired, Watched } from "./pairing";
 export type {
+  ActivityToken,
+  AlertKind,
   CodeRow,
+  DeviceRow,
   PlaceRow,
+  Platform,
+  PushRegistration,
   RunInfo,
   State,
   SummonsRow,
@@ -14,5 +20,7 @@ export type {
   WakeStore,
 } from "./store";
 export type { PendingSummons, PlaceView, SummonsView } from "./views";
-export { type Paired, Wake, type WakeOptions } from "./wake";
-export type { ClaimResult, RunReport, WakeHooks } from "./wire";
+export { Wake, type WakeOptions } from "./wake";
+export type { WatchCalls, Watching } from "./watch";
+export type { AlertTarget, DeviceView, WatchedPlace, WatchedSummons } from "./watched";
+export type { ClaimResult, Plan, PlanHook, RunReport, WakeHooks, WatchedAgent } from "./wire";

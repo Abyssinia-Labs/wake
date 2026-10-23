@@ -12,8 +12,8 @@ the same protocol over plain HTTP ([The HTTP transport](#the-http-transport)).
 `wakectl check <domain>` tests an app against this document.
 
 [Devices that watch](#devices-that-watch) and `wake:waiting` are new. Both
-packages serve them and `wakectl check` probes them; Wake does not call
-`wake:waiting` yet.
+packages serve them and `wakectl check` probes them; Wake calls
+`wake:waiting` from its next release.
 
 ## Terms
 

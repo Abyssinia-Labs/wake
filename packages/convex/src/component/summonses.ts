@@ -35,15 +35,17 @@ async function open(ctx: MutationCtx, id: Id<"summonses">, now: number): Promise
 
 /**
  * A person asked `agent` about `subject`. The owner asking opens it; anyone
- * else's ask waits for the owner (`answer`). A live one for the same agent
- * and subject is joined, not doubled. Only call it for a person's action:
- * an agent's own write never summons.
+ * else's ask waits for the owner (`answer`), and `askerName` is how the
+ * owner's devices say who asks. A live one for the same agent and subject
+ * is joined, not doubled. Only call it for a person's action: an agent's
+ * own write never summons.
  */
 export const summon = mutation({
   args: {
     agent: v.string(),
     owner: v.string(),
     askedBy: v.string(),
+    askerName: v.optional(v.string()),
     scope: v.optional(v.string()),
     subject: v.string(),
     kind: v.string(),
@@ -74,6 +76,22 @@ export const summon = mutation({
   },
 });
 
+/**
+ * The owner's yes opens an ask, where places see it; their no drops it.
+ * From the host (`answer`) or from one of the owner's devices (`wake:answer`).
+ */
+export async function answerAsk(
+  ctx: MutationCtx,
+  row: Doc<"summonses">,
+  yes: boolean,
+): Promise<void> {
+  if (row.state !== "asking") return;
+  const now = Date.now();
+  if (yes) await open(ctx, row._id, now);
+  else
+    await ctx.db.patch(row._id, { state: "dropped", reason: "The owner said no.", updatedAt: now });
+}
+
 /** The owner's answer to a summons someone else made. The host checks it is the owner. */
 export const answer = mutation({
   args: { id: v.string(), yes: v.boolean() },
@@ -81,15 +99,7 @@ export const answer = mutation({
   handler: async (ctx, args) => {
     const id = ctx.db.normalizeId("summonses", args.id);
     const row = id ? await ctx.db.get(id) : null;
-    if (row?.state !== "asking") return null;
-    const now = Date.now();
-    if (args.yes) await open(ctx, row._id, now);
-    else
-      await ctx.db.patch(row._id, {
-        state: "dropped",
-        reason: "The owner said no.",
-        updatedAt: now,
-      });
+    if (row) await answerAsk(ctx, row, args.yes);
     return null;
   },
 });

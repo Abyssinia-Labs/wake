@@ -10,6 +10,12 @@ own: [the Convex component](packages/convex/CHANGELOG.md) and
 
 ### Added
 
+- **`wakectl status` shows a run in herdr waiting on you.** When a run stops on a question in its
+  tab, a tool asking permission or a folder to trust, `status` says so with the question as the
+  tab shows it, `status --json` gives the run's `waiting` (`since` and `what`), and the log says
+  it. It clears when the run goes on. The question stays on your machine: an app that supports
+  `wake:waiting` hears only that the run waits, and when it goes on.
+
 - **wakectl as a single file, no Bun needed.** Each release on GitHub now carries a binary for
   macOS (Apple silicon and Intel) and Linux (x64 and arm64), each with its SHA-256. `wakectl
   install` starts the listener from it, and `wakectl update` tells you when a newer one is out
@@ -30,7 +36,7 @@ own: [the Convex component](packages/convex/CHANGELOG.md) and
   browser or a desktop app that lists the agent's runs and answers asks. Each holds a watch key,
   made only from a code the app shows its signed-in owner, so nothing a run can reach can say yes
   for them. An optional `wake:waiting` lets Wake say a run waits on its owner. The spec has them
-  now, and `wakectl check` probes them; Wake calls `wake:waiting` in a later release.
+  now, `wakectl check` probes them, and Wake calls `wake:waiting` when a run in herdr waits.
 - **`wakectl check` tests an app's calls for devices that watch.** Where the app makes watch
   codes, it checks that `POST /wake/v1/watch` and every watch call refuse what they must: a code
   nobody issued, a key that opens nothing, and this machine's own place key when it is paired with
@@ -39,6 +45,13 @@ own: [the Convex component](packages/convex/CHANGELOG.md) and
   paid apps need: your runs, and what they ask you, on your other devices. Until those apps come,
   it does what Free does. Team stays the organisation's plan, with its policy and audit; like
   Team, Pro isn't on sale yet.
+
+### Changed
+
+- **`wakectl install` leaves an app's listener alone.** When an app on your Mac runs the listener
+  itself, as its own login item, `install` writes no second LaunchAgent under the same name and
+  `uninstall` doesn't stop it: each says an app runs it, and that start at login is that app's
+  setting. `doctor` and `setup` count it as installed, and `pair` no longer says to install.
 
 ## 0.4.1 — 2026-10-14
 

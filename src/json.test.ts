@@ -62,6 +62,7 @@ test("status: the listener, each pairing's connection, the runs and the settings
           cwd: "/w/gat-21",
           startedAt: 160,
           tool: "codex",
+          waiting: { since: 170, what: "Run this command? · git push" },
         },
       ],
     },
@@ -88,6 +89,7 @@ test("status: the listener, each pairing's connection, the runs and the settings
       cwd: "/w/gat-20",
       startedAt: 150,
       resume: "claude --resume s-1",
+      waiting: null,
     },
     {
       app: "gatherd",
@@ -98,6 +100,7 @@ test("status: the listener, each pairing's connection, the runs and the settings
       cwd: "/w/gat-21",
       startedAt: 160,
       resume: null,
+      waiting: { since: 170, what: "Run this command? · git push" },
     },
   ]);
   expect(out.repos).toEqual({ "gatherd.dev": ["acme/widgets"] });

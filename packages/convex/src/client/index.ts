@@ -1,8 +1,9 @@
 // What a host app imports: `Wake`, to make and settle summonses and manage
-// places from its own functions; `exposeApi`, which gives wake:pending,
-// wake:claim and wake:finish their public names; and `registerRoutes`,
-// which mounts the pair and forget routes. docs/spec/wake-v1.md is the
-// protocol these serve.
+// places and devices from its own functions; `exposeApi`, which gives Wake's
+// calls (wake:pending, wake:claim, ...) their public names; `exposeWatchApi`,
+// the same for a device's calls; and `registerRoutes`, which mounts the
+// pair, watch and forget routes. docs/spec/wake-v1.md is the protocol these
+// serve.
 import {
   type GenericActionCtx,
   type GenericDataModel,
@@ -14,9 +15,10 @@ import {
 import { v } from "convex/values";
 import type { ComponentApi } from "../component/_generated/component.js";
 import { CODE_TTL_MS, hashSecret, newPairCode, normalizeCode } from "../component/keys.js";
-import { APP } from "../component/shape.js";
+import { type ALERT_KINDS, APP } from "../component/shape.js";
 
 export { registerRoutes } from "./routes.js";
+export { exposeWatchApi, type Plan, type PlanOf, type WatchedAgent } from "./watch.js";
 export type { ComponentApi };
 
 type RunQuery = Pick<GenericQueryCtx<GenericDataModel>, "runQuery">;
@@ -24,6 +26,7 @@ type RunMutation = Pick<GenericMutationCtx<GenericDataModel>, "runQuery" | "runM
 type RunAction = Pick<GenericActionCtx<GenericDataModel>, "runQuery" | "runMutation">;
 
 export type Tool = "claude" | "codex" | "cursor";
+export type AlertKind = (typeof ALERT_KINDS)[number];
 export type Target = { kind: string; ref: string; url: string };
 
 export type WakeOptions = {
@@ -48,6 +51,11 @@ export function discovery(o: { convexUrl: string; httpBase: string }): {
 /** What the agent tells its person to run. */
 export function pairCommand(domain: string, code: string): string {
   return `wakectl pair ${domain} ${code}`;
+}
+
+/** What the host shows beside a watch code, as text and as a QR code, so a device takes it untyped. */
+export function watchLink(domain: string, code: string): string {
+  return `wake://watch?domain=${encodeURIComponent(domain)}&code=${encodeURIComponent(code)}`;
 }
 
 export class Wake {
@@ -77,6 +85,27 @@ export class Wake {
     return { code, expiresAt };
   }
 
+  /**
+   * A watch code for an agent's owner, signed in to your app, to add a
+   * device. Make one only in your own interface, for the owner, and only
+   * where the agent's plan includes devices: nothing a run can reach may
+   * make one (the spec's principle 5). Show it with `watchLink`. Needs real
+   * randomness, so call it from an action.
+   */
+  async issueWatchCode(
+    ctx: RunAction,
+    o: { agent: string; agentName: string; owner: string; scope?: string; tool?: Tool },
+  ): Promise<{ code: string; expiresAt: number }> {
+    const code = newPairCode();
+    const expiresAt = Date.now() + CODE_TTL_MS;
+    await ctx.runMutation(this.component.devices.storeCode, {
+      ...o,
+      codeHash: await hashSecret(normalizeCode(code)),
+      expiresAt,
+    });
+    return { code, expiresAt };
+  }
+
   /** A person asked an agent about a subject: see the component's `summon`. */
   async summon(
     ctx: RunMutation,
@@ -84,6 +113,8 @@ export class Wake {
       agent: string;
       owner: string;
       askedBy: string;
+      /** Who asked, as the owner's devices show an ask; "Someone" without it. */
+      askerName?: string;
       scope?: string;
       subject: string;
       kind: string;
@@ -139,6 +170,24 @@ export class Wake {
     return await ctx.runMutation(this.component.places.remove, o);
   }
 
+  /** The devices watching an agent, for its owner to see and remove. */
+  async devices(ctx: RunQuery, agent: string) {
+    return await ctx.runQuery(this.component.devices.list, { agent });
+  }
+
+  /** The owner removed a device: its watch key opens nothing after. Check who may first. */
+  async forgetDevice(ctx: RunMutation, o: { agent: string; device: string }): Promise<boolean> {
+    return await ctx.runMutation(this.component.devices.remove, o);
+  }
+
+  /**
+   * The devices to alert about an agent's summons, and how: send only while
+   * the plan includes alerts, and only what the spec's `wake:push` allows.
+   */
+  async alertTargets(ctx: RunQuery, o: { agent: string; kind: AlertKind; summons?: string }) {
+    return await ctx.runQuery(this.component.devices.alertTargets, o);
+  }
+
   /**
    * The host deleted a tenant: one batch of what the component keeps for
    * `scope`. Call it again until `done`, from the host's deletion steps.
@@ -154,10 +203,11 @@ export class Wake {
 }
 
 /**
- * wake:pending, wake:claim, wake:started and wake:finish, for the host's
- * `convex/wake.ts`:
+ * wake:pending, wake:claim, wake:started, wake:finish and wake:waiting, for
+ * the host's `convex/wake.ts`:
  *
- *   export const { pending, claim, started, finish } = exposeApi(components.wake, { app: "acme" });
+ *   export const { pending, claim, started, finish, waiting } =
+ *     exposeApi(components.wake, { app: "acme" });
  *
  * They take no auth: the place key is the credential (the spec), and the
  * component checks it.
@@ -194,6 +244,10 @@ export function exposeApi(component: ComponentApi, options: WakeOptions) {
         reason: v.optional(v.string()),
       },
       handler: async (ctx, args) => await ctx.runMutation(component.wire.finish, args),
+    }),
+    waiting: mutationGeneric({
+      args: { key: v.string(), id: v.string(), waiting: v.boolean() },
+      handler: async (ctx, args) => await ctx.runMutation(component.wire.waiting, args),
     }),
   };
 }

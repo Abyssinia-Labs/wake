@@ -102,8 +102,10 @@ export async function pair(domain: string, code: string, toolFlag?: string): Pro
       `${mark.warn()} ${TOOL_NAMES[tool]} (${programOf(tool)}) isn't installed here, so nothing is claimed for it until it is.`,
     );
   }
+  const daemon = daemonFor();
+  if (await daemon?.appAgent(exec)) return;
   try {
-    await access(daemonFor()?.path ?? "");
+    await access(daemon?.path ?? "");
   } catch {
     say(
       `${mark.arrow()} Next: ${cyan("wakectl install")} ${dim("to start listening now and at every login")}`,

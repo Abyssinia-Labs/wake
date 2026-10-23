@@ -115,26 +115,30 @@ export const remove = mutation({
 });
 
 /**
- * An agent the host revoked: its places stop working, its codes can't be
- * used, and what waits for it is dropped. Call it wherever the host
- * revokes the agent, in the same mutation.
+ * An agent the host revoked: its places and devices stop working, its
+ * codes can't be used, and what waits for it is dropped. Call it wherever
+ * the host revokes the agent, in the same mutation.
  */
 export const revokeAgent = mutation({
   args: { agent: v.string() },
   returns: v.null(),
   handler: async (ctx, args) => {
     const now = Date.now();
-    for (const place of await ctx.db
-      .query("places")
-      .withIndex("by_agent", (q) => q.eq("agent", args.agent))
-      .take(500)) {
-      if (place.forgottenAt === undefined) await ctx.db.patch(place._id, { forgottenAt: now });
+    for (const table of ["places", "devices"] as const) {
+      for (const row of await ctx.db
+        .query(table)
+        .withIndex("by_agent", (q) => q.eq("agent", args.agent))
+        .take(500)) {
+        if (row.forgottenAt === undefined) await ctx.db.patch(row._id, { forgottenAt: now });
+      }
     }
-    for (const code of await ctx.db
-      .query("codes")
-      .withIndex("by_agent", (q) => q.eq("agent", args.agent))
-      .take(500)) {
-      if (code.usedAt === undefined) await ctx.db.patch(code._id, { usedAt: now });
+    for (const table of ["codes", "watchCodes"] as const) {
+      for (const code of await ctx.db
+        .query(table)
+        .withIndex("by_agent", (q) => q.eq("agent", args.agent))
+        .take(500)) {
+        if (code.usedAt === undefined) await ctx.db.patch(code._id, { usedAt: now });
+      }
     }
     for (const waiting of ["asking", "open"] as const) {
       for (const row of await ctx.db

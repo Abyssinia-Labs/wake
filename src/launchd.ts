@@ -77,3 +77,34 @@ export async function load(run: Exec, path: string): Promise<void> {
 export async function unload(run: Exec): Promise<boolean> {
   return (await run(["launchctl", "bootout", `${domain()}/${LABEL}`])).code === 0;
 }
+
+/** An app that runs the listener itself, by the name launchd knows it by, when it says one. */
+export type AppAgent = { app?: string };
+
+function field(printed: string, name: string): string | undefined {
+  return printed.match(new RegExp(`^\\s*${name} = (.+)$`, "m"))?.[1]?.trim();
+}
+
+/**
+ * Whether `launchctl print` shows the listener's label registered by an app
+ * rather than by Wake's own plist. An app registers it with SMAppService
+ * from its bundle's Contents/Library/LaunchAgents: launchd then shows no
+ * plist path but "(submitted by smd…)", `managed_by` ServiceManagement and
+ * the app's bundle as its parent (macOS 26, 2026-10-23). A program inside a
+ * `.app` counts too, unless Wake's own plist put it there.
+ */
+export function appAgentOf(printed: string, ownPlist: string = plistPath()): AppAgent | null {
+  if (field(printed, "path") === ownPlist) return null;
+  const bundle = field(printed, "program")?.match(/^(.*?\.app)\/Contents\//)?.[1];
+  const parent = field(printed, "parent bundle identifier");
+  const managed = field(printed, "managed_by") === "com.apple.xpc.ServiceManagement";
+  if (!bundle && !parent && !managed) return null;
+  const app = bundle ?? parent;
+  return app ? { app } : {};
+}
+
+/** The app that runs the listener, if one registered it; null for none, or for Wake's own plist. */
+export async function appAgent(run: Exec): Promise<AppAgent | null> {
+  const result = await run(["launchctl", "print", `${domain()}/${LABEL}`]);
+  return result.code === 0 ? appAgentOf(result.stdout) : null;
+}

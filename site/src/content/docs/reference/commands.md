@@ -19,7 +19,7 @@ the output isn't a terminal.
 | `wake pair <domain> <code> [--tool claude\|codex\|cursor]` | Pair with an app. Your agent gives you this command. `--tool` when the app couldn't tell which tool asked. |
 | `wake repos [allow\|remove <owner/name>] [--app <domain>]` | Which repositories each app may run in on this machine. `--app` when more than one app is paired. |
 | `wake install` | Start listening now and at every login (a LaunchAgent). |
-| `wake status` | What is paired, connected and running: each run by its name, with its resume line. |
+| `wake status` | What is paired, connected and running: each run by its name, with its resume line, and the question it waits on in herdr. |
 
 ## Watch
 
@@ -47,5 +47,5 @@ the output isn't a terminal.
 | `wake prune [--days 14]` | Remove run worktrees untouched that long; never one with uncommitted work. |
 | `wake forget <domain>` | Unpair an app's agents, here and on the app. |
 | `wake update` | Install the newest Wake from npm, restart the listener onto it, and list what changed since your version ([the changelog](/changelog/) has it all). |
-| `wake uninstall` | Stop, and don't start at login. |
+| `wake uninstall` | Stop, and don't start at login. Like `install`, it leaves alone a listener an app on your Mac runs as its own login item: start at login is that app's setting. |
 | `wake check <domain>` | Test an app against the [wake/v1 spec](/spec/wake-v1/). Pairs nothing, changes nothing. |

@@ -17,6 +17,7 @@ import {
   type Summons,
   startedRef,
   UNPAIRED,
+  waitingRef,
 } from "./contract";
 import { connectHttpPlace } from "./http-place";
 import { messageOf } from "./log";
@@ -89,6 +90,16 @@ export function connectPlace(
         // `wake:started` is optional, and a production deployment says only
         // "Server Error" for a function it lacks: either way the agent says
         // it is on it instead.
+        refused(error);
+        return false;
+      }
+    },
+    // Optional as `wake:started` is, and failing the same way where it is missing.
+    waiting: async (id: string, waiting: boolean) => {
+      try {
+        await client.mutation(waitingRef, { key, id, waiting });
+        return true;
+      } catch (error) {
         refused(error);
         return false;
       }

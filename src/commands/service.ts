@@ -1,12 +1,13 @@
 // The listener's service (a LaunchAgent on macOS, a systemd user service on
 // Linux) and the pause switch: `install`, `uninstall`, `pause`, `resume`
 // and `logs`.
+import { existsSync } from "node:fs";
 import { mkdir, rm } from "node:fs/promises";
 import { homedir } from "node:os";
 import { dirname } from "node:path";
 import { keepPrivate, paths } from "../config";
-import { daemonFor, programArguments } from "../daemon";
-import { exec } from "../exec";
+import { appRunsIt, type Daemon, daemonFor, programArguments } from "../daemon";
+import { type Exec, exec } from "../exec";
 import { say } from "../log";
 import { colorLogLine } from "../log-colors";
 import { colorOn, cyan, dim, mark, spin, tildify } from "../ui";
@@ -17,9 +18,17 @@ function service() {
   return daemon;
 }
 
-export async function install(): Promise<void> {
+// An app that runs the listener registered it under Wake's own label, so a
+// plist of Wake's beside it would be a second listener, or a fight over
+// which starts at login. Start at login is that app's setting.
+export async function install(run: Exec = exec, daemon: Daemon = service()): Promise<void> {
+  const app = await daemon.appAgent(run);
+  if (app) {
+    say(`${mark.warn()} ${appRunsIt(app)}`);
+    say(dim(`  Start at login is that app's setting, so Wake adds no ${daemon.name} of its own.`));
+    return;
+  }
   const p = paths();
-  const daemon = service();
   await keepPrivate(p);
   await mkdir(dirname(daemon.path), { recursive: true });
   const env: Record<string, string> = { PATH: process.env.PATH ?? "", HOME: homedir() };
@@ -31,15 +40,24 @@ export async function install(): Promise<void> {
     daemon.path,
     daemon.file({ args: programArguments(process.execPath, process.argv[1]), env, log: p.log }),
   );
-  await spin("Starting the listener", () => daemon.start(exec));
+  await spin("Starting the listener", () => daemon.start(run));
   say(`${mark.ok()} Wake is listening, and will start at every login`);
   say(dim(`  Its ${daemon.name}: ${tildify(daemon.path)}`));
   say(dim(`  Its log: ${tildify(p.log)}. Follow it with wakectl logs -f.`));
 }
 
-export async function uninstall(): Promise<void> {
-  const daemon = service();
-  const stopped = await spin("Stopping the listener", () => daemon.stop(exec));
+export async function uninstall(run: Exec = exec, daemon: Daemon = service()): Promise<void> {
+  const app = await daemon.appAgent(run);
+  if (app) {
+    // A plist of Wake's own left from before the app took over is Wake's to remove.
+    const leftover = existsSync(daemon.path);
+    if (leftover) await rm(daemon.path, { force: true });
+    say(`${mark.warn()} ${appRunsIt(app)}, so it keeps running`);
+    say(dim("  Start at login is that app's setting: turn it off there."));
+    if (leftover) say(dim(`  Removed Wake's own ${daemon.name}, ${tildify(daemon.path)}.`));
+    return;
+  }
+  const stopped = await spin("Stopping the listener", () => daemon.stop(run));
   await rm(daemon.path, { force: true });
   say(
     stopped

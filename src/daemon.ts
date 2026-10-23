@@ -2,6 +2,7 @@
 // systemd user service on Linux (WAK-6). install, uninstall, update and
 // doctor go through this and don't need to know which.
 import type { Exec } from "./exec";
+import type { AppAgent } from "./launchd";
 import * as launchd from "./launchd";
 import * as systemd from "./systemd";
 
@@ -14,6 +15,12 @@ export type Daemon = {
   start(run: Exec): Promise<void>;
   stop(run: Exec): Promise<boolean>;
   restart(run: Exec): Promise<boolean>;
+  /**
+   * An app that registered the listener itself (macOS's SMAppService), or
+   * null. Its start at login is the app's setting, so install and uninstall
+   * leave it alone; Linux has none.
+   */
+  appAgent(run: Exec): Promise<AppAgent | null>;
 };
 
 export function daemonFor(platform: string = process.platform): Daemon | null {
@@ -34,6 +41,7 @@ export function daemonFor(platform: string = process.platform): Daemon | null {
             `gui/${process.getuid?.() ?? 0}/${launchd.LABEL}`,
           ])
         ).code === 0,
+      appAgent: launchd.appAgent,
     };
   }
   if (platform === "linux") {
@@ -44,9 +52,15 @@ export function daemonFor(platform: string = process.platform): Daemon | null {
       start: systemd.start,
       stop: systemd.stop,
       restart: systemd.restart,
+      appAgent: async () => null,
     };
   }
   return null;
+}
+
+/** What install, uninstall, doctor and the rest say when an app runs the listener. */
+export function appRunsIt(agent: AppAgent): string {
+  return `An app on this Mac runs the listener${agent.app ? ` (${agent.app})` : ""}`;
 }
 
 /** Same as launchd's: Bun and the script, or a compiled binary. */

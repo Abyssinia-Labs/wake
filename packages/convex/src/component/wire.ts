@@ -1,7 +1,8 @@
-// wake:pending, wake:claim and wake:finish (the spec's "The three
-// functions"), behind the host's own wrappers (client `exposeApi`), which
-// give them their public names and the app's name. Each finds the place by
-// its key's hash and answers for that place's agent only.
+// wake:pending, wake:claim and wake:finish, and the optional wake:started
+// and wake:waiting (the spec's "The functions"), behind the host's own
+// wrappers (client `exposeApi`), which give them their public names and the
+// app's name. Each finds the place by its key's hash and answers for that
+// place's agent only.
 import { ConvexError, v } from "convex/values";
 import type { Doc } from "./_generated/dataModel.js";
 import { type MutationCtx, mutation, type QueryCtx, query } from "./_generated/server.js";
@@ -21,6 +22,17 @@ async function placeOf(ctx: QueryCtx | MutationCtx, key: string): Promise<Doc<"p
     .unique();
   if (!place || place.forgottenAt !== undefined) throw new ConvexError("UNPAIRED");
   return place;
+}
+
+/** The summons `id` while this place's claim on it stands; null for any other. */
+async function claimedBy(
+  ctx: MutationCtx,
+  place: Doc<"places">,
+  id: string,
+): Promise<Doc<"summonses"> | null> {
+  const found = ctx.db.normalizeId("summonses", id);
+  const row = found ? await ctx.db.get(found) : null;
+  return row?.place === place._id && row.state === "claimed" ? row : null;
 }
 
 const pendingSummons = v.object({
@@ -74,7 +86,7 @@ export const claim = mutation({
       claimedAt: now,
       updatedAt: now,
     });
-    await ctx.db.patch(place._id, { lastSeenAt: now });
+    await ctx.db.patch(place._id, { lastSeenAt: now, lastClaimAt: now });
     return { claimed: true as const, run: { prompt: row.prompt } };
   },
 });
@@ -93,10 +105,8 @@ export const started = mutation({
   returns: v.null(),
   handler: async (ctx, args) => {
     const place = await placeOf(ctx, args.key);
-    const id = ctx.db.normalizeId("summonses", args.id);
-    const row = id ? await ctx.db.get(id) : null;
-    if (!row || row.place !== place._id || row.state !== "claimed") return null;
-    if (!isRunReport(args.run)) return null;
+    const row = await claimedBy(ctx, place, args.id);
+    if (!row || !isRunReport(args.run)) return null;
     const now = Date.now();
     await ctx.db.patch(row._id, {
       run: {
@@ -124,10 +134,9 @@ export const finish = mutation({
   returns: v.null(),
   handler: async (ctx, args) => {
     const place = await placeOf(ctx, args.key);
-    const id = ctx.db.normalizeId("summonses", args.id);
-    const row = id ? await ctx.db.get(id) : null;
     // Another place's run, or one already finished: nothing of this place's to end.
-    if (!row || row.place !== place._id || row.state !== "claimed") return null;
+    const row = await claimedBy(ctx, place, args.id);
+    if (!row) return null;
     const now = Date.now();
     await ctx.db.patch(row._id, {
       state: args.outcome,
@@ -135,6 +144,25 @@ export const finish = mutation({
       updatedAt: now,
       ...(args.reason ? { reason: args.reason.slice(0, 300) } : {}),
     });
+    await ctx.db.patch(place._id, { lastSeenAt: now });
+    return null;
+  },
+});
+
+/**
+ * wake:waiting: the run this place claimed stops on a question for its
+ * owner, or goes on. Not a word of the question: it stays on the machine,
+ * and the owner's devices see only that it waits (`wake:runs`).
+ */
+export const waiting = mutation({
+  args: { key: v.string(), id: v.string(), waiting: v.boolean() },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const place = await placeOf(ctx, args.key);
+    const row = await claimedBy(ctx, place, args.id);
+    if (!row) return null;
+    const now = Date.now();
+    await ctx.db.patch(row._id, { waiting: args.waiting, updatedAt: now });
     await ctx.db.patch(place._id, { lastSeenAt: now });
     return null;
   },

@@ -16,6 +16,7 @@ import { keychain } from "./secrets";
 import { type ListenerState, type RunState, writeState } from "./state";
 import { takeStops } from "./stop";
 import { programOf, TOOL_NAMES, toolInstalled, toolOf } from "./tools";
+import { waitingTeller, withWaiting } from "./waiting";
 
 const RECONCILE_MS = 30_000;
 
@@ -98,6 +99,7 @@ export async function listen(): Promise<void> {
       active.set(summons.id, place);
       const stopper = new AbortController();
       stoppers.set(summons.id, stopper);
+      const tellApp = waitingTeller((waiting) => place.waiting(summons.id, waiting));
       try {
         const outcome = await runSummons(summons, run, app, {
           config,
@@ -125,11 +127,19 @@ export async function listen(): Promise<void> {
               startedAt: known?.startedAt ?? Date.now(),
               summons: summons.id,
             };
-            runs.set(summons.id, now);
+            // A session id learnt later keeps a question the run waits on.
+            runs.set(summons.id, withWaiting(now, known?.waiting ?? null));
             void keep({ ...now, summons: summons.id });
             void save();
           },
           report: (run) => place.started(summons.id, run),
+          // What it asks stays here, in the state file and the log; the app hears only that it waits.
+          onWaiting: (waiting) => {
+            const known = runs.get(summons.id);
+            if (known) runs.set(summons.id, withWaiting(known, waiting));
+            void save();
+            void tellApp(waiting !== null);
+          },
         });
         const ran = runs.get(summons.id);
         if (ran?.name) {

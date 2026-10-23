@@ -5,11 +5,12 @@
 //
 //   bun packages/server/example/server.ts
 //   wake check localhost:3210
-//   curl -X POST localhost:3210/demo/code     # then run the command it gives
-//   curl -X POST localhost:3210/demo/assign   # and your agent starts
+//   curl -X POST localhost:3210/demo/code         # then run the command it gives
+//   curl -X POST localhost:3210/demo/assign       # and your agent starts
+//   curl -X POST localhost:3210/demo/watch-code   # a code and link to add a device
 import { PGlite } from "@electric-sql/pglite";
 import { drizzle } from "drizzle-orm/pglite";
-import { discovery, pairCommand, Wake, wakeHandler } from "../src";
+import { discovery, pairCommand, Wake, wakeHandler, watchLink } from "../src";
 import { drizzleStore, WAKE_TABLES_SQL } from "../src/drizzle";
 
 const port = Number(process.env.PORT ?? 3210);
@@ -37,6 +38,16 @@ Bun.serve({
         tool: "claude",
       });
       return Response.json({ command: pairCommand(`localhost:${port}`, code) });
+    }
+    // A real app makes this only in its own interface, for the agent's signed-in owner.
+    if (req.method === "POST" && pathname === "/demo/watch-code") {
+      const { code } = await wake.issueWatchCode({
+        agent: "agent-1",
+        agentName: "Claude",
+        owner: "you",
+        tool: "claude",
+      });
+      return Response.json({ code, link: watchLink(`localhost:${port}`, code) });
     }
     if (req.method === "POST" && pathname === "/demo/assign") {
       const id = await wake.summon({

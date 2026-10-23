@@ -19,6 +19,15 @@ export const unpaired = (): Response =>
 export const invalidBody = (shape: string): Response =>
   refuse(400, "invalid_body", `Send ${shape}.`);
 
+export const noContent = (): Response => new Response(null, { status: 204 });
+
+/** A value of a body, read as an object or nothing. */
+export function record(value: unknown): Record<string, unknown> | null {
+  return typeof value === "object" && value !== null && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : null;
+}
+
 export function bearer(req: Request): string | null {
   const match = req.headers.get("authorization")?.match(/^Bearer\s+(\S+)$/i);
   return match?.[1] ?? null;
@@ -26,10 +35,7 @@ export function bearer(req: Request): string | null {
 
 export async function bodyOf(req: Request): Promise<Record<string, unknown>> {
   try {
-    const body: unknown = await req.json();
-    return typeof body === "object" && body !== null && !Array.isArray(body)
-      ? (body as Record<string, unknown>)
-      : {};
+    return record(await req.json()) ?? {};
   } catch {
     return {};
   }
@@ -44,6 +50,11 @@ export function text(value: unknown, max: number): string | null {
 /** A refusal the spec names becomes its answer; anything else is the host's to see. */
 export function answerFor(error: unknown): Response {
   if (error instanceof WakeError && error.code === "UNPAIRED") return unpaired();
-  if (error instanceof WakeError && error.code === "INVALID_BODY") return invalidBody("JSON");
+  if (error instanceof WakeError && error.code === "INVALID_BODY") {
+    return invalidBody("what the spec allows");
+  }
+  if (error instanceof WakeError && error.code === "NOT_IN_PLAN") {
+    return refuse(402, "not-in-plan", "The agent's plan doesn't include devices.");
+  }
   throw error;
 }

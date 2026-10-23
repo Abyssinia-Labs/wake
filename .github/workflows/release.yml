@@ -99,15 +99,15 @@ jobs:
   # a Mac, so they have the linker's ad hoc signature: Apple silicon starts
   # nothing unsigned. Bun appends the bundle after the linker has signed, so
   # `codesign --verify` calls the signature modified though the binary runs;
-  # an app that carries one signs it again as its own. The Intel build is
-  # the baseline one, which needs no AVX (Rosetta has none).
+  # an app that carries one signs it again as its own. The Intel build runs
+  # under Rosetta with a warning that it lacks AVX, which Intel Macs have.
   binaries:
     needs: github-release
     strategy:
       matrix:
         include:
           - { os: macos-latest, target: bun-darwin-arm64, file: wakectl-darwin-arm64, runs: true }
-          - { os: macos-latest, target: bun-darwin-x64-baseline, file: wakectl-darwin-x64, runs: false }
+          - { os: macos-latest, target: bun-darwin-x64, file: wakectl-darwin-x64, runs: false }
           - { os: ubuntu-latest, target: bun-linux-x64, file: wakectl-linux-x64, runs: true }
           - { os: ubuntu-latest, target: bun-linux-arm64, file: wakectl-linux-arm64, runs: false }
     runs-on: ${{ matrix.os }}

@@ -8,6 +8,14 @@ own: [the Convex component](packages/convex/CHANGELOG.md) and
 
 ## Unreleased
 
+### Added
+
+- **wake/v1 has calls for devices that watch.** An app can let an agent's owner add a phone, a
+  browser or a desktop app that lists the agent's runs and answers asks. Each holds a watch key,
+  made only from a code the app shows its signed-in owner, so nothing a run can reach can say yes
+  for them. An optional `wake:waiting` lets Wake say a run waits on its owner. The spec has them
+  now; Wake, `wakectl check` and the server packages take them up in later releases.
+
 ## 0.4.1 — 2026-10-14
 
 ### Fixed

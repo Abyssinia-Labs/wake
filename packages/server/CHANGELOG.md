@@ -6,6 +6,14 @@ that serves wake/v1 over HTTP. What changed in `wakectl` is in
 
 ## Unreleased
 
+### Added
+
+- **wake/v1 has calls for devices that watch, which this server doesn't serve yet.** The spec adds
+  a watch key, which an agent's owner trades for a code your app shows them, and the calls it
+  opens, for a phone or a browser that lists the agent's runs and answers asks. The server checks
+  what a device may send by the spec's rules; serving the calls comes in a later release, and until
+  then it serves wake/v1 as before.
+
 ## 0.4.0 — 2026-10-12
 
 ### Added

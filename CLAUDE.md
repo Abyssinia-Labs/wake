@@ -40,7 +40,8 @@ against the spec.
 - At most 300 lines a file; 350 is the ceiling. Split by responsibility.
 - TypeScript `strict`, no `any`, no non-null assertions. Exported functions
   have explicit return types. Anything read from the network is `unknown`
-  until a guard in `src/contract.ts` has narrowed it.
+  until a guard in `src/contract.ts` (`src/contract-watch.ts` for the
+  watch calls) has narrowed it.
 - Files `kebab-case`. Biome is the only formatter and linter.
 - Output goes through `src/log.ts`, never `console.log`.
 - Comments say why, not what. Cite the pattern's section when a choice

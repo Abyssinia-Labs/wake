@@ -4,6 +4,7 @@ import { parseArgs } from "node:util";
 import pkg from "../package.json";
 import { check } from "./commands/check";
 import { doctor, setup } from "./commands/doctor";
+import { JSON_COMMANDS, printJson, takesJson } from "./commands/json";
 import { model } from "./commands/model";
 import { open } from "./commands/open";
 import { forget, pair } from "./commands/pair";
@@ -37,6 +38,7 @@ async function main(argv: string[]): Promise<void> {
       app: { type: "string" },
       effort: { type: "string" },
       days: { type: "string", default: "14" },
+      json: { type: "boolean", default: false },
       help: { type: "boolean", short: "h", default: false },
       version: { type: "boolean", short: "v", default: false },
     },
@@ -44,6 +46,13 @@ async function main(argv: string[]): Promise<void> {
   const [command, ...rest] = positionals;
   if (values.version) return say(pkg.version);
   if (values.help || !command || command === "help") return say(help());
+  if (values.json) {
+    // Only the forms that change nothing: `repos allow x --json` would change the config.
+    if (!takesJson(command) || rest.length > 0) {
+      throw new Usage(`${JSON_COMMANDS.join("|")} --json`);
+    }
+    return printJson(command);
+  }
 
   switch (command) {
     case "setup":

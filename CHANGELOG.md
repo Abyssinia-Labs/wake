@@ -10,6 +10,10 @@ own: [the Convex component](packages/convex/CHANGELOG.md) and
 
 ### Added
 
+- **`--json` for scripts and apps that drive wakectl.** `wakectl status --json` prints the
+  listener, each pairing's connection, the runs with their resume commands, the approved
+  repositories and the settings as JSON; `repos`, `model`, `doctor` and `open` take it too. Only
+  the forms that change nothing do, and no key is ever in it.
 - **wake/v1 has calls for devices that watch.** An app can let an agent's owner add a phone, a
   browser or a desktop app that lists the agent's runs and answers asks. Each holds a watch key,
   made only from a code the app shows its signed-in owner, so nothing a run can reach can say yes

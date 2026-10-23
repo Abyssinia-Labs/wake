@@ -124,6 +124,12 @@ Wake waits for you to answer it in the tab rather than failing the run.
 `wakectl resume` goes on. `wakectl prune` removes run worktrees untouched
 for 14 days, and keeps any with uncommitted work.
 
+**For a program.** `wakectl status --json` prints what `status` shows as
+JSON: the listener, each pairing's connection, the runs with their resume
+commands, the approved repositories and the settings. `repos`, `model`,
+`doctor` and `open` (the runs this machine remembers, newest first) take
+`--json` too, in the forms that change nothing. No key is ever in it.
+
 Place keys live in the macOS Keychain or Linux's Secret Service
 (`dev.abyssinia.wake`), never in the config at
 `~/Library/Application Support/Wake/config.json` (`~/.config/wake` on

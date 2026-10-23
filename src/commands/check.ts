@@ -1,71 +1,33 @@
 // `wakectl check <domain>`: does an app answer wake/v1 as docs/spec/
 // wake-v1.md says? Every probe is one an app must refuse (a code nobody
 // issued, a key that opens nothing), so checking pairs nothing and changes
-// nothing on the app.
+// nothing on the app. Where this machine is paired with the app, its own
+// place key is tried on the watch calls too, which must refuse it.
 import { ConvexHttpClient } from "convex/browser";
-import { claimRef, type Discovery, finishRef, pendingRef, startedRef } from "../contract";
+import { domainKey, loadConfig } from "../config";
+import {
+  claimRef,
+  type Discovery,
+  finishRef,
+  pendingRef,
+  startedRef,
+  waitingRef,
+} from "../contract";
 import { appOrigin, discover, HttpError, pairPlace } from "../http";
 import { messageOf, say } from "../log";
-import { isUnpairedError } from "../place";
+import { keychain } from "../secrets";
 import { bold, dim, mark } from "../ui";
 import { httpProbes } from "./check-http";
+import { expectStatus, expectUnpaired, NOBODY, type Probe } from "./check-probe";
+import { watchProbes } from "./check-watch";
 
-export type Probe = { what: string; ok: boolean; detail?: string };
+export type { Probe };
 
-/** A key of the right shape that no app ever issued. */
-const NOBODY = `wk_${"0".repeat(64)}`;
-
-async function expectStatus(
-  what: string,
-  call: () => Promise<Response>,
-  status: number,
-  error?: string,
-): Promise<Probe> {
-  try {
-    const res = await call();
-    let code: unknown;
-    try {
-      code = ((await res.json()) as { error?: unknown }).error;
-    } catch {
-      // No JSON body: only the status can be checked.
-    }
-    const ok = res.status === status && (error === undefined || code === error);
-    return {
-      what,
-      ok,
-      ...(ok
-        ? {}
-        : { detail: `answered ${res.status}${typeof code === "string" ? ` ${code}` : ""}` }),
-    };
-  } catch (e) {
-    return { what, ok: false, detail: messageOf(e) };
-  }
-}
-
-async function expectUnpaired(
-  what: string,
-  call: () => Promise<unknown>,
-  optional = false,
-): Promise<Probe> {
-  try {
-    await call();
-    return { what, ok: false, detail: "answered instead of throwing UNPAIRED" };
-  } catch (error) {
-    if (isUnpairedError(error)) return { what, ok: true };
-    // An optional function passes either way: Wake does without it, and a
-    // production deployment won't say whether it is missing or failed.
-    if (optional) {
-      return {
-        what: what.replace(/ throws UNPAIRED$/, " isn't served"),
-        ok: true,
-        detail: "agents comment that they started instead",
-      };
-    }
-    return { what, ok: false, detail: messageOf(error) };
-  }
-}
-
-export async function checkApp(domain: string, fetcher: typeof fetch = fetch): Promise<Probe[]> {
+export async function checkApp(
+  domain: string,
+  fetcher: typeof fetch = fetch,
+  placeKey?: string,
+): Promise<Probe[]> {
   const probes: Probe[] = [];
   let found: Discovery;
   try {
@@ -109,8 +71,10 @@ export async function checkApp(domain: string, fetcher: typeof fetch = fetch): P
       401,
     ),
   );
+  const keys = { nobody: NOBODY, ...(placeKey ? { place: placeKey } : {}) };
   if (found.transport === "http") {
     probes.push(...(await httpProbes(found.httpBase, NOBODY, fetcher)));
+    probes.push(...(await watchProbes(found, keys, fetcher)));
     return probes;
   }
   const client = new ConvexHttpClient(found.convexUrl);
@@ -132,15 +96,33 @@ export async function checkApp(domain: string, fetcher: typeof fetch = fetch): P
           id: "x",
           run: { name: "amber-heron", tool: "claude" },
         }),
-      true,
+      "agents comment that they started instead",
+    ),
+    await expectUnpaired(
+      "wake:waiting (optional) throws UNPAIRED",
+      () => client.mutation(waitingRef, { key: NOBODY, id: "x", waiting: true }),
+      "Wake does without it",
     ),
   );
+  probes.push(...(await watchProbes(found, keys, fetcher, client)));
   return probes;
+}
+
+/** This machine's place key for `domain`, when it is paired with it; it opens no watch call. */
+async function placeKeyFor(domain: string): Promise<string | undefined> {
+  try {
+    const host = domainKey(domain);
+    const paired = Object.entries((await loadConfig()).apps).find(([, app]) => app.domain === host);
+    return paired ? ((await keychain.get(paired[0])) ?? undefined) : undefined;
+  } catch {
+    // No config or no secret store: the made-up key is tried alone.
+    return undefined;
+  }
 }
 
 export async function check(domain: string): Promise<void> {
   say(`${bold("wake/v1")} at ${bold(appOrigin(domain))} ${dim("· docs/spec/wake-v1.md")}`);
-  const probes = await checkApp(domain);
+  const probes = await checkApp(domain, fetch, await placeKeyFor(domain));
   for (const probe of probes) {
     say(
       `  ${probe.ok ? mark.ok() : mark.fail()} ${probe.what}${probe.detail ? dim(`  ${probe.detail}`) : ""}`,

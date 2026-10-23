@@ -30,7 +30,11 @@ own: [the Convex component](packages/convex/CHANGELOG.md) and
   browser or a desktop app that lists the agent's runs and answers asks. Each holds a watch key,
   made only from a code the app shows its signed-in owner, so nothing a run can reach can say yes
   for them. An optional `wake:waiting` lets Wake say a run waits on its owner. The spec has them
-  now; Wake, `wakectl check` and the server packages take them up in later releases.
+  now, and `wakectl check` probes them; Wake calls `wake:waiting` in a later release.
+- **`wakectl check` tests an app's calls for devices that watch.** Where the app makes watch
+  codes, it checks that `POST /wake/v1/watch` and every watch call refuse what they must: a code
+  nobody issued, a key that opens nothing, and this machine's own place key when it is paired with
+  the app, since a place key must open none of them. It tries the optional `waiting` too.
 - **Wake for GitHub: Pro, a plan for your own account.** $8 a month or $80 a year, for what Wake's
   paid apps need: your runs, and what they ask you, on your other devices. Until those apps come,
   it does what Free does. Team stays the organisation's plan, with its policy and audit; like

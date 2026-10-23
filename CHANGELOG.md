@@ -18,6 +18,11 @@ own: [the Convex component](packages/convex/CHANGELOG.md) and
   listener, each pairing's connection, the runs with their resume commands, the approved
   repositories and the settings as JSON; `repos`, `model`, `doctor` and `open` take it too. Only
   the forms that change nothing do, and no key is ever in it.
+- **wake/v1 has calls for devices that watch.** An app can let an agent's owner add a phone, a
+  browser or a desktop app that lists the agent's runs and answers asks. Each holds a watch key,
+  made only from a code the app shows its signed-in owner, so nothing a run can reach can say yes
+  for them. An optional `wake:waiting` lets Wake say a run waits on its owner. The spec has them
+  now; Wake, `wakectl check` and the server packages take them up in later releases.
 - **Wake for GitHub: Pro, a plan for your own account.** $8 a month or $80 a year, for what Wake's
   paid apps need: your runs, and what they ask you, on your other devices. Until those apps come,
   it does what Free does. Team stays the organisation's plan, with its policy and audit; like

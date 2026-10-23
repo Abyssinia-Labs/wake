@@ -49,6 +49,12 @@ export const startedRef = makeFunctionReference<
   { key: string; id: string; run: RunReport },
   unknown
 >("wake:started");
+/** Optional too: that a claimed run waits on its owner, with no word of what it asks. */
+export const waitingRef = makeFunctionReference<
+  "mutation",
+  { key: string; id: string; waiting: boolean },
+  unknown
+>("wake:waiting");
 
 /** What a wake:* function throws for a key that no longer opens anything. */
 export const UNPAIRED = "UNPAIRED";
@@ -60,7 +66,7 @@ export class ContractError extends Error {
   }
 }
 
-function isRecord(v: unknown): v is Record<string, unknown> {
+export function isRecord(v: unknown): v is Record<string, unknown> {
   return typeof v === "object" && v !== null && !Array.isArray(v);
 }
 
@@ -142,35 +148,36 @@ export function asDiscovery(v: unknown): Discovery {
   return { version: CONTRACT, transport: "convex", convexUrl: v.convexUrl, httpBase: v.httpBase };
 }
 
+/** The agent a pairing (or a watch key) is for; a tool Wake doesn't know is left out. */
+export function asAgent(v: unknown): Agent | null {
+  if (!isRecord(v) || !isId(v.id) || !isLabel(v.name)) return null;
+  const known = AGENT_TOOLS.find((one) => one === v.tool);
+  return { id: v.id, name: v.name, ...(known ? { tool: known } : {}) };
+}
+
 export function asPaired(v: unknown): Paired {
-  if (isRecord(v) && isKey(v.placeKey) && isAppName(v.app) && isRecord(v.agent)) {
-    const { id, name, tool } = v.agent;
-    const known = AGENT_TOOLS.find((one) => one === tool);
-    if (isId(id) && isLabel(name)) {
-      return {
-        placeKey: v.placeKey,
-        app: v.app,
-        agent: { id, name, ...(known ? { tool: known } : {}) },
-      };
-    }
+  const agent = isRecord(v) ? asAgent(v.agent) : null;
+  if (isRecord(v) && isKey(v.placeKey) && isAppName(v.app) && agent) {
+    return { placeKey: v.placeKey, app: v.app, agent };
   }
   throw new ContractError("pairing");
 }
 
-function isId(v: unknown): v is string {
+export function isId(v: unknown): v is string {
   return typeof v === "string" && ID.test(v);
 }
-function isLabel(v: unknown): v is string {
+export function isLabel(v: unknown): v is string {
   return typeof v === "string" && LABEL.test(v);
 }
-function isKey(v: unknown): v is string {
+export function isKey(v: unknown): v is string {
   return typeof v === "string" && KEY.test(v);
 }
 function isKind(v: unknown): v is string {
   return typeof v === "string" && KIND.test(v);
 }
 
-function asSummons(v: unknown): Summons | null {
+/** One summons of `wake:pending` (and the pending fields of `wake:runs`), or null. */
+export function asSummons(v: unknown): Summons | null {
   if (!isRecord(v) || !isId(v.id) || !isAppName(v.app) || !isKind(v.kind)) return null;
   if (typeof v.at !== "number" || !isRecord(v.target)) return null;
   const { kind, ref, url } = v.target;

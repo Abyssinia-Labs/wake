@@ -214,6 +214,16 @@ called with the place key as an argument. Anywhere else, the same four as
 HTTP routes, with the pending list as server-sent events and the place key
 as a bearer token (`transport: "http"` in discovery). Wake speaks both.
 
+The spec also has devices that watch: a phone, a browser or a desktop app
+the agent's owner adds from your app, which lists the agent's runs and
+answers asks. Each holds a watch key, traded at `POST /wake/v1/watch` for a
+code your app shows only to its signed-in owner, so nothing a run can reach
+can say yes for them. The key opens `wake:runs`, `wake:answer`,
+`wake:places`, `wake:watching`, `wake:push` and `wake:activity`, and no
+place call; a place key opens none of them. An optional `wake:waiting`
+lets Wake say a run waits on its owner. Neither package serves these yet,
+and `wakectl check` doesn't probe them yet.
+
 - **The spec**: [docs/spec/wake-v1.md](docs/spec/wake-v1.md).
 - **On Convex**: [`@abyssinia-labs/wake-convex`](packages/convex) is the
   whole server half as a component. You decide what summons an agent and

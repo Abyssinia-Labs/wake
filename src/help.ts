@@ -21,7 +21,7 @@ const GROUPS: readonly { title: string; entries: readonly Entry[] }[] = [
       { use: "status", what: "What is paired, connected, running and waiting on you" },
       {
         use: "  --json",
-        what: "As JSON for a program; status, repos, model, doctor and open take it",
+        what: "As JSON for a program; status, repos, model, doctor, open and setup take it",
       },
     ],
   },
@@ -40,6 +40,7 @@ const GROUPS: readonly { title: string; entries: readonly Entry[] }[] = [
   {
     title: "How runs work",
     entries: [
+      { use: "roots [add|remove <folder>]", what: "Where Wake looks for your clones" },
       { use: "mode [headless|herdr]", what: "In the background, or a tab in herdr you can watch" },
       { use: "permissions [mode]", what: "What a run may do unasked: acceptEdits, auto, dontAsk" },
       {
@@ -85,6 +86,7 @@ export const COMMANDS = [
   "allow",
   "trust",
   "repos",
+  "roots",
   "prune",
   "listen",
   "help",

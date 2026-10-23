@@ -68,11 +68,18 @@ export function readPairLine(line: string): { domain: string; code: string; tool
   return { domain: match[1], code: match[2], ...(match[3] ? { tool: match[3] } : {}) };
 }
 
+/** The folders setup offers for clones: those Wake looks in, then the usual ones, as exist here. */
+export function folderCandidates(
+  config: Pick<Config, "roots">,
+  home: string,
+  exists: (path: string) => boolean,
+): string[] {
+  return [...new Set([...config.roots, ...FOLDERS.map((name) => join(home, name))])].filter(exists);
+}
+
 async function folders(d: SetupDeps, config: Config, probe: Probe): Promise<Config> {
   const home = d.home ?? homedir();
-  const candidates = [
-    ...new Set([...config.roots, ...FOLDERS.map((name) => join(home, name))]),
-  ].filter((path) => probe.exists(path));
+  const candidates = folderCandidates(config, home, probe.exists);
   if (candidates.length === 0) {
     const typed = await text(d.io, "Which folder holds your clones? (a full path)");
     return typed ? { ...config, roots: [typed] } : config;

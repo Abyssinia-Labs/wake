@@ -1,4 +1,4 @@
-// `wakectl <command> --json`: status, repos, model, doctor and open, read
+// `wakectl <command> --json`: status, repos, model, doctor, open and setup, read
 // from the same places their terminal forms read, printed as JSON (json.ts).
 // Only the forms that change nothing take it.
 import { existsSync } from "node:fs";
@@ -7,9 +7,9 @@ import { readHistory } from "../history";
 import { doctorJson, historyJson, modelsJson, statusJson } from "../json";
 import { sayJson } from "../log";
 import { isAlive, readState } from "../state";
-import { doctorChecks } from "./doctor";
+import { doctorChecks, setupNow } from "./doctor";
 
-export const JSON_COMMANDS = ["status", "repos", "model", "doctor", "open"] as const;
+export const JSON_COMMANDS = ["status", "repos", "model", "doctor", "open", "setup"] as const;
 
 export function takesJson(command: string): boolean {
   return (JSON_COMMANDS as readonly string[]).includes(command);
@@ -38,6 +38,8 @@ export async function printJson(command: string): Promise<void> {
     }
     case "open":
       return sayJson(historyJson(await readHistory(p.history)));
+    case "setup":
+      return sayJson(await setupNow());
     default:
       throw new Error(`--json goes with ${JSON_COMMANDS.join(", ")}.`);
   }

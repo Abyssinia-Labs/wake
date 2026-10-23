@@ -10,6 +10,14 @@ own: [the Convex component](packages/convex/CHANGELOG.md) and
 
 ### Added
 
+- **`wakectl roots` sets where Wake looks for your clones.** `wakectl roots add ~/code` and
+  `wakectl roots remove ~/code` change the folders setup asks about, one and two folders down;
+  `wakectl roots` lists them.
+- **`wakectl setup --json` for an app that runs setup its own way.** It prints what setup would
+  ask, with today's answers: this machine's checks, the folders it offers, the clones there and
+  which apps asked for each, run modes, models and whether the listener starts at login. It
+  changes nothing, and no key is ever in it.
+
 - **`wakectl status` shows a run in herdr waiting on you.** When a run stops on a question in its
   tab, a tool asking permission or a folder to trust, `status` says so with the question as the
   tab shows it, `status --json` gives the run's `waiting` (`since` and `what`), and the log says

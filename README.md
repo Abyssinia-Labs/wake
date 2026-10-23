@@ -157,14 +157,22 @@ JSON: the listener, each pairing's connection, the runs with their resume
 commands and any question they wait on, the approved repositories and the
 settings. `repos`, `model`,
 `doctor` and `open` (the runs this machine remembers, newest first) take
-`--json` too, in the forms that change nothing. No key is ever in it.
+`--json` too, in the forms that change nothing. `wakectl setup --json`
+prints what setup would ask, with today's answers: this machine's checks,
+the folders it offers for clones, the clones found there and which apps
+asked for each, the run modes and models to choose from, and whether
+anything starts the listener at login. A program asks those questions its
+own way and gives each answer back through its command (`roots`, `pair`,
+`repos allow`, `mode`, `permissions`, `model`, `install`). No key is ever
+in any of it.
 
 Place keys live in the macOS Keychain or Linux's Secret Service
 (`dev.abyssinia.wake`), never in the config at
 `~/Library/Application Support/Wake/config.json` (`~/.config/wake` on
 Linux). A Linux machine with no Secret Service (a server, a container)
 keeps them in `~/.config/wake/keys.json`, readable by you alone. Its settings:
-`roots` (where to look for clones, `~/Projects` by default), `maxRuns` (2),
+`roots` (where to look for clones, `~/Projects` by default; `wakectl roots
+add ~/code` and `wakectl roots remove` change them), `maxRuns` (2),
 `runTimeoutMinutes` (120), `extraAllowedTools` for a run, and `models`,
 as `wakectl model` sets it.
 

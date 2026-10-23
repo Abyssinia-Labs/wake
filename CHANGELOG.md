@@ -10,6 +10,10 @@ own: [the Convex component](packages/convex/CHANGELOG.md) and
 
 ### Added
 
+- **Each run's steps are kept on your machine, a file per run.** The lines `wakectl logs` shows
+  for a run also go to its own file under `runs/` in Wake's folder, as JSON lines, so a program
+  can show one run's steps without reading the whole log. Readable by you alone, never sent
+  anywhere, and removed when Wake forgets the run after its last 200.
 - **`--json` for scripts and apps that drive wakectl.** `wakectl status --json` prints the
   listener, each pairing's connection, the runs with their resume commands, the approved
   repositories and the settings as JSON; `repos`, `model`, `doctor` and `open` take it too. Only

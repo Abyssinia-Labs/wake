@@ -13,6 +13,7 @@ import { realDeps, runSummons } from "./run";
 import { type Place, Scheduler } from "./scheduler";
 import { keychain } from "./secrets";
 import { type ListenerState, type RunState, writeState } from "./state";
+import { takeStops } from "./stop";
 import { programOf, TOOL_NAMES, toolInstalled, toolOf } from "./tools";
 
 const RECONCILE_MS = 30_000;
@@ -33,7 +34,21 @@ export async function listen(): Promise<void> {
   const runs = new Map<string, RunState>();
   // Runs under way and the place that claimed each, so stopping can finish them.
   const active = new Map<string, Place>();
+  // Each run's own stop, for `wakectl stop` (stop.ts), by summons.
+  const stoppers = new Map<string, AbortController>();
   let config: Config = await loadConfig();
+
+  const takeStopRequests = async (): Promise<void> => {
+    for (const id of await takeStops(p.stops)) {
+      const stopper = stoppers.get(id);
+      if (!stopper) continue;
+      note(`Stopping ${runs.get(id)?.name ?? id}: its owner asked (wakectl stop).`);
+      stopper.abort();
+    }
+  };
+  const stopRequested = (): void => {
+    takeStopRequests().catch((e) => note(`Could not take stop requests: ${messageOf(e)}`));
+  };
 
   const save = async (): Promise<void> => {
     const apps: ListenerState["apps"] = {};
@@ -67,11 +82,14 @@ export async function listen(): Promise<void> {
       const app = config.apps[place.domain];
       if (!app) return { id: summons.id, outcome: "failed", reason: "Wake was unpaired mid-run." };
       active.set(summons.id, place);
+      const stopper = new AbortController();
+      stoppers.set(summons.id, stopper);
       try {
         const outcome = await runSummons(summons, run, app, {
           config,
           paths: p,
           deps,
+          signal: stopper.signal,
           onEvent: (line) => note(`${summons.target.ref}: ${line}`),
           onStart: ({ sessionId, cwd, tool, name }) => {
             const known = runs.get(summons.id);
@@ -88,6 +106,7 @@ export async function listen(): Promise<void> {
               tool,
               name,
               startedAt: known?.startedAt ?? Date.now(),
+              summons: summons.id,
             };
             runs.set(summons.id, now);
             void keep({ ...now, summons: summons.id });
@@ -109,6 +128,7 @@ export async function listen(): Promise<void> {
         return outcome;
       } finally {
         active.delete(summons.id);
+        stoppers.delete(summons.id);
         runs.delete(summons.id);
         void save();
       }
@@ -196,6 +216,8 @@ export async function listen(): Promise<void> {
 
   const tick = (): void => {
     reconcile().catch((e) => note(`Could not reload: ${messageOf(e)}`));
+    // A request made while no signal reached the listener is taken here.
+    stopRequested();
   };
 
   const stop = async (signal: string): Promise<void> => {
@@ -216,6 +238,8 @@ export async function listen(): Promise<void> {
   };
   process.on("SIGTERM", () => void stop("SIGTERM"));
   process.on("SIGINT", () => void stop("SIGINT"));
+  // `wakectl stop` leaves its request, then wakes the listener with this.
+  process.on("SIGUSR2", stopRequested);
 
   note(`Wake ${process.pid} listening, ${config.maxRuns} runs at most.`);
   await reconcile();

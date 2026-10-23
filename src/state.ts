@@ -13,6 +13,8 @@ export type RunState = {
   tool?: AgentTool;
   /** Its two-word name (run-name.ts); absent in an older state file. */
   name?: string;
+  /** The summons it runs, so `wakectl stop` can name it; absent in an older state file. */
+  summons?: string;
 };
 
 export type ListenerState = {

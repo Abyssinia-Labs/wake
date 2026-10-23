@@ -15,6 +15,7 @@ import { findClone } from "./repos";
 import { runName } from "./run-name";
 import { runCodex } from "./runners/codex";
 import { runCursor } from "./runners/cursor";
+import { STOPPED } from "./stop";
 import { toolOf } from "./tools";
 import { isMade, prepareWorktree, worktreeRoot } from "./worktree";
 
@@ -105,8 +106,12 @@ async function runOne(
     report?: (run: RunReport) => Promise<boolean>;
     /** Each step of the run, for the listener's log. */
     onEvent?: (line: string) => void;
+    /** Aborted when its owner stops the run (`wakectl stop`). */
+    signal?: AbortSignal;
   },
 ): Promise<Outcome> {
+  // Stopped while it waited its turn on the branch: nothing starts.
+  if (o.signal?.aborted) return { id: summons.id, outcome: "failed", reason: STOPPED };
   const sessionId = o.deps.newId();
   let cwd: string;
   let defaultBranch: string | undefined;
@@ -177,10 +182,12 @@ async function runOne(
       ...(model ? { model } : {}),
       trustFolder: o.config.trustCodexWorktrees,
       ...(o.onEvent ? { onEvent: o.onEvent } : {}),
+      ...(o.signal ? { signal: o.signal } : {}),
     },
     { mode: o.config.run, ref: summons.target.ref, tool },
   );
-  return result.ok
-    ? { id: summons.id, outcome: "done" }
-    : { id: summons.id, outcome: "failed", reason: result.reason };
+  if (result.ok) return { id: summons.id, outcome: "done" };
+  // A tool ended by `wakectl stop` exits like a failure; the app hears why.
+  const reason = o.signal?.aborted ? STOPPED : result.reason;
+  return { id: summons.id, outcome: "failed", ...(reason ? { reason } : {}) };
 }

@@ -10,6 +10,13 @@ own: [the Convex component](packages/convex/CHANGELOG.md) and
 
 ### Added
 
+- **Stop a run now: `wakectl stop amber-heron`.** It ends a run going on this machine, found by
+  its name, its ticket or its session id. A headless run's tool is stopped; a run in herdr is
+  interrupted with Esc and its tab kept. The app shows the run couldn't finish, stopped by its
+  owner.
+
+### Added
+
 - **`--json` for scripts and apps that drive wakectl.** `wakectl status --json` prints the
   listener, each pairing's connection, the runs with their resume commands, the approved
   repositories and the settings as JSON; `repos`, `model`, `doctor` and `open` take it too. Only

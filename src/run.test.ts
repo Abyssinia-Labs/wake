@@ -7,6 +7,7 @@ import { defaults, type PairedApp, type Paths } from "./config";
 import type { Summons } from "./contract";
 import { exec } from "./exec";
 import { composePrompt, oneAtATime, type RunDeps, roomOf, runSummons } from "./run";
+import { STOPPED } from "./stop";
 
 const home = await mkdtemp(join(tmpdir(), "wake-run-"));
 afterAll(() => rm(home, { recursive: true, force: true }));
@@ -20,6 +21,7 @@ const p: Paths = {
   made: join(home, "worktrees.json"),
   asked: join(home, "asked-repos.json"),
   history: join(home, "runs.json"),
+  stops: join(home, "stop"),
   rooms: join(home, "rooms"),
   log: join(home, "wake.log"),
 };
@@ -191,5 +193,41 @@ describe("the security pass", () => {
       }),
     ]);
     expect(order).toEqual(["z", "y"]);
+  });
+});
+
+describe("a run its owner stops", () => {
+  test("stopped while it waited its turn, nothing starts and the app hears why", async () => {
+    const seen: ClaudeRun[] = [];
+    const stopper = new AbortController();
+    stopper.abort();
+    const outcome = await runSummons(page, { prompt: "x" }, app, {
+      config: defaults(),
+      paths: p,
+      deps: deps(seen),
+      onStart: () => {},
+      signal: stopper.signal,
+    });
+    expect(outcome).toEqual({ id: "s1", outcome: "failed", reason: STOPPED });
+    expect(seen).toEqual([]);
+  });
+
+  test("stopped mid-run, the tool's own failure is reported as the stop", async () => {
+    const stopper = new AbortController();
+    const outcome = await runSummons(page, { prompt: "x" }, app, {
+      config: defaults(),
+      paths: p,
+      deps: {
+        ...deps([]),
+        claude: async (run) => {
+          expect(run.signal).toBe(stopper.signal);
+          stopper.abort();
+          return { ok: false, reason: "claude exited 143." };
+        },
+      },
+      onStart: () => {},
+      signal: stopper.signal,
+    });
+    expect(outcome).toEqual({ id: "s1", outcome: "failed", reason: STOPPED });
   });
 });

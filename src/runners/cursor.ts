@@ -134,6 +134,7 @@ export async function runCursor(
     cwd: o.cwd,
     stdin: "",
     timeoutMs: o.timeoutMs,
+    ...(o.signal ? { signal: o.signal } : {}),
     onLine: (line) => {
       result = resultOf(line) ?? result;
       if (!session) {

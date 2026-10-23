@@ -120,8 +120,11 @@ rather than start it unable to read the ask, and `wakectl logs` gives the
 command that signs that folder in. If an agent in herdr stops on a question before it is ready,
 Wake waits for you to answer it in the tab rather than failing the run.
 
-`wakectl pause` stops new claims (a run already going finishes) and
-`wakectl resume` goes on. `wakectl prune` removes run worktrees untouched
+`wakectl stop amber-heron` ends one run now, found by its name, its ticket
+or its session id: a headless run's tool is stopped, a run in herdr is
+interrupted (Esc) and its tab kept, and the app shows it couldn't finish,
+stopped by its owner. `wakectl pause` stops new claims (a run already going
+finishes) and `wakectl resume` goes on. `wakectl prune` removes run worktrees untouched
 for 14 days, and keeps any with uncommitted work.
 
 **For a program.** `wakectl status --json` prints what `status` shows as

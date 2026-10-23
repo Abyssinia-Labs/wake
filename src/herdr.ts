@@ -282,5 +282,6 @@ export async function runInHerdr(o: HerdrRun, run: Exec): Promise<ClaudeResult> 
     timeoutMs: o.timeoutMs,
     settle: answered,
     ...(o.onEvent ? { onEvent: o.onEvent } : {}),
+    ...(o.signal ? { signal: o.signal } : {}),
   });
 }

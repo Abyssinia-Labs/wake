@@ -9,6 +9,7 @@
 // sent again, at most twice.
 import type { ClaudeResult } from "./claude";
 import type { Exec } from "./exec";
+import { STOPPED } from "./stop";
 
 export const SETTLE_MS = 2_500;
 export const STALL_RETRIES = 2;
@@ -20,7 +21,17 @@ export type PromptRun = {
   /** A question before startup was just answered: let the agent settle first. */
   settle: boolean;
   onEvent?: (line: string) => void;
+  /** Aborted when its owner stops the run: the agent's turn is interrupted, its tab kept. */
+  signal?: AbortSignal;
 };
+
+/** Resolves when the signal aborts; never, without one. */
+function whenAborted(signal: AbortSignal | undefined): Promise<"stopped"> {
+  return new Promise((resolve) => {
+    if (signal?.aborted) resolve("stopped");
+    else signal?.addEventListener("abort", () => resolve("stopped"), { once: true });
+  });
+}
 
 function lastLine(result: { stdout: string; stderr: string }): string {
   return (result.stderr || result.stdout).trim().split("\n").at(-1) ?? "";
@@ -32,8 +43,9 @@ export async function promptUntilTurnEnds(
   pause: (ms: number) => Promise<unknown> = Bun.sleep,
 ): Promise<ClaudeResult> {
   if (o.settle) await pause(SETTLE_MS);
+  const stopped = whenAborted(o.signal);
   for (let attempt = 0; ; attempt++) {
-    const answer = await run([
+    const waiting = run([
       "herdr",
       "agent",
       "prompt",
@@ -51,6 +63,14 @@ export async function promptUntilTurnEnds(
       "--timeout",
       String(o.timeoutMs),
     ]);
+    const answer = await Promise.race([waiting, stopped]);
+    if (answer === "stopped") {
+      // Esc interrupts the agent's turn in its own terminal; the session and
+      // its tab stay, as at the end of any turn, for the person to read or go on.
+      await run(["herdr", "agent", "send-keys", o.name, "esc"]);
+      o.onEvent?.("stopped by its owner: interrupted in herdr, and its tab stays open");
+      return { ok: false, reason: STOPPED };
+    }
     if (answer.code === 0) {
       // Finished and stopped look alike from here, so neither is called a
       // failure: the person was watching, and the agent's comment says which.

@@ -8,6 +8,7 @@ import { type Config, type PairedApp, type Paths, type RunMode, repoApproved } f
 import type { AgentTool, Outcome, Run, RunReport, Summons } from "./contract";
 import type { Exec } from "./exec";
 import { herdrRunning, runInHerdr } from "./herdr";
+import type { Waiting } from "./herdr-waiting";
 import { installDependencies } from "./install";
 import { madeWorktrees, rememberWorktree } from "./made";
 import { describeModel } from "./models";
@@ -108,6 +109,8 @@ async function runOne(
     onEvent?: (line: string) => void;
     /** Aborted when its owner stops the run (`wakectl stop`). */
     signal?: AbortSignal;
+    /** When a run in herdr stops on a question for its owner, and when it goes on. */
+    onWaiting?: (waiting: Waiting | null) => void;
   },
 ): Promise<Outcome> {
   // Stopped while it waited its turn on the branch: nothing starts.
@@ -183,6 +186,7 @@ async function runOne(
       trustFolder: o.config.trustCodexWorktrees,
       ...(o.onEvent ? { onEvent: o.onEvent } : {}),
       ...(o.signal ? { signal: o.signal } : {}),
+      ...(o.onWaiting ? { onWaiting: o.onWaiting } : {}),
     },
     { mode: o.config.run, ref: summons.target.ref, tool },
   );

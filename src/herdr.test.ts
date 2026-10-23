@@ -137,6 +137,11 @@ describe("a question before the agent is ready", () => {
           stderr: "",
         };
       }
+      if (cmd[2] === "read") {
+        return { code: 0, stdout: `${"─".repeat(9)}\n Trust this folder?\n › 1. Yes`, stderr: "" };
+      }
+      // The watch during the turn: no question comes.
+      if (cmd.includes("blocked")) return await new Promise(() => {});
       const out =
         cmd[1] === "workspace"
           ? { result: { workspaces: [{ workspace_id: "w2", label: "Wake" }] } }
@@ -146,15 +151,23 @@ describe("a question before the agent is ready", () => {
       return { code: 0, stdout: JSON.stringify(out), stderr: "" };
     };
     const said: string[] = [];
+    const heard: unknown[] = [];
     const result = await runInHerdr(
-      { ...base, tool: "codex", ref: "GAT-31", onEvent: (line) => said.push(line) },
+      {
+        ...base,
+        tool: "codex",
+        ref: "GAT-31",
+        onEvent: (line) => said.push(line),
+        onWaiting: (w) => heard.push(w),
+      },
       exec,
     );
     expect(result).toEqual({ ok: true });
     const order = calls.map((cmd) => `${cmd[1]} ${cmd[2]}`);
     expect(order.indexOf("agent wait")).toBeGreaterThan(order.indexOf("agent start"));
     expect(order.indexOf("agent prompt")).toBeGreaterThan(order.indexOf("agent wait"));
-    expect(said.some((line) => line.startsWith("waiting for you in herdr"))).toBe(true);
+    expect(said).toContain("waiting for you in herdr before it starts: Trust this folder?");
+    expect(heard).toEqual([{ since: expect.any(Number), what: "Trust this folder?" }, null]);
   });
 });
 

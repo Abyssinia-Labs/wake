@@ -82,13 +82,20 @@ export function statusLines({ config, state, paused, now }: StatusInput): string
     lines.push("", bold("Running now"));
     for (const run of runs) {
       lines.push(
-        `  ${mark.half()} ${pad(bold(run.ref), 10)}${pad(run.name ?? "", 16)}${pad(ago(run.startedAt, now), 10)}${dim(tildify(run.cwd))}`,
+        `  ${run.waiting ? mark.warn() : mark.half()} ${pad(bold(run.ref), 10)}${pad(run.name ?? "", 16)}${pad(ago(run.startedAt, now), 10)}${dim(tildify(run.cwd))}`,
       );
       lines.push(
         run.sessionId
           ? `    ${dim("resume:")} ${cyan(resumeLine(run.tool ?? "claude", run.sessionId))}`
           : `    ${dim("starting…")}`,
       );
+      // Only a run in herdr waits: it stopped on a question, asked in its tab.
+      if (run.waiting) {
+        const since = ago(run.waiting.since, now);
+        lines.push(
+          `    ${yellow(`waiting for you in herdr${since === "just now" ? "" : `, ${since}`}`)}${run.waiting.what ? `${dim(":")} ${run.waiting.what}` : ""}`,
+        );
+      }
     }
   }
 

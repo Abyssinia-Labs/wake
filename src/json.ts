@@ -5,6 +5,7 @@
 import type { Config, PermissionMode, RunMode } from "./config";
 import { AGENT_TOOLS, type Agent, type AgentTool, type Transport } from "./contract";
 import type { Check } from "./doctor";
+import type { Waiting } from "./herdr-waiting";
 import type { RunRecord } from "./history";
 import type { ToolModel } from "./models";
 import type { ListenerState } from "./state";
@@ -40,6 +41,8 @@ export type RunJson = {
   startedAt: number;
   /** The command that resumes it, once it has a session. */
   resume: string | null;
+  /** A run in herdr stopped on a question: since when, and the question as its tab shows it. */
+  waiting: Waiting | null;
 };
 
 export type StatusJson = {
@@ -108,6 +111,7 @@ export function statusJson(input: {
       cwd: run.cwd,
       startedAt: run.startedAt,
       resume: run.sessionId ? resumeLine(tool, run.sessionId) : null,
+      waiting: run.waiting ?? null,
     };
   });
   return {

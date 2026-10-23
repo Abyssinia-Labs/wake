@@ -5,6 +5,7 @@ import { describeEvent, resultOf } from "./claude-events";
 import type { PermissionMode } from "./config";
 import type { AgentTool } from "./contract";
 import { claudeSettings } from "./fence";
+import type { Waiting } from "./herdr-waiting";
 import { modelArgs, type ToolModel } from "./models";
 import { TOOL_NAMES } from "./tools";
 
@@ -39,6 +40,12 @@ export type ClaudeRun = {
   onSession?: (id: string) => void;
   /** Aborted when its owner stops the run (`wakectl stop`, stop.ts). */
   signal?: AbortSignal;
+  /**
+   * When the run stops on a question for its owner, and when it goes on. Only
+   * a run in herdr ever calls it: a headless one has nobody to ask, so what
+   * isn't allowed is denied rather than asked (herdr-waiting.ts).
+   */
+  onWaiting?: (waiting: Waiting | null) => void;
 };
 
 export type ClaudeResult = { ok: boolean; reason?: string };

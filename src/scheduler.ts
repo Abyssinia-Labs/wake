@@ -12,6 +12,8 @@ export type Place = {
   finish(outcome: Outcome): Promise<void>;
   /** `wake:started`; false when the app doesn't serve it, so the agent says it instead. */
   started(id: string, run: RunReport): Promise<boolean>;
+  /** `wake:waiting`, with no word of the question; false when the app doesn't serve it. */
+  waiting(id: string, waiting: boolean): Promise<boolean>;
 };
 
 export type Work = (place: Place, summons: Summons, run: Run) => Promise<Outcome>;

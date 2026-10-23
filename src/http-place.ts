@@ -1,8 +1,8 @@
 // A paired app on the HTTP transport (the spec's "The HTTP transport"): the
 // pending list as server-sent events, read for as long as the app keeps the
-// stream open and read again when it ends; claim, started and finish as
-// POSTs with the place key as a bearer token. A stream that keeps failing
-// (a proxy that buffers it) falls back to asking every thirty seconds.
+// stream open and read again when it ends; claim, started, waiting and
+// finish as POSTs with the place key as a bearer token. A stream that keeps
+// failing (a proxy that buffers it) falls back to asking every thirty seconds.
 import type { PairedApp } from "./config";
 import { asClaim, asSummonses, type Outcome, type RunReport } from "./contract";
 import { messageOf } from "./log";
@@ -90,6 +90,13 @@ export function connectHttpPlace(
     started: async (summons: string, run: RunReport) => {
       try {
         return (await post("started", { id: summons, run })).ok;
+      } catch {
+        return false;
+      }
+    },
+    waiting: async (summons: string, waiting: boolean) => {
+      try {
+        return (await post("waiting", { id: summons, waiting })).ok;
       } catch {
         return false;
       }

@@ -10,6 +10,12 @@ own: [the Convex component](packages/convex/CHANGELOG.md) and
 
 ### Added
 
+- **`wakectl status` shows a run in herdr waiting on you.** When a run stops on a question in its
+  tab, a tool asking permission or a folder to trust, `status` says so with the question as the
+  tab shows it, `status --json` gives the run's `waiting` (`since` and `what`), and the log says
+  it. It clears when the run goes on. The question stays on your machine: an app that supports
+  `wake:waiting` hears only that the run waits, and when it goes on.
+
 - **wakectl as a single file, no Bun needed.** Each release on GitHub now carries a binary for
   macOS (Apple silicon and Intel) and Linux (x64 and arm64), each with its SHA-256. `wakectl
   install` starts the listener from it, and `wakectl update` tells you when a newer one is out

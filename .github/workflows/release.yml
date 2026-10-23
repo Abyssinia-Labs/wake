@@ -93,3 +93,49 @@ jobs:
         run: |
           bun scripts/changelog.ts release "$GITHUB_REF_NAME" > notes.md
           gh release create "$GITHUB_REF_NAME" --verify-tag --title "wakectl ${GITHUB_REF_NAME#v}" --notes-file notes.md
+
+  # wakectl as one file, for someone who'd rather not install Bun and for an
+  # app that carries it, each beside its SHA-256. The Mac builds are made on
+  # a Mac, so they have the linker's ad hoc signature: Apple silicon starts
+  # nothing unsigned. Bun appends the bundle after the linker has signed, so
+  # `codesign --verify` calls the signature modified though the binary runs;
+  # an app that carries one signs it again as its own. The Intel build is
+  # the baseline one, which needs no AVX (Rosetta has none).
+  binaries:
+    needs: github-release
+    strategy:
+      matrix:
+        include:
+          - { os: macos-latest, target: bun-darwin-arm64, file: wakectl-darwin-arm64, runs: true }
+          - { os: macos-latest, target: bun-darwin-x64-baseline, file: wakectl-darwin-x64, runs: false }
+          - { os: ubuntu-latest, target: bun-linux-x64, file: wakectl-linux-x64, runs: true }
+          - { os: ubuntu-latest, target: bun-linux-arm64, file: wakectl-linux-arm64, runs: false }
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version: 1.3.3
+      - run: bun install --frozen-lockfile --ignore-scripts
+      - name: Build ${{ matrix.file }}
+        env:
+          TARGET: ${{ matrix.target }}
+          FILE: ${{ matrix.file }}
+        run: bun build --compile --minify --target="$TARGET" src/cli.ts --outfile "$FILE"
+      - name: It says the tag's version, where this runner can run it
+        if: matrix.runs
+        env:
+          FILE: ${{ matrix.file }}
+        run: test "v$(./"$FILE" --version)" = "$GITHUB_REF_NAME"
+      - name: Attach it and its checksum to the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          FILE: ${{ matrix.file }}
+        run: |
+          shasum -a 256 "$FILE" > "$FILE.sha256"
+          gh release upload "$GITHUB_REF_NAME" "$FILE" "$FILE.sha256"

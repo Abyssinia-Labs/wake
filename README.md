@@ -38,6 +38,12 @@ bun add -g @abyssinia-labs/wake
 wakectl setup
 ```
 
+Or without Bun: each release on GitHub has `wakectl` as a single file for
+macOS and Linux (`wakectl-darwin-arm64`, `-darwin-x64`, `-linux-x64`,
+`-linux-arm64`), each beside its SHA-256. Put it on your PATH as `wakectl`;
+`wakectl install` starts the listener from that file, and `wakectl update`
+says when a newer one is out, since whatever put it there updates it.
+
 `wake` is the same command, shorter to type (`wake status`, `wake logs -f`).
 `wakectl update` installs the newest version from npm, restarts the
 listener onto it, and lists what changed since yours. Every release's notes

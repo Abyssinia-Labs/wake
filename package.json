@@ -46,6 +46,7 @@
   ],
   "scripts": {
     "wakectl": "bun src/cli.ts",
+    "build": "bun build --compile --minify src/cli.ts --outfile dist/wakectl",
     "test": "bun test",
     "typecheck": "tsc",
     "lint": "biome check .",

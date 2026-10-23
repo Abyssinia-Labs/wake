@@ -9,6 +9,12 @@ test("a global Bun install is told from a checkout", () => {
   expect(installKindOf(undefined)).toBe("source");
 });
 
+test("a single binary is told apart by its embedded script", () => {
+  // What `bun build --compile` reports as argv[1], whatever the binary is called.
+  expect(installKindOf("/$bunfs/root/wakectl")).toBe("binary");
+  expect(installKindOf("/$bunfs/root/wakectl-darwin-arm64")).toBe("binary");
+});
+
 test("versions compare part by part, not as text", () => {
   expect(isNewer("0.1.10", "0.1.9")).toBe(true);
   expect(isNewer("0.2.0", "0.1.9")).toBe(true);

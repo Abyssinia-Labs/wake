@@ -8,6 +8,13 @@ own: [the Convex component](packages/convex/CHANGELOG.md) and
 
 ## Unreleased
 
+### Added
+
+- **`--json` for scripts and apps that drive wakectl.** `wakectl status --json` prints the
+  listener, each pairing's connection, the runs with their resume commands, the approved
+  repositories and the settings as JSON; `repos`, `model`, `doctor` and `open` take it too. Only
+  the forms that change nothing do, and no key is ever in it.
+
 ## 0.4.1 — 2026-10-14
 
 ### Fixed

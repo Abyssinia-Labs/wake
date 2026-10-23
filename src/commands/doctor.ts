@@ -3,7 +3,7 @@
 import { existsSync } from "node:fs";
 import { loadConfig, paths } from "../config";
 import { daemonFor } from "../daemon";
-import { machineChecks, type Probe, realProbe, wakeChecks } from "../doctor";
+import { type Check, machineChecks, type Probe, realProbe, wakeChecks } from "../doctor";
 import { exec } from "../exec";
 import { say } from "../log";
 import { terminalIo } from "../prompt";
@@ -25,7 +25,8 @@ async function probe(): Promise<Probe> {
   });
 }
 
-export async function doctor(): Promise<void> {
+/** The machine's checks and Wake's, for `wakectl doctor` and its `--json`. */
+export async function doctorChecks(): Promise<{ machine: Check[]; wake: Check[] }> {
   const config = await loadConfig();
   const machine = await machineChecks(exec, await probe());
   // The MCP server each Cursor pairing's runs read the app through (WAK-14).
@@ -36,6 +37,11 @@ export async function doctor(): Promise<void> {
     ...wakeChecks(config, await probe()),
     ...(await cursorChecks([...new Set(cursorServers)])),
   ];
+  return { machine, wake };
+}
+
+export async function doctor(): Promise<void> {
+  const { machine, wake } = await doctorChecks();
   say(
     [bold("This machine"), ...checkLines(machine), "", bold("Wake"), ...checkLines(wake)].join(
       "\n",

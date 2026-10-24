@@ -3,14 +3,24 @@ title: Getting started
 description: Install Wake, pair your agent, approve a repository and start the listener, in about five minutes.
 ---
 
-Wake runs on macOS and Linux. You need [Bun](https://bun.sh) 1.3.3 or later, git, the
-GitHub CLI (`gh`, signed in) for pull requests, and at least one agent:
-[Claude Code](https://claude.com/claude-code) (`claude`), Codex (`codex`) or
+import { MacDownload } from "../../../components/site/mac-download";
+import { macBuild } from "../../../lib/mac";
+
+Wake runs on macOS and Linux. You need [Bun](https://bun.sh) 1.3.3 or later
+(not with Wake for Mac), git, the GitHub CLI (`gh`, signed in) for pull
+requests, and at least one agent: [Claude Code](https://claude.com/claude-code)
+(`claude`), Codex (`codex`) or
 Cursor's CLI (`cursor-agent`), connected to your app's MCP server. On
 Linux, also `bubblewrap` and `socat` (Claude Code's sandbox needs them) and
 a systemd user session; `wake doctor` checks each, with the fix.
 
 ## Install
+
+On a Mac:
+
+<MacDownload build={macBuild} className="mt-4" />
+
+On Linux, or in the terminal:
 
 ```bash
 bun add -g @abyssinia-labs/wake
@@ -19,6 +29,8 @@ bun add -g @abyssinia-labs/wake
 `wakectl` and `wake` are the same command; this site uses the shorter one.
 
 ## Set up
+
+Wake for Mac opens on these steps the first time it starts. In the terminal:
 
 ```bash
 wake setup
@@ -61,7 +73,7 @@ wake update
 ```
 
 installs the newest Wake from npm and restarts the listener onto it, once
-no run is going.
+no run is going. Wake for Mac updates itself instead, and the command with it.
 
 ## Before you rely on it
 

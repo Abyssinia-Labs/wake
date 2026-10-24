@@ -1,13 +1,15 @@
 ---
 // The landing hero: what's new and the badges, the headline in two inks, the tagline and its
 // three points, the actions as shadcn buttons, the install line in a
-// terminal frame, and the clock from the page's frontmatter (RingClock.astro
-// rings it).
+// terminal frame with Wake for Mac's download under it, and the clock from
+// the page's frontmatter (RingClock.astro rings it).
 import { Code } from "@astrojs/starlight/components";
 import { ArrowRight, Check } from "lucide-react";
 import { HeroBadges } from "@/components/site/hero-badges";
+import { MacDownload } from "@/components/site/mac-download";
 import { buttonVariants } from "@/components/ui/button";
 import { latest, wakeLog } from "@/lib/changelog";
+import { macBuild } from "@/lib/mac";
 import { cn } from "@/lib/utils";
 
 // Starlight's PAGE_TITLE_ID: the skip link's target.
@@ -65,6 +67,9 @@ const variants: Record<string, Variant> = {
               href={link}
               class={cn(
                 buttonVariants({ variant: variants[variant] ?? "outline", size: "lg" }),
+                // Starlight runs without preflight, so a link keeps the browser's
+                // blue unless a class gives it ink; only the primary one has its own.
+                variant !== "primary" && "text-foreground",
                 "no-underline",
               )}
             >
@@ -78,6 +83,7 @@ const variants: Record<string, Variant> = {
     <div class="max-w-[36rem]">
       <Code code={install} lang="bash" frame="terminal" title="Terminal" />
     </div>
+    <MacDownload build={macBuild} className="max-w-[36rem]" />
   </div>
   {art && <div class="mx-auto w-full max-w-[25rem] lg:justify-self-end" set:html={art} />}
 </div>

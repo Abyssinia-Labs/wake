@@ -8,6 +8,8 @@ own: [the Convex component](packages/convex/CHANGELOG.md) and
 
 ## Unreleased
 
+## 0.5.0 — 2026-10-23
+
 ### Added
 
 - **`wakectl limits` sets runs at once and when a run is stopped.** `wakectl limits runs 1` lets

@@ -8,6 +8,12 @@ own: [the Convex component](packages/convex/CHANGELOG.md) and
 
 ## Unreleased
 
+### Added
+
+- **Wake for Mac, a download on wakectl.dev.** The menu bar app over the same Wake: it carries
+  `wakectl` and runs the listener, so a Mac needs no Bun. It needs macOS 26, and updates itself,
+  so the command updates with it. On Linux and in the terminal, install with Bun as before.
+
 ## 0.5.0 — 2026-10-23
 
 ### Added

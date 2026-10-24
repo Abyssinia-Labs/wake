@@ -1,6 +1,6 @@
 /*
- * Tailwind v4 and shadcn's tokens, mapped onto the risograph inks that
- * riso.css defines. The layer order is Starlight's recipe: its own styles
+ * Tailwind v4 and shadcn's tokens, mapped onto the theme tokens that
+ * themes.css defines. The layer order is Starlight's recipe: its own styles
  * sit between Tailwind's base and its utilities, so a utility class on an
  * element always wins over Starlight's defaults. The `dark` variant comes
  * from the Starlight bridge (it follows `[data-theme=dark]`).
@@ -11,51 +11,48 @@
 @import "tailwindcss/theme.css" layer(theme);
 @import "tailwindcss/utilities.css" layer(utilities);
 
-@theme {
-  --font-sans: "Work Sans", system-ui, sans-serif;
-  --font-mono: "Space Mono", ui-monospace, monospace;
-  --font-display: "Syne", "Work Sans", system-ui, sans-serif;
-}
-
-/* shadcn's names for the print's colours; each resolves per theme in riso.css. */
+/* shadcn's names for the theme's colours; each resolves per theme in themes.css,
+   as does --radius. */
 :root {
-  --radius: 0.5rem;
-  --background: var(--riso-paper);
-  --foreground: var(--riso-ink);
-  --card: var(--riso-card);
-  --card-foreground: var(--riso-ink);
-  --popover: var(--riso-card);
-  --popover-foreground: var(--riso-ink);
-  --primary: var(--riso-ink);
-  --primary-foreground: var(--riso-paper);
-  --secondary: var(--riso-card);
-  --secondary-foreground: var(--riso-ink);
-  --muted: var(--riso-wash);
+  --background: var(--wk-paper);
+  --foreground: var(--wk-ink);
+  --card: var(--wk-card);
+  --card-foreground: var(--wk-ink);
+  --popover: var(--wk-card);
+  --popover-foreground: var(--wk-ink);
+  --primary: var(--wk-primary);
+  --primary-foreground: var(--wk-on-primary);
+  --secondary: var(--wk-card);
+  --secondary-foreground: var(--wk-ink);
+  --muted: var(--wk-wash);
   --muted-foreground: var(--sl-color-gray-3);
-  --accent: var(--riso-hover);
-  --accent-foreground: var(--riso-ink);
-  --destructive: var(--riso-b);
+  --accent: var(--wk-hover);
+  --accent-foreground: var(--wk-ink);
+  --destructive: var(--wk-b);
   --border: var(--sl-color-gray-5);
   --input: var(--sl-color-gray-5);
-  --ring: var(--riso-a);
-  --ink-a: var(--riso-a);
-  --ink-b: var(--riso-b);
-  --ink-a-soft: var(--riso-a-soft);
-  --on-ink-a: var(--riso-on-a);
-  --link: var(--riso-link);
-  --code: var(--riso-code);
+  --ring: var(--wk-a);
+  --ink-a: var(--wk-a);
+  --ink-b: var(--wk-b);
+  --ink-a-soft: var(--wk-a-soft);
+  --on-ink-a: var(--wk-on-a);
+  --link: var(--wk-link);
+  --code: var(--wk-code);
   /* shadcn's Sidebar reads its own slots; the docs sidebar wears the page's. */
-  --sidebar: var(--riso-paper);
-  --sidebar-foreground: var(--riso-ink);
-  --sidebar-primary: var(--riso-ink);
-  --sidebar-primary-foreground: var(--riso-paper);
-  --sidebar-accent: var(--riso-hover);
-  --sidebar-accent-foreground: var(--riso-ink);
+  --sidebar: var(--wk-paper);
+  --sidebar-foreground: var(--wk-ink);
+  --sidebar-primary: var(--wk-ink);
+  --sidebar-primary-foreground: var(--wk-paper);
+  --sidebar-accent: var(--wk-hover);
+  --sidebar-accent-foreground: var(--wk-ink);
   --sidebar-border: var(--sl-color-gray-5);
-  --sidebar-ring: var(--riso-a);
+  --sidebar-ring: var(--wk-a);
 }
 
 @theme inline {
+  --font-sans: var(--sl-font);
+  --font-mono: var(--sl-font-mono);
+  --font-display: var(--wk-font-display);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -95,7 +92,7 @@
 }
 
 @layer base {
-  /* A bare `border` utility draws in the print's rule colour, as shadcn expects. */
+  /* A bare `border` utility draws in the theme's rule colour, as shadcn expects. */
   *,
   ::before,
   ::after {

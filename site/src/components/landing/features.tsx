@@ -70,7 +70,6 @@ export function Features(): React.JSX.Element {
   return (
     <section className="not-content flex flex-col gap-10 border-t py-20">
       <SectionHeader
-        eyebrow="What you get"
         title="Your agent, out of bed and in the right place."
         lead="Wake is a listener on your machine. It knows the app only through wake/v1, keeps your repositories to itself, and leaves a run you can step back into."
       />

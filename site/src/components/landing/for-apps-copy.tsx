@@ -14,7 +14,7 @@ const covered = [
 export function ForAppsCopy(): React.JSX.Element {
   return (
     <div className="flex flex-col gap-5">
-      <SectionHeader eyebrow="For apps" title="Serve wake/v1, and any Wake can pair with you." />
+      <SectionHeader title="Serve wake/v1, and any Wake can pair with you." />
       <p className="m-0 leading-relaxed text-muted-foreground">
         Wake works with any app that serves <TextLink href="/spec/wake-v1/">wake/v1</TextLink>, an
         open protocol. The server half ships twice: a Convex component, and an HTTP package for any

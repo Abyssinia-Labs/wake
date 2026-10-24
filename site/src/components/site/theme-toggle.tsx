@@ -20,7 +20,7 @@ const apply = (theme: Theme): void => {
   document.documentElement.dataset.theme = theme === "auto" ? system() : theme;
 };
 
-/** The theme picker: shadcn's mode toggle, a ghost icon button opening a dropdown menu. */
+/** Light or dark: shadcn's mode toggle, a ghost icon button opening a dropdown menu. */
 export function ThemeToggle(): React.JSX.Element {
   const [theme, setTheme] = useState<Theme>("auto");
 
@@ -44,7 +44,12 @@ export function ThemeToggle(): React.JSX.Element {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon-sm" aria-label="Theme" className="text-muted-foreground">
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          aria-label="Light or dark"
+          className="text-muted-foreground"
+        >
           <Sun className="dark:hidden" />
           <Moon className="hidden dark:block" />
         </Button>

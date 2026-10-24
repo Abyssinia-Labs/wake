@@ -1,7 +1,7 @@
 /*
  * Content: Starlight's markdown restyled to shadcn's measures. Tables and
  * asides take shadcn's recipes in src/rehype/shadcn.ts; code blocks keep
- * Expressive Code's frames, in the print's rule colour, with the copy
+ * Expressive Code's frames, in the theme's rule colour, with the copy
  * button from src/ec/copy-button.ts. The page's meta line sits on a rule.
  */
 
@@ -62,7 +62,7 @@ html[data-has-hero][data-theme] {
     border-radius: 0.25rem;
   }
 
-  /* Code blocks: the print's rule, no window shadow, the second ink for the dots. */
+  /* Code blocks: the theme's rule, no window shadow, the second ink for the dots. */
   .expressive-code {
     --ec-brdRad: 0.5rem;
     --ec-brdCol: var(--border);

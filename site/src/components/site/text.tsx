@@ -25,21 +25,18 @@ export function TextLink({
   );
 }
 
-/** A section's eyebrow in the first ink, its title in Syne, an optional lead. */
+/** A section's title in the theme's display face and an optional lead. No eyebrow over it: they crowd the page. */
 export function SectionHeader({
-  eyebrow,
   title,
   lead,
   className,
 }: {
-  eyebrow: string;
   title: string;
   lead?: string;
   className?: string;
 }): React.JSX.Element {
   return (
     <div className={cn("flex max-w-[42rem] flex-col gap-3", className)}>
-      <span className="font-mono text-xs tracking-[0.08em] text-ink-a uppercase">{eyebrow}</span>
       <h2 className="m-0 font-display text-[2.375rem] leading-[1.1] font-bold tracking-[-0.02em] text-foreground">
         {title}
       </h2>

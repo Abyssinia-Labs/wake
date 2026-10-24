@@ -2,10 +2,11 @@
 import SocialIcons from "@astrojs/starlight/components/SocialIcons.astro";
 import { Mark } from "@/components/site/mark";
 import { ThemeToggle } from "@/components/site/theme-toggle";
+import { WakeThemePicker } from "@/components/site/wake-theme-picker";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-// The site header: brand, the five site links, Starlight's search and theme
-// picker, GitHub, and a Get started button. Starlight's own pieces keep
+// The site header: brand, the five site links, Starlight's search, GitHub,
+// light or dark, Wake's theme beside it, and a Get started button. Starlight's own pieces keep
 // their scripts; chrome.css dresses them.
 import Search from "./Search.astro";
 
@@ -25,7 +26,7 @@ const isCurrent = (under: string[]): boolean => under.some((prefix) => path.star
 
 <div class="site-header">
   <a href={siteTitleHref} class="brand">
-    <Mark className="size-7" />
+    <Mark className="size-8" />
     <span>wakectl</span>
   </a>
   <nav aria-label="Site" class="site-nav">
@@ -47,6 +48,7 @@ const isCurrent = (under: string[]): boolean => under.some((prefix) => path.star
   <div class="right print:hidden">
     <SocialIcons />
     <ThemeToggle client:load />
+    <WakeThemePicker client:load />
     <a href="/start/getting-started/" class={cn(buttonVariants({ size: "sm" }), "no-underline")}>Get started</a>
   </div>
 </div>

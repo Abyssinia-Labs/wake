@@ -1,0 +1,204 @@
+/*
+ * wakectl.dev in Wake's three themes: the Annunciator, Burrow and Signal
+ * that Wake for Mac and Wake on the web wear, from the same tokens (the
+ * apps' brief, "The look"). A theme changes how the site looks, never what
+ * it says. Burrow is the default, the owner's call of 2026-10-22. The theme
+ * picker (wake-theme-picker.tsx) sets `data-wake-theme` on <html>, beside
+ * Starlight's own `data-theme`, which stays light or dark. Each theme names
+ * its paper, inks and faces here; Starlight's slots below and shadcn's
+ * tokens (global.css) are mapped from them, and looks.css draws what each
+ * theme adds. The tokens stay outside any cascade layer so they beat the
+ * Tailwind bridge's defaults.
+ */
+
+/* The faces, bundled (all OFL), as Wake on the web bundles them: the site
+   loads nothing from a third party. A browser fetches only those in use. */
+@import "@fontsource/b612/400.css";
+@import "@fontsource/b612/700.css";
+@import "@fontsource/b612-mono/400.css";
+@import "@fontsource/b612-mono/700.css";
+@import "@fontsource/pixelify-sans/600.css";
+@import "@fontsource/vt323/400.css";
+@import "@fontsource/silkscreen/400.css";
+@import "@fontsource-variable/archivo/wdth.css";
+
+/* Burrow, the default: every run is a creature on a small monochrome
+   screen in an orange case, and the case is the one colour. Dark is the
+   backlit screen, light the daylight one. */
+:root {
+  --wk-paper: #0f241c;
+  --wk-card: #0f241c;
+  --wk-wash: #173528;
+  --wk-hover: rgb(159 232 200 / 0.1);
+  --wk-code: #0b1c16;
+  --wk-ink: #9fe8c8;
+  --wk-ink2: #5fa88a;
+  --wk-rule: #5fa88a;
+  --wk-a: #9fe8c8;
+  --wk-a-soft: #1d4434;
+  --wk-on-a: #0f241c;
+  --wk-b: #5fa88a;
+  --wk-link: #9fe8c8;
+  --wk-ghost: rgb(159 232 200 / 0.14);
+  --wk-grid: rgb(159 232 200 / 0.035);
+  --wk-case: #f47a3e;
+  --wk-case-hi: #ff9b63;
+  --wk-case-lo: #d9612a;
+  --wk-case-text: #1f2a1a;
+  --wk-rubber: #2b2f2a;
+  --wk-rubber-text: #e3e9d0;
+  --wk-primary: var(--wk-case);
+  --wk-on-primary: var(--wk-case-text);
+
+  --wk-font-display: "Pixelify Sans", "VT323", monospace;
+  --wk-font-label: "Silkscreen", "VT323", monospace;
+  --sl-font: "VT323", ui-monospace, monospace;
+  --sl-font-mono: "VT323", ui-monospace, monospace;
+  --radius: 0;
+}
+
+:root[data-theme="light"] {
+  --wk-paper: #c8d0b0;
+  --wk-card: #c8d0b0;
+  --wk-wash: #bcc4a3;
+  --wk-hover: rgb(31 42 26 / 0.08);
+  --wk-code: #d2d9bd;
+  --wk-ink: #1f2a1a;
+  --wk-ink2: #4a5640;
+  --wk-rule: #4a5640;
+  --wk-a: #1f2a1a;
+  --wk-a-soft: #b0b994;
+  --wk-on-a: #c8d0b0;
+  --wk-b: #4a5640;
+  --wk-link: #1f2a1a;
+  --wk-ghost: rgb(31 42 26 / 0.14);
+  --wk-grid: rgb(31 42 26 / 0.045);
+}
+
+/* Annunciator: a flight deck's caution panel. Green is normal, amber needs
+   you, white is information; the site has nothing that needs you, so its
+   amber stays dark. B612 and B612 Mono. */
+:root[data-wake-theme="annunciator"] {
+  --wk-paper: #1e2225;
+  --wk-panel-top: #24292c;
+  --wk-card: #171a1d;
+  --wk-wash: #24292c;
+  --wk-hover: rgb(255 255 255 / 0.05);
+  --wk-code: #121517;
+  --wk-ink: #e8ecee;
+  --wk-ink2: #aab3b9;
+  --wk-rule: #363c41;
+  --wk-a: #74ffb9;
+  --wk-a-soft: #133b2b;
+  --wk-on-a: #0d1c16;
+  --wk-b: #39d98a;
+  --wk-link: #74ffb9;
+  --wk-edge: #0a0c0d;
+  --wk-key-top: #3b4247;
+  --wk-key-bottom: #2a3034;
+  --wk-primary: #2f363a;
+  --wk-on-primary: #74ffb9;
+
+  --wk-font-display: "B612", "Helvetica Neue", Arial, sans-serif;
+  --wk-font-label: "B612", "Helvetica Neue", Arial, sans-serif;
+  --sl-font: "B612", "Helvetica Neue", Arial, sans-serif;
+  --sl-font-mono: "B612 Mono", ui-monospace, Menlo, monospace;
+  --radius: 7px;
+}
+
+:root[data-wake-theme="annunciator"][data-theme="light"] {
+  --wk-paper: #dcddd8;
+  --wk-panel-top: #e6e7e2;
+  --wk-card: #e7e7e4;
+  --wk-wash: #d2d3cd;
+  --wk-hover: rgb(0 0 0 / 0.05);
+  --wk-code: #e9eae6;
+  --wk-ink: #1a1d20;
+  --wk-ink2: #4a5158;
+  --wk-rule: #b6b9b3;
+  --wk-a: #0e6a3e;
+  --wk-a-soft: #cfe9da;
+  --wk-on-a: #ffffff;
+  --wk-b: #1d9a5c;
+  --wk-link: #0e6a3e;
+  --wk-edge: #9ea3a6;
+  --wk-key-top: #f4f5f1;
+  --wk-key-bottom: #cfd1cb;
+  --wk-primary: #e6e7e2;
+  --wk-on-primary: #0e6a3e;
+}
+
+/* Signal: a shape alphabet in poster colours, no metaphor, no ornament.
+   Cobalt is a run; vermilion is for asks alone, so the site leaves it to
+   the art. Archivo on its width axis. */
+:root[data-wake-theme="signal"] {
+  --wk-paper: #111110;
+  --wk-card: color-mix(in srgb, #f4f4f0 5%, #111110);
+  --wk-wash: color-mix(in srgb, #f4f4f0 8%, #111110);
+  --wk-hover: rgb(244 244 240 / 0.06);
+  --wk-code: color-mix(in srgb, #f4f4f0 5%, #111110);
+  --wk-ink: #f4f4f0;
+  --wk-ink2: #a8a8a0;
+  --wk-rule: color-mix(in srgb, #f4f4f0 18%, #111110);
+  --wk-a: #5c73ff;
+  --wk-a-soft: #1f2547;
+  --wk-on-a: #ffffff;
+  --wk-b: #f4f4f0;
+  --wk-link: #f4f4f0;
+  --wk-run: #5c73ff;
+  --wk-ask: #ff3b1f;
+  --wk-wait: #ffd400;
+  --wk-primary: #f4f4f0;
+  --wk-on-primary: #111110;
+
+  --wk-font-display: "Archivo Variable", "Helvetica Neue", Arial, sans-serif;
+  --wk-font-label: "Archivo Variable", "Helvetica Neue", Arial, sans-serif;
+  --sl-font: "Archivo Variable", "Helvetica Neue", Arial, sans-serif;
+  --sl-font-mono: ui-monospace, "SF Mono", Menlo, monospace;
+  --radius: 0;
+}
+
+:root[data-wake-theme="signal"][data-theme="light"] {
+  --wk-paper: #f4f4f0;
+  --wk-card: color-mix(in srgb, #0d0d0d 5%, #f4f4f0);
+  --wk-wash: color-mix(in srgb, #0d0d0d 7%, #f4f4f0);
+  --wk-hover: rgb(13 13 13 / 0.05);
+  --wk-code: color-mix(in srgb, #0d0d0d 4%, #f4f4f0);
+  --wk-ink: #0d0d0d;
+  --wk-ink2: #55554f;
+  --wk-rule: color-mix(in srgb, #0d0d0d 16%, #f4f4f0);
+  --wk-a: #1f3bff;
+  --wk-a-soft: #dde2ff;
+  --wk-on-a: #ffffff;
+  --wk-b: #0d0d0d;
+  --wk-link: #0d0d0d;
+  --wk-run: #1f3bff;
+  --wk-primary: #0d0d0d;
+  --wk-on-primary: #f4f4f0;
+}
+
+/* Starlight's slots, from whichever theme is on: its greys run from the
+   ink to the paper, as each theme's own rules and washes do. */
+:root {
+  --sl-color-white: var(--wk-ink);
+  --sl-color-gray-1: color-mix(in srgb, var(--wk-ink) 85%, var(--wk-ink2));
+  --sl-color-gray-2: color-mix(in srgb, var(--wk-ink) 50%, var(--wk-ink2));
+  --sl-color-gray-3: var(--wk-ink2);
+  --sl-color-gray-4: color-mix(in srgb, var(--wk-ink2) 60%, var(--wk-paper));
+  --sl-color-gray-5: var(--wk-rule);
+  --sl-color-gray-6: var(--wk-wash);
+  --sl-color-gray-7: var(--wk-card);
+  --sl-color-black: var(--wk-paper);
+
+  --sl-color-accent-low: var(--wk-a-soft);
+  --sl-color-accent: var(--wk-a);
+  --sl-color-accent-high: var(--wk-a);
+
+  --sl-color-text-accent: var(--wk-link);
+  --sl-color-bg-nav: var(--wk-paper);
+  --sl-color-bg-sidebar: var(--wk-paper);
+  --sl-color-bg-inline-code: var(--wk-wash);
+  --sl-color-hairline: var(--wk-rule);
+  --sl-color-hairline-light: var(--wk-rule);
+  --sl-color-hairline-shade: var(--wk-rule);
+}

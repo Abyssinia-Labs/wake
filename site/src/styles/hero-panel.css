@@ -1,0 +1,144 @@
+/*
+ * Annunciator's panel for the landing hero (hero-art.tsx): its lamps and
+ * pips from Wake on the web's annunciator-lamps.css. The housing and the
+ * glass are the same in day and night, as a flight deck's are.
+ */
+@layer components {
+  .an-housing {
+    padding: 1.1rem;
+    border-radius: 1.5rem;
+    background: linear-gradient(180deg, #2f363a, #1e2225);
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.08),
+      0 0 0 1px #0a0c0d,
+      0 14px 30px rgb(0 0 0 / 0.25);
+    font-family: "B612", sans-serif;
+    color: #e8ecee;
+  }
+  .an-plate {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.1rem 0.35rem 0.8rem;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: #aab3b9;
+  }
+  .an-grid,
+  .an-runs {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .an-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.5rem;
+  }
+  .an-grid li,
+  .an-runs li {
+    margin: 0;
+  }
+  .an-lamp {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    min-height: 4.5rem;
+    padding: 6px;
+    border-radius: 5px;
+    text-align: center;
+    font-size: 0.66rem;
+    font-weight: 700;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    line-height: 1.15;
+    color: #8a939a;
+    background: #121517;
+    box-shadow:
+      inset 0 0 0 1px #2a3034,
+      inset 0 2px 7px rgb(0 0 0 / 0.65);
+  }
+  .an-lamp-n {
+    font-family: "B612 Mono", monospace;
+    font-size: 1.4rem;
+    letter-spacing: 0;
+  }
+  .an-lamp[data-lit="g"] {
+    color: #74ffb9;
+    background: radial-gradient(ellipse at 50% 50%, #133b2b, #0d1c16 85%);
+    box-shadow:
+      inset 0 0 0 1px #2c6b4d,
+      inset 0 0 16px rgb(57 217 138 / 0.3),
+      0 0 14px rgb(57 217 138 / 0.16);
+    text-shadow: 0 0 7px rgb(57 217 138 / 0.45);
+  }
+  .an-lamp[data-lit="a"] {
+    color: #1b1400;
+    background: radial-gradient(ellipse at 50% 42%, #ffd67a, #ffb020 68%, #e3950c);
+    box-shadow:
+      inset 0 0 0 1px #ffd06a,
+      0 0 20px rgb(255 176 32 / 0.5);
+  }
+  .an-lamp[data-lit="w"] {
+    color: #f6f8f9;
+    background: radial-gradient(ellipse at 50% 50%, #30373b, #1a1e21 85%);
+    box-shadow:
+      inset 0 0 0 1px #4b545a,
+      inset 0 0 12px rgb(255 255 255 / 0.08);
+  }
+  .an-runs {
+    display: flex;
+    flex-direction: column;
+    margin-top: 0.9rem;
+    border-radius: 7px;
+    background: #171a1d;
+    box-shadow: inset 0 0 0 1px #2a3034;
+  }
+  .an-runs li {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.55rem 0.75rem;
+    font-size: 0.8rem;
+  }
+  .an-runs li + li {
+    border-top: 1px dashed #363c41;
+  }
+  .an-runs b {
+    flex: 1 1 auto;
+    font-family: "B612 Mono", monospace;
+  }
+  .an-runs li > span:last-child {
+    font-size: 0.66rem;
+    font-weight: 700;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: #aab3b9;
+  }
+  .an-pip {
+    width: 14px;
+    height: 14px;
+    border-radius: 3px;
+    background: #121517;
+    box-shadow: inset 0 0 0 1px #3a4146;
+  }
+  .an-pip[data-lit="g"] {
+    background: radial-gradient(circle at 50% 42%, #b4ffda, #39d98a 58%, #1d9a5c);
+    box-shadow:
+      inset 0 0 0 1px #2c6b4d,
+      0 0 9px rgb(57 217 138 / 0.45);
+  }
+  .an-pip[data-lit="a"] {
+    background: radial-gradient(circle at 50% 42%, #ffe7ad, #ffb020 60%, #d98c00);
+    box-shadow:
+      inset 0 0 0 1px #ffd06a,
+      0 0 11px rgb(255 176 32 / 0.5);
+  }
+  .an-pip[data-lit="w"] {
+    background: radial-gradient(circle at 50% 42%, #ffffff, #c4ccd1 75%);
+    box-shadow: 0 0 7px rgb(255 255 255 / 0.28);
+  }
+}

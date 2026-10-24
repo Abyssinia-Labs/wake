@@ -1,0 +1,225 @@
+/*
+ * The landing hero's art (hero-art.tsx), one picture per theme, from the
+ * apps' own pieces: Burrow's case, screen and creatures, Signal's shapes,
+ * and Annunciator's panel in hero-panel.css. The case keeps its orange in
+ * light and dark, as the apps' does; Burrow's screen lights up in the dark,
+ * and Signal prints on the page's own paper.
+ */
+@layer components {
+  /* Burrow. */
+  .bw-case {
+    padding: 1.75rem 1.75rem 1.25rem;
+    border-radius: 2.5rem;
+    background: linear-gradient(180deg, #ff9b63, #f47a3e 30%, #d9612a);
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.4),
+      0 14px 30px rgb(0 0 0 / 0.25);
+    text-shadow: none;
+  }
+  .bw-screen {
+    --bw-screen: #c8d0b0;
+    --bw-ink: #1f2a1a;
+    --bw-ghost: rgb(31 42 26 / 0.14);
+    --bw-grid: rgb(31 42 26 / 0.045);
+    padding: 1rem 1.1rem 1.25rem;
+    border-radius: 0.9rem;
+    color: var(--bw-ink);
+    background-color: var(--bw-screen);
+    background-image:
+      linear-gradient(var(--bw-grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--bw-grid) 1px, transparent 1px);
+    background-size: 3px 3px;
+    box-shadow: inset 0 0 0 2px rgb(31 42 26 / 0.35);
+    font-family: "VT323", monospace;
+    text-shadow: 1px 1px 0 var(--bw-ghost);
+    -webkit-font-smoothing: none;
+  }
+  :root[data-theme="dark"] .bw-screen {
+    --bw-screen: #0f241c;
+    --bw-ink: #9fe8c8;
+    --bw-ghost: rgb(159 232 200 / 0.14);
+    --bw-grid: rgb(159 232 200 / 0.035);
+  }
+  .bw-head {
+    display: flex;
+    justify-content: space-between;
+    padding-bottom: 0.4rem;
+    margin-bottom: 0.75rem;
+    border-bottom: 2px dashed var(--bw-ink);
+    font-family: "Silkscreen", monospace;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+  }
+  .bw-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .bw-rows li {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    margin: 0;
+    padding: 0.25rem 0.4rem;
+  }
+  .bw-rows b {
+    display: block;
+    font-family: "Pixelify Sans", monospace;
+    font-weight: 600;
+    font-size: 1.15rem;
+    line-height: 1.1;
+  }
+  .bw-rows small {
+    display: block;
+    font-size: 1.2rem;
+    line-height: 1.1;
+  }
+  /* Needs you: inverse video, and nothing else uses it. */
+  .bw-rows .bw-needs {
+    color: var(--bw-screen);
+    background: var(--bw-ink);
+    text-shadow: none;
+  }
+  .bw-egg {
+    position: relative;
+    display: inline-block;
+    line-height: 0;
+  }
+  .bw-bubble {
+    position: absolute;
+    top: -10px;
+    right: -10px;
+  }
+  .bw-foot {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding-top: 1.1rem;
+  }
+  .bw-grille {
+    flex: 1 1 auto;
+    height: 0.6rem;
+    background:
+      radial-gradient(circle, rgb(31 42 26 / 0.45) 0 2.5px, transparent 3px) 0 50% / 0.9rem 100%
+      repeat-x;
+  }
+  .bw-key {
+    padding: 0.45rem 0.8rem;
+    border-radius: 999px;
+    color: #e3e9d0;
+    background: #2b2f2a;
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.12),
+      0 2px 0 rgb(0 0 0 / 0.3);
+    font-family: "Silkscreen", monospace;
+    font-size: 0.65rem;
+    text-transform: uppercase;
+  }
+
+  /* Signal: the shapes print on the page's own paper. */
+  .sg-poster {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    border: 2px solid var(--wk-ink);
+    font-family: "Archivo Variable", sans-serif;
+  }
+  .sg-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    padding: 1.25rem;
+  }
+  .sg-cell + .sg-cell {
+    border-left: 2px solid var(--wk-ink);
+  }
+  .sg-cell svg {
+    display: block;
+    width: 100%;
+    max-width: 4.5rem;
+    height: auto;
+  }
+  .sg-label {
+    font-stretch: 125%;
+    font-weight: 700;
+    font-size: 0.72rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--wk-ink2);
+  }
+  .sg-name {
+    font-stretch: 62%;
+    font-weight: 800;
+    font-size: 2.25rem;
+    line-height: 1;
+    color: var(--wk-ink);
+  }
+  /* The run, across the top: its circle, and its state and name beside it. */
+  .sg-big {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: 9rem minmax(0, 1fr);
+    grid-template-rows: 1fr auto auto;
+    column-gap: 1.25rem;
+    border-bottom: 2px solid var(--wk-ink);
+  }
+  .sg-cell.sg-big svg {
+    grid-row: 1 / -1;
+    max-width: none;
+  }
+  .sg-big .sg-label {
+    grid-row: 2;
+  }
+  .sg-big .sg-name {
+    grid-row: 3;
+  }
+  .sg-big + .sg-cell {
+    border-left: 0;
+  }
+  .sg-poster .run {
+    fill: var(--wk-run, #1f3bff);
+  }
+  .sg-poster .ask {
+    fill: #ff3b1f;
+  }
+  .sg-poster .ask-ink,
+  .sg-poster .ink {
+    fill: var(--wk-ink);
+  }
+
+  /* Burrow's creatures move in whole pixels; a lamp test lights the panel
+     once as the page opens. Neither moves for a reader who asks for less. */
+  @media (prefers-reduced-motion: no-preference) {
+    .bw-awake {
+      animation: bw-bob 0.9s steps(1) infinite;
+    }
+    .bw-blink {
+      animation: bw-blink 1.2s steps(1) infinite;
+    }
+    .an-grid .an-lamp:not([data-lit]) {
+      animation: an-test 1.4s steps(1) 0.4s 1;
+    }
+  }
+}
+
+@keyframes bw-bob {
+  50% {
+    transform: translateY(-3px);
+  }
+}
+@keyframes bw-blink {
+  50% {
+    opacity: 0.2;
+  }
+}
+@keyframes an-test {
+  0% {
+    color: #f6f8f9;
+    background: radial-gradient(ellipse at 50% 50%, #30373b, #1a1e21 85%);
+  }
+  100% {
+    color: #8a939a;
+  }
+}

@@ -1,13 +1,15 @@
 // wakectl.dev: what Wake is, how to use it, and how an app serves wake/v1.
 // Static, served by a Cloudflare Worker (wrangler.jsonc). The chrome is
 // shadcn/ui on Tailwind (React, rendered to HTML at build; the one island
-// is the server-half tabs on the landing page), in the inks of riso.css.
+// is the server-half tabs on the landing page), in Wake's three themes
+// (themes.css), Burrow unless a visitor picks another.
 
 import { satteri } from "@astrojs/markdown-satteri";
 import react from "@astrojs/react";
 import starlight from "@astrojs/starlight";
 import tailwindcss from "@tailwindcss/vite";
 import { defineConfig } from "astro/config";
+import { wakeThemeScript } from "./src/lib/wake-theme.ts";
 import { shadcnMarkdown } from "./src/markdown/shadcn.ts";
 
 export default defineConfig({
@@ -17,16 +19,15 @@ export default defineConfig({
       title: "wakectl",
       description:
         "Wake starts your coding agent (Claude Code, Codex, Cursor) on your Mac when someone hands it work in an app.",
-      logo: {
-        light: "./src/assets/mark-light.svg",
-        dark: "./src/assets/mark-dark.svg",
-        alt: "",
-      },
-      // Tailwind first (it declares the cascade layers), then the risograph
-      // inks, then Starlight's chrome and content restyled to shadcn's measures.
+      // Tailwind first (it declares the cascade layers), then the themes'
+      // tokens and what each draws, then Starlight's chrome and content
+      // restyled to shadcn's measures.
       customCss: [
         "./src/styles/global.css",
-        "./src/styles/riso.css",
+        "./src/styles/themes.css",
+        "./src/styles/looks.css",
+        "./src/styles/hero.css",
+        "./src/styles/hero-panel.css",
         "./src/styles/chrome.css",
         "./src/styles/content.css",
         "./src/styles/demo.css",
@@ -42,20 +43,9 @@ export default defineConfig({
         TableOfContents: "./src/components/starlight/TableOfContents.astro",
         MobileMenuFooter: "./src/components/starlight/MobileMenuFooter.astro",
       },
-      head: [
-        { tag: "link", attrs: { rel: "preconnect", href: "https://fonts.googleapis.com" } },
-        {
-          tag: "link",
-          attrs: { rel: "preconnect", href: "https://fonts.gstatic.com", crossorigin: true },
-        },
-        {
-          tag: "link",
-          attrs: {
-            rel: "stylesheet",
-            href: "https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Work+Sans:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap",
-          },
-        },
-      ],
+      // The chosen theme, set before the page paints so nothing flashes, as
+      // Starlight sets light or dark (wake-theme-picker.tsx keeps it).
+      head: [{ tag: "script", content: wakeThemeScript }],
       favicon: "/favicon.svg",
       social: [{ icon: "github", label: "GitHub", href: "https://github.com/Abyssinia-Labs/wake" }],
       editLink: { baseUrl: "https://github.com/Abyssinia-Labs/wake/edit/main/site/" },

@@ -1,0 +1,140 @@
+/*
+ * What each theme draws beyond its tokens (themes.css), after Wake on the
+ * web's theme files: Burrow's pixel grid and ghosted ink, Annunciator's
+ * panel and push-button keys, Signal's widths. `:root:not([data-wake-theme])`
+ * stands for Burrow before the head script has run, and with scripts off.
+ */
+@layer base {
+  h1,
+  h2,
+  h3 {
+    font-family: var(--wk-font-display);
+  }
+
+  /* The headline, as each theme prints its biggest words. */
+  .wake-headline {
+    margin: 0;
+    font-family: var(--wk-font-display);
+    font-size: clamp(3rem, 8vw, 5.5rem);
+    line-height: 0.95;
+    color: var(--wk-ink);
+  }
+
+  /* Burrow: the screen's fine pixel grid, ink that keeps its edges and casts
+     a one-pixel ghost. VT323 is small for its size, so its x-height is set
+     to a text face's; the pixel faces keep their own. */
+  :root:not([data-wake-theme]) body,
+  :root[data-wake-theme="burrow"] body {
+    background-image:
+      linear-gradient(var(--wk-grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--wk-grid) 1px, transparent 1px);
+    background-size: 3px 3px;
+    text-shadow: 1px 1px 0 var(--wk-ghost);
+    font-size-adjust: ex-height 0.5;
+    -webkit-font-smoothing: none;
+  }
+  :root:not([data-wake-theme]) :is(h1, h2, h3, .brand, .wake-headline, .font-display),
+  :root[data-wake-theme="burrow"] :is(h1, h2, h3, .brand, .wake-headline, .font-display) {
+    font-size-adjust: none;
+    /* Pixelify Sans comes in one weight here; a heavier ask keeps it, unsmeared. */
+    font-synthesis-weight: none;
+    font-weight: 600;
+    letter-spacing: 0;
+  }
+  :root:not([data-wake-theme]) .wake-headline,
+  :root[data-wake-theme="burrow"] .wake-headline {
+    text-shadow: 0.05em 0.05em 0 var(--wk-ghost);
+  }
+  :root:not([data-wake-theme]) .sl-markdown-content a:not(.not-content *),
+  :root[data-wake-theme="burrow"] .sl-markdown-content a:not(.not-content *) {
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 3px;
+  }
+
+  /* Annunciator: the panel a little lighter at the top; links are lit
+     legends, so they carry weight rather than an underline. */
+  :root[data-wake-theme="annunciator"] body {
+    background-image: linear-gradient(180deg, var(--wk-panel-top), var(--wk-paper) 18rem);
+    background-repeat: no-repeat;
+  }
+  :root[data-wake-theme="annunciator"] :is(h1, h2, h3, .brand, .wake-headline) {
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+  :root[data-wake-theme="annunciator"] .sl-markdown-content a:not(.not-content *) {
+    font-weight: 700;
+    text-decoration: none;
+  }
+
+  /* Signal: names and numbers at 62% width, everything said at 100%. */
+  :root[data-wake-theme="signal"] :is(h1, h2, h3, .brand, .wake-headline) {
+    font-stretch: 62%;
+    font-weight: 800;
+    letter-spacing: 0;
+    line-height: 1;
+  }
+  :root[data-wake-theme="signal"] .wake-headline {
+    font-weight: 900;
+    font-size: clamp(3.75rem, 10vw, 6.75rem);
+    line-height: 0.86;
+  }
+  :root[data-wake-theme="signal"] .sl-markdown-content a:not(.not-content *) {
+    font-weight: 600;
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 3px;
+  }
+}
+
+@layer components {
+  /* What only one theme draws (a mark, the hero's art) waits for its theme. */
+  .for-theme {
+    display: none;
+  }
+  :root:not([data-wake-theme]) .for-burrow,
+  :root[data-wake-theme="burrow"] .for-burrow,
+  :root[data-wake-theme="annunciator"] .for-annunciator,
+  :root[data-wake-theme="signal"] .for-signal {
+    display: revert;
+  }
+
+  /* Burrow's labels and keys: Silkscreen, as the case prints them. */
+  :root:not([data-wake-theme]) :is(.key-default, .key-outline),
+  :root[data-wake-theme="burrow"] :is(.key-default, .key-outline) {
+    font-family: var(--wk-font-label);
+    font-size-adjust: none;
+    text-shadow: none;
+  }
+  :root:not([data-wake-theme]) .key-default,
+  :root[data-wake-theme="burrow"] .key-default {
+    background-image: linear-gradient(
+      180deg,
+      var(--wk-case-hi),
+      var(--wk-case) 40%,
+      var(--wk-case-lo)
+    );
+    box-shadow: inset 0 -2px 0 rgb(0 0 0 / 0.18);
+  }
+
+  /* Annunciator's keys: push-buttons, lit green when they are the way on. */
+  :root[data-wake-theme="annunciator"] :is(.key-default, .key-outline) {
+    border: 1px solid var(--wk-edge);
+    background-image: linear-gradient(180deg, var(--wk-key-top), var(--wk-key-bottom));
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.12),
+      0 1px 2px rgb(0 0 0 / 0.35);
+    font-weight: 700;
+  }
+  :root[data-wake-theme="annunciator"] .key-default {
+    color: var(--wk-on-primary);
+  }
+
+  /* Signal's keys are square and set in tracked capitals at 125% width. */
+  :root[data-wake-theme="signal"] :is(.key-default, .key-outline) {
+    font-stretch: 125%;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+}

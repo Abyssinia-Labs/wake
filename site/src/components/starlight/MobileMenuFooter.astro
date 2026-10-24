@@ -1,15 +1,19 @@
 ---
-// The foot of the mobile menu: Starlight's social links and the same theme
-// picker as the header (shadcn's mode toggle), in Starlight's own layout.
+// The foot of the mobile menu: Starlight's social links and the same light
+// or dark toggle and Wake theme picker as the header, in Starlight's own layout.
 import SocialIcons from "@astrojs/starlight/components/SocialIcons.astro";
 import { ThemeToggle } from "@/components/site/theme-toggle";
+import { WakeThemePicker } from "@/components/site/wake-theme-picker";
 ---
 
 <div class="mobile-preferences sl-flex">
   <div class="social-icons">
     <SocialIcons />
   </div>
-  <ThemeToggle client:load />
+  <div class="flex items-center gap-1">
+    <ThemeToggle client:load />
+    <WakeThemePicker client:load />
+  </div>
 </div>
 
 <style>

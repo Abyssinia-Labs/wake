@@ -1,8 +1,8 @@
 import type { SVGProps } from "react";
 
 // The marks of the tools Wake starts and of GitHub, each in the page's
-// ink (currentColor) rather than its own colour: a page in two inks has
-// no room for four more. The paths are the ones Gatherd draws them with.
+// ink (currentColor) rather than its own colour: each theme keeps its few
+// colours for what they mean, and has no room for four more. The paths are the ones Gatherd draws them with.
 
 type Props = SVGProps<SVGSVGElement>;
 

@@ -7,6 +7,7 @@ import { activityIn } from "./activity";
 import { recordAsked } from "./asked";
 import { type Config, keepPrivate, loadConfig, paths } from "./config";
 import { exec } from "./exec";
+import { agentName, agentOpen } from "./herdr";
 import { type RunRecord, readHistory, recordRun } from "./history";
 import { messageOf, note } from "./log";
 import { connectPlace, type LivePlace } from "./place";
@@ -15,10 +16,14 @@ import { type Place, Scheduler } from "./scheduler";
 import { keychain } from "./secrets";
 import { type ListenerState, type RunState, writeState } from "./state";
 import { takeStops } from "./stop";
+import { tidyWorktrees } from "./tidy";
 import { programOf, TOOL_NAMES, toolInstalled, toolOf } from "./tools";
 import { waitingTeller, withWaiting } from "./waiting";
 
 const RECONCILE_MS = 30_000;
+// Run worktrees that are finished with go (tidy.ts): a while after start, then four times a day.
+const TIDY_FIRST_MS = 2 * 60_000;
+const TIDY_MS = 6 * 60 * 60_000;
 
 export async function listen(): Promise<void> {
   const p = paths();
@@ -275,4 +280,24 @@ export async function listen(): Promise<void> {
   await reconcile();
   if (Object.keys(config.apps).length === 0) note("Nothing paired yet: run wakectl pair.");
   setInterval(tick, RECONCILE_MS);
+
+  const tidy = async (): Promise<void> => {
+    const done = await tidyWorktrees(
+      {
+        paths: p,
+        history: await readHistory(p.history),
+        inUse: new Set([...runs.values()].map((run) => run.cwd)),
+      },
+      {
+        exec,
+        now: Date.now(),
+        herdrOpen: (run) => agentOpen(exec, agentName(run.ref, run.sessionId)),
+      },
+    );
+    for (const { path, why } of done.removed) note(`Removed the worktree ${path}: ${why}.`);
+  };
+  const tidyNow = (): void =>
+    void tidy().catch((e) => note(`Could not tidy worktrees: ${messageOf(e)}`));
+  setTimeout(tidyNow, TIDY_FIRST_MS);
+  setInterval(tidyNow, TIDY_MS);
 }

@@ -16,7 +16,8 @@ that support Wake, are at [wakectl.dev](https://wakectl.dev).
 - Wake keeps a Convex subscription open to each app you pair it with. An
   idle subscription costs nothing, and nothing polls.
 - When the app has a summons for your agent, Wake claims it, makes a git
-  worktree on the ticket's branch, and starts the agent there.
+  worktree on the ticket's branch, and starts the agent there. A follow-up
+  on the same ticket goes to the same agent: its session, in its worktree.
 - The summons carries no text. The agent reads what it was asked over its
   own connection to the app, so the app checks access as on any call.
 - Your agent pairs Wake itself: it asks the app for a code and runs
@@ -126,8 +127,8 @@ checked out is carried on in that folder, whichever tool made it, since git
 checks a branch out once; a worktree folder you deleted by hand is forgotten
 and made again. Interactive Codex asks whether to trust
 each new folder; `wakectl trust codex on` has Wake add the run's worktree to
-`~/.codex/config.toml` first, marked as Wake's, and `wakectl prune` takes it
-out again. Cursor is started with `--trust` for the run's worktree, in herdr
+`~/.codex/config.toml` first, marked as Wake's, and the tidy takes it
+out again with the worktree. Cursor is started with `--trust` for the run's worktree, in herdr
 as headless. Cursor keeps MCP sign-ins per folder, so a run on a new branch
 starts signed out of the app: Wake checks first and refuses such a run
 rather than start it unable to read the ask, and `wakectl logs` gives the
@@ -147,8 +148,25 @@ denied rather than asked.
 or its session id: a headless run's tool is stopped, a run in herdr is
 interrupted (Esc) and its tab kept, and the app shows it couldn't finish,
 stopped by its owner. `wakectl pause` stops new claims (a run already going
-finishes) and `wakectl resume` goes on. `wakectl prune` removes run
-worktrees untouched for 14 days, and keeps any with uncommitted work.
+finishes) and `wakectl resume` goes on.
+
+**A follow-up continues the run.** When a ticket is summoned again after a
+run on it finished (a question in a comment, say), Wake doesn't start
+another agent: it continues the session that answered the last summons, in
+the same worktree and under the same name. In herdr it asks the agent still
+open in the run's tab; with the tab closed, or headless, it resumes the
+session (`claude --resume`, `codex exec resume`, `cursor-agent --resume`).
+A new session starts only when there is none to continue, or the last one
+finished more than 14 days ago.
+
+**Worktrees are tidied.** The listener removes the run worktrees it made
+once they are finished with: a day after their branch is merged (squash
+merges included, through `gh`), or a week after their last run once
+everything in them is pushed. It never removes one with uncommitted
+changes or with commits on no remote, one a run is in, or one whose herdr
+tab is still open, and git itself refuses to remove a worktree with
+changes. `wakectl prune` tidies now and says what it kept and why;
+`--days` sets how long a pushed worktree waits.
 
 **Each run's steps** are kept beside the log, in `runs/` in Wake's folder:
 a file per run, `<app>.<summons>.ndjson`, one `{ "at", "line" }` a line,

@@ -59,7 +59,7 @@ const GROUPS: readonly { title: string; entries: readonly Entry[] }[] = [
     title: "Housekeeping",
     entries: [
       { use: "pause | resume", what: "Stop or go on claiming new work" },
-      { use: "prune [--days 14]", what: "Remove run worktrees untouched for a while" },
+      { use: "prune [--days 7]", what: "Remove run worktrees that are merged, or pushed and idle" },
       { use: "forget <domain>", what: "Unpair its agents, here and on the app" },
       { use: "update", what: "The latest Wake from npm, and the listener onto it" },
       { use: "uninstall", what: "Stop, and do not start at login" },

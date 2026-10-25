@@ -1,15 +1,18 @@
-// `wakectl prune`: remove run worktrees untouched for a while: the ones Wake
-// made (made.ts), in the clones' .claude/worktrees/, and any left where runs
-// used to be made. A worktree with uncommitted work is kept and named, never
-// forced, and one Wake did not make is never touched.
+// `wakectl prune`: the listener's tidy of run worktrees (tidy.ts), now, and
+// saying what it kept for holding work. `--days` is how long a pushed,
+// unmerged worktree is kept idle. Worktrees left where runs used to be made
+// go when untouched that long. Nothing is forced: git refuses a worktree
+// with changes, and one Wake did not make is never touched.
 import { readdir, stat } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { untrustCodexFolder } from "../codex-trust";
 import { paths } from "../config";
 import { exec, git } from "../exec";
+import { agentName, agentOpen } from "../herdr";
+import { readHistory } from "../history";
 import { messageOf, say } from "../log";
-import { forgetWorktree, madeWorktrees } from "../made";
 import { isAlive, readState } from "../state";
+import { tidyWorktrees } from "../tidy";
 import { dim, mark, tildify } from "../ui";
 
 async function dirs(path: string): Promise<string[]> {
@@ -21,41 +24,51 @@ async function dirs(path: string): Promise<string[]> {
   }
 }
 
+/** Worktrees made where runs used to be, untouched for `days`. */
+async function pruneLegacy(
+  root: string,
+  inUse: ReadonlySet<string>,
+  days: number,
+): Promise<number> {
+  const cutoff = Date.now() - days * 24 * 60 * 60_000;
+  let removed = 0;
+  for (const repo of await dirs(root)) {
+    for (const worktree of await dirs(repo)) {
+      if (inUse.has(worktree) || (await stat(worktree)).mtimeMs > cutoff) continue;
+      try {
+        const common = await git(
+          exec,
+          ["rev-parse", "--path-format=absolute", "--git-common-dir"],
+          worktree,
+        );
+        await git(exec, ["worktree", "remove", worktree], dirname(common));
+        await untrustCodexFolder(worktree);
+        removed += 1;
+      } catch (error) {
+        say(`${mark.warn()} Kept ${tildify(worktree)} ${dim(messageOf(error))}`);
+      }
+    }
+  }
+  return removed;
+}
+
 export async function prune(days: number): Promise<void> {
   const p = paths();
   const state = await readState(p.state);
   const inUse = new Set(state && isAlive(state.pid) ? state.runs.map((r) => r.cwd) : []);
-  const cutoff = Date.now() - days * 24 * 60 * 60_000;
-  let removed = 0;
-
-  const legacy: string[] = [];
-  for (const repo of await dirs(p.worktrees)) legacy.push(...(await dirs(repo)));
-  for (const worktree of [...(await madeWorktrees(p.made)), ...legacy]) {
-    let modified: number;
-    try {
-      modified = (await stat(worktree)).mtimeMs;
-    } catch {
-      // Already gone, by hand or by git: nothing to remove, nothing to remember.
-      await forgetWorktree(p.made, worktree);
-      continue;
-    }
-    if (inUse.has(worktree) || modified > cutoff) continue;
-    try {
-      const common = await git(
-        exec,
-        ["rev-parse", "--path-format=absolute", "--git-common-dir"],
-        worktree,
-      );
-      // Without --force, git refuses a worktree with changes, which is the point.
-      await git(exec, ["worktree", "remove", worktree], dirname(common));
-      await forgetWorktree(p.made, worktree);
-      await untrustCodexFolder(worktree);
-      removed += 1;
-    } catch (error) {
-      say(`${mark.warn()} Kept ${tildify(worktree)} ${dim(messageOf(error))}`);
-    }
-  }
+  const tidied = await tidyWorktrees(
+    { paths: p, history: await readHistory(p.history), inUse, idleDays: days },
+    {
+      exec,
+      now: Date.now(),
+      herdrOpen: (run) => agentOpen(exec, agentName(run.ref, run.sessionId)),
+    },
+  );
+  for (const { path, why } of tidied.removed)
+    say(`${mark.ok()} Removed ${tildify(path)} ${dim(why)}`);
+  for (const { path, why } of tidied.kept) say(`${mark.warn()} Kept ${tildify(path)} ${dim(why)}`);
+  const removed = tidied.removed.length + (await pruneLegacy(p.worktrees, inUse, days));
   say(
-    `${mark.ok()} Removed ${removed} worktree${removed === 1 ? "" : "s"} ${dim(`untouched for ${days} days`)}`,
+    `${mark.ok()} Removed ${removed} worktree${removed === 1 ? "" : "s"} ${dim(`merged a day ago, or pushed and untouched for ${days} days`)}`,
   );
 }

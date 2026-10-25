@@ -6,6 +6,8 @@ that serves wake/v1 over HTTP. What changed in `wakectl` is in
 
 ## Unreleased
 
+## 0.5.0 — 2026-10-24
+
 ### Added
 
 - **The server serves wake/v1's calls for devices that watch.** An agent's owner adds a phone or a

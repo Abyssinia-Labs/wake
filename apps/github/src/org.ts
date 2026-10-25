@@ -81,14 +81,14 @@ function planBody(account: Account, plan: Plan): string {
   const source = plan.source === "none" ? "" : ` (${plan.source})`;
   const does =
     person && plan.name === "pro"
-      ? "you wake your own agent, as on Free, and the account has what Wake's paid apps need."
+      ? 'you wake your own agent, as on Free, and your devices watch its runs: <a href="/devices">add a device</a>.'
       : "anyone who can push to a repository wakes their own agent from it.";
   const on = `<h1>${esc(account.login)}</h1><p>On <strong>${LABEL[plan.name]}</strong>${source}: ${does}</p>`;
   if (person && plan.name === "pro") return on;
   if (person) {
     return `${on}
 <div class="card"><p><strong>Pro</strong>, for your own account, adds:</p><ul>
-<li>what Wake's paid apps need: your runs, and what they ask you, on your other devices;</li>
+<li>devices: your runs, as they go, on your phone, in a browser or on your Mac;</li>
 <li>cloud fallback, later: when no machine is awake, your own cloud agent.</li></ul>
 <p>$8 a month or $80 a year. ${askUs("Pro", account.login)}</p></div>`;
   }

@@ -13,6 +13,9 @@ agent from an issue or a review, with no other app. Hosted at
 3. **Asks**: the label `wake` on an issue, or `/wake` on its own line in an
    issue comment or a pull request review. `wake:codex` / `/wake cursor`
    picks the tool; otherwise the first one they paired runs.
+4. **Adds a device**, on Pro: at `/devices`, a code for one of their agents,
+   which Wake on a phone, in a browser or on a Mac takes over wake/v1's
+   watch calls to list that agent's runs. The same page forgets one.
 
 Their agent starts on their machine, in their clone, on the issue's branch
 (`issue-12-…`) or the pull request's own, inside Wake's sandbox. It reads
@@ -34,8 +37,8 @@ One Fetch handler (`src/app.ts`), so it runs on Workers, Bun or Node:
 - `/.well-known/wake`: discovery, `transport: "http"`.
 - `/github/webhook`: GitHub's events, checked against the webhook secret
   (`src/webhook.ts`).
-- `/`, `/pair`, `/auth/*`: the pages, and signing in with the app's own
-  GitHub user authorization. A signed cookie holds the user's id and login;
+- `/`, `/pair`, `/devices`, `/auth/*`: the pages, and signing in with the
+  app's own GitHub user authorization. A signed cookie holds the user's id and login;
   nothing else is kept about them.
 - Wake's run hooks write the status comment (`src/hooks.ts`), through an
   installation token (`src/github.ts`, the app's JWT signed with Web Crypto).
@@ -48,11 +51,11 @@ installation, so uninstalling the app deletes its summonses.
 **Free**, for anyone: a label or `/wake` wakes your own agent on your own
 machine, on any repository you can push to.
 
-**Pro**, for a personal account, $8 a month or $80 a year, is the plan
-Wake's paid apps need: your runs, and what they ask you, on your other
-devices, and cloud fallback and routing when they arrive (WAK-24). Until
-then it does what Free does. It has nothing of an organisation's: no policy
-and no audit.
+**Pro**, for a personal account, $8 a month or $80 a year, adds devices:
+your agents' runs on your phone, in a browser or on your Mac, added at
+`/devices` (its watch codes are made only there, and every watch call asks
+the plan). Cloud fallback and routing come later (WAK-24). It has nothing
+of an organisation's: no policy and no audit.
 
 **Team**, per organisation, adds a policy (which repositories may summon,
 and who: anyone who can push, or admins and maintainers only) and an audit

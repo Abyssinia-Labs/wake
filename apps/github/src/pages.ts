@@ -35,7 +35,7 @@ export function home(o: { installUrl: string; signedIn: boolean }): Response {
     `<h1>Wake for GitHub</h1>
 <p>Label an issue <code>wake</code>, or write <code>/wake</code> in a comment or a pull request review, and your coding agent (Claude Code, Codex or Cursor) starts on <em>your</em> machine: in your clone, on the issue's own branch, inside Wake's sandbox. It reads the issue with <code>gh</code>, opens a pull request that closes it, and the issue shows how it's going.</p>
 <div class="row"><a class="button" href="${esc(o.installUrl)}">Install on your repositories</a>
-<a href="${o.signedIn ? "/pair" : "/auth/login"}">${o.signedIn ? "Pair Wake" : "Sign in with GitHub to pair Wake"}</a></div>
+<a href="${o.signedIn ? "/pair" : "/auth/login"}">${o.signedIn ? "Pair Wake" : "Sign in with GitHub to pair Wake"}</a>${o.signedIn ? ' <a href="/devices">Add a device</a>' : ""}</div>
 <h2>How to ask</h2>
 <div class="card"><p><code>wake</code> on an issue, or <code>/wake</code> on its own line in a comment: your first paired agent works on it.<br><code>wake:codex</code> or <code>/wake cursor</code> picks the tool. On a pull request, <code>/wake</code> in a review addresses the feedback on its branch.</p>
 <small>Only you can wake your agent, and only on a repository you can push to. Taking the label off or closing the issue lets it go.</small></div>
@@ -61,7 +61,8 @@ ${machines ? `<small>Paired on ${machines}</small>` : "<small>Not paired yet</sm
   return page(
     "Pair Wake",
     `<h1>Pair Wake</h1><p>Signed in as <strong>@${esc(o.login)}</strong>. Get a code for the tool that should run, and run the command it gives in a terminal on the machine your clones are on. You need <a href="https://wakectl.dev/start/getting-started/">Wake</a> installed there.</p>
-${tools}<form method="post" action="/auth/logout"><button>Sign out</button></form>`,
+${tools}<p><a href="/devices">Add a device</a> to watch your runs on your phone, in a browser or on your Mac.</p>
+<form method="post" action="/auth/logout"><button>Sign out</button></form>`,
   );
 }
 

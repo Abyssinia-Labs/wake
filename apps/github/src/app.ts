@@ -1,6 +1,6 @@
 // The bridge as one Fetch handler (WAK-4), so it runs on Workers, Bun or
-// Node alike: wake/v1 over HTTP for Wake, GitHub's webhook, and the pages
-// to install the app and pair. Storage is wake-server's store and the
+// Node alike: wake/v1 over HTTP for Wake and for devices that watch,
+// GitHub's webhook, and the pages to install the app, pair and add a device. Storage is wake-server's store and the
 // bridge's own table, on Postgres (db.ts) or SQLite / D1 (db-sqlite.ts).
 import {
   discovery,
@@ -12,6 +12,7 @@ import {
 } from "@abyssinia-labs/wake-server";
 import { agentId, ownerId, TOOL_NAMES, TOOLS } from "./commands";
 import type { Asks } from "./db";
+import { devicePlan, devicesRoute } from "./devices";
 import { gitHub } from "./github";
 import { githubHooks } from "./hooks";
 import type { Kv } from "./kv";
@@ -51,6 +52,7 @@ export function createBridge(
     store: storage.store,
     keyPrefix: "ghw_",
     hooks: githubHooks(asks, github),
+    plan: devicePlan(kv),
   });
   const routes = wakeHandler(wake, config.maxStreamMs ? { maxStreamMs: config.maxStreamMs } : {});
   const host = new URL(config.origin).host;
@@ -90,6 +92,10 @@ export function createBridge(
     if (org) {
       if (!who) return Response.redirect(`${config.origin}/auth/login`, 303);
       return await orgPage({ wake, asks, github, kv, origin: config.origin }, req, who, org);
+    }
+    if (url.pathname === "/devices") {
+      if (!who) return Response.redirect(`${config.origin}/auth/login`, 303);
+      return await devicesRoute({ wake, kv, origin: config.origin }, req, who);
     }
     if (url.pathname === "/pair") {
       if (!who) return Response.redirect(`${config.origin}/auth/login`, 303);

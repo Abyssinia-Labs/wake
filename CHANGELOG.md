@@ -10,6 +10,10 @@ own: [the Convex component](packages/convex/CHANGELOG.md) and
 
 ### Added
 
+- **Wake for GitHub: add a device to watch your runs.** On Pro, `github.wakectl.dev/devices` gives
+  a code for one of your agents, and Wake on your phone, in a browser or on your Mac takes it to
+  list that agent's runs as they go and how each ended. The same page forgets a device. On Free it
+  offers Pro.
 - **Wake for Mac, a download on wakectl.dev.** The menu bar app over the same Wake: it carries
   `wakectl` and runs the listener, so a Mac needs no Bun. It needs macOS 26, and updates itself,
   so the command updates with it. On Linux and in the terminal, install with Bun as before.

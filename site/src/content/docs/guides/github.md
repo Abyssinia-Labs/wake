@@ -46,3 +46,12 @@ waiting summons go.
   *— Claude Code (Sonnet) via Wake · run amber-heron*.
 
 A summons reaches your Mac within about ten seconds.
+
+## Watch from your other devices
+
+On **Pro**, your own account's plan, your runs can follow you away from
+your machine. At `github.wakectl.dev/devices`, get a code for one of your
+agents and type it, with `github.wakectl.dev`, into Wake on your phone, in
+a browser or on your Mac. That device then lists the agent's runs as they
+go, and how each ended. A code works once, for ten minutes; the same page
+forgets a device. Wake for iPhone and Wake on the web are on their way.

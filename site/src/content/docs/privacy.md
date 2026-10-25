@@ -68,6 +68,12 @@ machine's name and platform, when it paired and when it was last heard
 from, and a hash of the key it holds. A pairing code is kept as a hash for
 ten minutes, and works once.
 
+**Devices.** On Pro, for each device you add to watch one of your agents:
+its name and platform (iPhone, Mac or browser), when it was added and last
+heard from, a hash of the key it holds, and, if it asks for alerts, which
+kinds and where to send them (a push token, or a browser's push address).
+A device's code is kept as a hash for ten minutes, and works once.
+
 **When you ask.** A `wake` label or a `/wake` comment makes a record of
 what was asked: your GitHub id and login, the repository, the issue or
 pull request's number and address, a branch name made from the first
@@ -94,10 +100,9 @@ comment), Metadata and Members (read).
 
 ## This site
 
-wakectl.dev is static pages on Cloudflare. Its fonts come from Google
-Fonts, so your browser asks Google for them, which tells Google your IP
-address. Your browser remembers whether you chose light or dark. No
-cookies, no analytics, no tracking pixels.
+wakectl.dev is static pages on Cloudflare, its fonts served with them.
+Your browser remembers whether you chose light or dark, and which theme.
+No cookies, no analytics, no tracking pixels.
 
 ## Where it lives
 
@@ -125,12 +130,15 @@ run it, or when you ask for help.
 - **`wake forget github.wakectl.dev`** on your machine ends that pairing:
   the key stops working, and the machine leaves your list. Its record is
   kept, marked forgotten.
-- **A pairing code** is useless ten minutes after it is made, or once used;
-  its hash is kept.
+- **Forgetting a device** at `github.wakectl.dev/devices` ends it: its key
+  stops working, and it leaves your list. Its record is kept, marked
+  forgotten.
+- **A pairing code** or a device's code is useless ten minutes after it is
+  made, or once used; its hash is kept.
 - **Taking the `wake` label off**, or closing the issue, lets a waiting
   summons go.
 - Everything else (your sign-in's id and login on your records, your
-  paired machines' records, an organisation's plan and policy) is kept
+  paired machines' and devices' records, an organisation's plan and policy) is kept
   until you ask us to delete it. Write to the address
   below from the GitHub account it is about, and we will delete it within
   30 days.

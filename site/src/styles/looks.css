@@ -138,3 +138,114 @@
     text-transform: uppercase;
   }
 }
+
+/* The logo (mark.tsx): the owl in --wk-mark, blinking now and then, three
+   times in twelve seconds and the last twice; still for anyone who asks for
+   reduced motion. The theme picker shows each theme's owl on its own page. */
+@layer components {
+  .wk-mark {
+    fill: var(--wk-mark);
+    flex: 0 0 auto;
+  }
+  .wk-mark .wk-shut {
+    opacity: 0;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .wk-mark .wk-open {
+      animation: wk-open 12s steps(1, end) infinite;
+    }
+    .wk-mark .wk-shut {
+      animation: wk-shut 12s steps(1, end) infinite;
+    }
+  }
+
+  .wk-chip {
+    display: inline-flex;
+    padding: 3px;
+    border-radius: 5px;
+    box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.12);
+  }
+  .wk-chip-burrow {
+    --wk-mark: #1f2a1a;
+    background: #c8d0b0;
+  }
+  .wk-chip-annunciator {
+    --wk-mark: #1a1d20;
+    background: #dcddd8;
+  }
+  .wk-chip-signal {
+    --wk-mark: #0d0d0d;
+    background: #f4f4f0;
+  }
+  :root[data-theme="dark"] .wk-chip-burrow {
+    --wk-mark: #9fe8c8;
+    background: #0f241c;
+  }
+  :root[data-theme="dark"] .wk-chip-annunciator {
+    --wk-mark: #74ffb9;
+    background: #1e2225;
+  }
+  :root[data-theme="dark"] .wk-chip-signal {
+    --wk-mark: #f4f4f0;
+    background: #111110;
+  }
+}
+
+@keyframes wk-open {
+  0% {
+    opacity: 1;
+  }
+  30% {
+    opacity: 0;
+  }
+  31.2% {
+    opacity: 1;
+  }
+  63% {
+    opacity: 0;
+  }
+  64.2% {
+    opacity: 1;
+  }
+  92% {
+    opacity: 0;
+  }
+  93.2% {
+    opacity: 1;
+  }
+  95% {
+    opacity: 0;
+  }
+  96.2% {
+    opacity: 1;
+  }
+}
+@keyframes wk-shut {
+  0% {
+    opacity: 0;
+  }
+  30% {
+    opacity: 1;
+  }
+  31.2% {
+    opacity: 0;
+  }
+  63% {
+    opacity: 1;
+  }
+  64.2% {
+    opacity: 0;
+  }
+  92% {
+    opacity: 1;
+  }
+  93.2% {
+    opacity: 0;
+  }
+  95% {
+    opacity: 1;
+  }
+  96.2% {
+    opacity: 0;
+  }
+}

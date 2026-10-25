@@ -118,12 +118,13 @@ export const otterAsleep = sprite(
   ),
 );
 
-/** One SVG path for a sprite: a rectangle per run of ink pixels on each row. */
-export function spritePath(s: Sprite, x = 0, y = 0): string {
+/** One SVG path for a sprite at `x`, `y`, `scale` units a pixel: a rectangle per run of ink pixels on each row. */
+export function spritePath(s: Sprite, x = 0, y = 0, scale = 1): string {
   const parts: string[] = [];
   s.rows.forEach((row, dy) => {
     for (const match of row.matchAll(/#+/g)) {
-      parts.push(`M${x + (match.index ?? 0)} ${y + dy}h${match[0].length}v1h-${match[0].length}z`);
+      const n = match[0].length * scale;
+      parts.push(`M${x + (match.index ?? 0) * scale} ${y + dy * scale}h${n}v${scale}h-${n}z`);
     }
   });
   return parts.join("");

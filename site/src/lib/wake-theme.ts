@@ -26,14 +26,32 @@ export function asTheme(value: unknown): WakeTheme {
   return THEMES.find((one) => one === value) ?? DEFAULT_THEME;
 }
 
+/** Each theme's favicon: the owl in its ink, light or dark as the browser is (public/). */
+export function faviconOf(theme: WakeTheme): string {
+  return `/favicon-${theme}.svg`;
+}
+
+/** Points the page's icon at the theme's favicon. */
+export function showFavicon(theme: WakeTheme): void {
+  const link = document.querySelector<HTMLLinkElement>('link[rel~="icon"]');
+  if (link) link.href = faviconOf(theme);
+}
+
 /**
- * The head script: puts the kept theme on <html> before the page paints.
- * Storage can throw (a private window, blocked site data); the default
- * stands then.
+ * The head script: puts the kept theme on <html> before the page paints,
+ * and its favicon on the tab once the icon's link is parsed. Storage can
+ * throw (a private window, blocked site data); the default stands then.
  */
 export const wakeThemeScript = `(() => {
   let kept = null;
   try { kept = localStorage.getItem(${JSON.stringify(THEME_KEY)}); } catch {}
   const themes = ${JSON.stringify(THEMES)};
-  document.documentElement.dataset.wakeTheme = themes.includes(kept) ? kept : ${JSON.stringify(DEFAULT_THEME)};
+  const theme = themes.includes(kept) ? kept : ${JSON.stringify(DEFAULT_THEME)};
+  document.documentElement.dataset.wakeTheme = theme;
+  const icon = () => {
+    const link = document.querySelector('link[rel~="icon"]');
+    if (link) link.href = "/favicon-" + theme + ".svg";
+  };
+  icon();
+  document.addEventListener("DOMContentLoaded", icon);
 })();`;

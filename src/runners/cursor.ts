@@ -84,6 +84,8 @@ export function cursorArgs(o: ClaudeRun, approveMcps = true): string[] {
   return [
     "cursor-agent",
     "-p",
+    // A follow-up continues the chat.
+    ...(o.resume ? ["--resume", o.sessionId] : []),
     "--output-format",
     "stream-json",
     "--trust",

@@ -177,6 +177,15 @@
   --wk-on-primary: #f4f4f0;
 }
 
+/* The logo's owl (mark.tsx) prints in the theme's ink; Annunciator's lights
+   up green at night, as its legends do. */
+:root {
+  --wk-mark: var(--wk-ink);
+}
+:root[data-wake-theme="annunciator"]:not([data-theme="light"]) {
+  --wk-mark: #74ffb9;
+}
+
 /* Starlight's slots, from whichever theme is on: its greys run from the
    ink to the paper, as each theme's own rules and washes do. */
 :root {

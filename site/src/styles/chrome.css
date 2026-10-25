@@ -23,14 +23,8 @@
   .site-header .brand {
     display: inline-flex;
     align-items: center;
-    gap: 0.625rem;
     color: var(--foreground);
-    font-family: var(--font-display);
-    font-weight: 800;
-    font-size: 1.25rem;
-    letter-spacing: -0.02em;
     text-decoration: none;
-    white-space: nowrap;
   }
   .site-nav {
     display: none;

@@ -1,6 +1,6 @@
 ---
 import SocialIcons from "@astrojs/starlight/components/SocialIcons.astro";
-import { Mark } from "@/components/site/mark";
+import { Logo } from "@/components/site/mark";
 import { ThemeToggle } from "@/components/site/theme-toggle";
 import { WakeThemePicker } from "@/components/site/wake-theme-picker";
 import { buttonVariants } from "@/components/ui/button";
@@ -26,8 +26,7 @@ const isCurrent = (under: string[]): boolean => under.some((prefix) => path.star
 
 <div class="site-header">
   <a href={siteTitleHref} class="brand">
-    <Mark className="size-8" />
-    <span>wakectl</span>
+    <Logo />
   </a>
   <nav aria-label="Site" class="site-nav">
     {

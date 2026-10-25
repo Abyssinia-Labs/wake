@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Mark } from "@/components/site/mark";
+import { CaseMark } from "@/components/site/mark";
 import { cn } from "@/lib/utils";
 
 // The pieces GitHub's issue and pull request pages (demo-github.tsx) are
@@ -48,8 +48,8 @@ export function Label({ name }: { name: "wake" | "enhancement" }): React.JSX.Ele
 
 export function Avatar({ who }: { who: "michael" | "bot" }): React.JSX.Element {
   return who === "bot" ? (
-    <span className="inline-flex size-6 shrink-0 items-center justify-center rounded-full bg-[var(--gh-bg-3)]">
-      <Mark className="size-4" />
+    <span className="inline-flex size-6 shrink-0 overflow-hidden rounded-full">
+      <CaseMark className="size-6" />
     </span>
   ) : (
     <span className="inline-flex size-6 shrink-0 items-center justify-center rounded-full bg-[var(--gh-bg-3)] text-[11px] font-semibold">

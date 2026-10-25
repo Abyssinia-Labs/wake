@@ -1,69 +1,82 @@
-import type { SVGProps } from "react";
 import { cn } from "@/lib/utils";
 import type { WakeTheme } from "@/lib/wake-theme";
-import { owl, spritePath } from "./sprites";
+import { owl12, owlBody, owlOpen, owlShut, wordmark } from "./logo-pixels";
+import { spritePath } from "./sprites";
 
-type Props = SVGProps<SVGSVGElement> & { className?: string };
+// Wake's logo, locked in on 2026-10-24 (wake-cloud's brief, "The logo"):
+// one owl, the same shape everywhere. On wakectl.dev and app.wakectl.dev it
+// is D, the owl alone in the theme's ink (--wk-mark, themes.css), so it
+// changes colour with the theme and never shape. It blinks now and then
+// (looks.css). Wake for GitHub's avatar is B, the owl on the orange case.
 
-/** Burrow: the app icon in small, the owl on the screen in the orange case. */
-function BurrowMark({ className, ...props }: Props): React.JSX.Element {
+type Props = { className?: string };
+
+/** D: the owl in the theme's ink, sized by its className (crisp at 16 and 32 px). */
+export function Mark({ className }: Props): React.JSX.Element {
   return (
-    <svg aria-hidden="true" focusable="false" viewBox="0 0 32 32" className={className} {...props}>
-      <rect width="32" height="32" rx="7" fill="#f47a3e" />
-      <rect x="1" y="1" width="30" height="15" rx="6" fill="#ff9b63" opacity="0.5" />
-      <rect x="4" y="4" width="24" height="19" rx="2" fill="#c8d0b0" />
-      <path d={spritePath(owl, 8, 5)} fill="#1f2a1a" shapeRendering="crispEdges" />
-      <g fill="#1f2a1a" opacity="0.45">
-        <circle cx="12" cy="27" r="1" />
-        <circle cx="16" cy="27" r="1" />
-        <circle cx="20" cy="27" r="1" />
-      </g>
+    <svg
+      aria-hidden="true"
+      focusable="false"
+      viewBox="0 0 16 16"
+      shapeRendering="crispEdges"
+      className={cn("wk-mark", className)}
+    >
+      <path d={spritePath(owlBody)} />
+      <path className="wk-open" d={spritePath(owlOpen)} />
+      <path className="wk-shut" d={spritePath(owlShut)} />
     </svg>
   );
 }
 
-/** Annunciator: two legends behind smoked glass, the top one lit green. */
-function AnnunciatorMark({ className, ...props }: Props): React.JSX.Element {
+const NAME = wordmark("wakectl");
+
+/** The name, drawn on the owl's grid in the ink around it (currentColor), 7 pixels tall. */
+export function Wordmark({ className }: Props): React.JSX.Element {
   return (
-    <svg aria-hidden="true" focusable="false" viewBox="0 0 32 32" className={className} {...props}>
-      <rect width="32" height="32" rx="7" fill="#2a3034" />
-      <rect x="3" y="3" width="26" height="26" rx="4.5" fill="#121517" />
-      <rect x="6" y="6.5" width="20" height="9" rx="2" fill="#39d98a" />
-      <rect x="9" y="8.5" width="14" height="4" rx="1.5" fill="#b4ffda" opacity="0.6" />
-      <rect x="6" y="17.5" width="20" height="8" rx="2" fill="#24292c" stroke="#3a4146" />
+    <svg
+      role="img"
+      aria-label="wakectl"
+      viewBox={`0 0 ${NAME.width} ${NAME.height}`}
+      shapeRendering="crispEdges"
+      fill="currentColor"
+      className={className}
+    >
+      <path d={spritePath(NAME)} />
     </svg>
   );
 }
 
-/** Signal: a circle, which is a run. */
-function SignalMark({ className, ...props }: Props): React.JSX.Element {
+/** The mark beside its name, as the header and footer show it. */
+export function Logo({ className }: Props): React.JSX.Element {
   return (
-    <svg aria-hidden="true" focusable="false" viewBox="0 0 32 32" className={className} {...props}>
-      <circle cx="16" cy="16" r="14" style={{ fill: "var(--wk-run, #1f3bff)" }} />
+    <span className={cn("inline-flex items-center gap-2.5", className)}>
+      <Mark className="size-8" />
+      <Wordmark className="h-[21px] w-[90px]" />
+    </span>
+  );
+}
+
+/** B: the owl on the orange case, Wake for GitHub's logo and avatar; the same in every theme. */
+export function CaseMark({ className }: Props): React.JSX.Element {
+  return (
+    <svg
+      aria-hidden="true"
+      focusable="false"
+      viewBox="0 0 32 32"
+      shapeRendering="crispEdges"
+      className={className}
+    >
+      <rect width="32" height="32" rx="7" fill="#f47a3e" shapeRendering="geometricPrecision" />
+      <path fill="#1f2a1a" d={spritePath(owl12, 4, 4, 2)} />
     </svg>
   );
 }
 
-const MARKS = { annunciator: AnnunciatorMark, burrow: BurrowMark, signal: SignalMark };
-
-/**
- * The wakectl mark, sized by its className: one theme's when `theme` is
- * given, else all three, each shown only while its theme is on (looks.css).
- */
-export function Mark({
-  theme,
-  className,
-  ...props
-}: Props & { theme?: WakeTheme }): React.JSX.Element {
-  if (theme) {
-    const One = MARKS[theme];
-    return <One className={className} {...props} />;
-  }
+/** A theme's own D on a swatch of its page, for the theme picker. */
+export function ThemeChip({ theme, className }: Props & { theme: WakeTheme }): React.JSX.Element {
   return (
-    <>
-      <BurrowMark className={cn("for-theme for-burrow", className)} {...props} />
-      <AnnunciatorMark className={cn("for-theme for-annunciator", className)} {...props} />
-      <SignalMark className={cn("for-theme for-signal", className)} {...props} />
-    </>
+    <span className={cn("wk-chip", `wk-chip-${theme}`, className)}>
+      <Mark className="size-4" />
+    </span>
   );
 }

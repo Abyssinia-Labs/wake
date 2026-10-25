@@ -1,4 +1,4 @@
-import { Mark } from "@/components/site/mark";
+import { Logo } from "@/components/site/mark";
 import { Separator } from "@/components/ui/separator";
 
 const columns: { title: string; links: { label: string; href: string }[] }[] = [
@@ -37,10 +37,7 @@ export function SiteFooter(): React.JSX.Element {
     <footer className="not-content flex flex-col gap-8 border-t pt-12 pb-8">
       <div className="flex flex-wrap justify-between gap-10">
         <div className="flex basis-72 flex-col gap-3">
-          <span className="inline-flex items-center gap-2.5 font-display text-lg font-extrabold text-foreground">
-            <Mark className="size-[22px]" />
-            wakectl
-          </span>
+          <Logo className="text-foreground" />
           <p className="m-0 max-w-[19rem] text-sm leading-relaxed text-muted-foreground">
             The client half of the Wake pattern. Open source, MIT, by Abyssinia Labs.
           </p>

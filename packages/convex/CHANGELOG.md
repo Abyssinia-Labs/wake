@@ -6,6 +6,8 @@ that serves wake/v1 from Convex. What changed in `wakectl` is in
 
 ## Unreleased
 
+## 0.4.0 — 2026-10-24
+
 ### Added
 
 - **The component serves wake/v1's calls for devices that watch.** An agent's owner adds a phone or

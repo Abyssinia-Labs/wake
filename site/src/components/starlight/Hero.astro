@@ -2,10 +2,13 @@
 // The landing hero: what's new and the badges, the headline, the tagline and its
 // three points, the actions as shadcn buttons, the install line in a
 // terminal frame with Wake for Mac's download under it, and Wake at work as
-// the theme that is on draws it (hero-art.tsx).
+// the theme that is on draws it: in Burrow, Wake for Mac's window with a run
+// printing its steps (live-run.tsx), so what Wake does shows at once; in
+// Annunciator and Signal, their art (hero-art.tsx).
 import { Code } from "@astrojs/starlight/components";
 import { ArrowRight, Check } from "lucide-react";
 import { HeroArt } from "@/components/landing/hero-art";
+import { LiveRun } from "@/components/landing/live-run";
 import { HeroBadges } from "@/components/site/hero-badges";
 import { MacDownload } from "@/components/site/mac-download";
 import { buttonVariants } from "@/components/ui/button";
@@ -38,12 +41,23 @@ const variants: Record<string, Variant> = {
 ---
 
 <div
-  class="hero not-content grid items-center gap-12 py-10 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:py-16"
+  class="hero not-content grid gap-x-12 gap-y-6 py-10 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:grid-rows-[auto_1fr] lg:py-16"
 >
-  <div class="flex flex-col gap-6">
+  <div class="flex flex-col gap-6 lg:col-start-1 lg:row-start-1">
     <HeroBadges news={news} />
     <h1 id={PAGE_TITLE_ID} data-page-title class="wake-headline" set:html={title} />
     {tagline && <p class="m-0 max-w-[36rem] text-lg leading-relaxed text-foreground" set:html={tagline} />}
+  </div>
+  {/* Wake at work comes right after the headline on a phone, beside it on a wide screen. */}
+  <div class="flex min-w-0 flex-col lg:col-start-2 lg:row-span-2 lg:row-start-1">
+    <div class="for-theme for-burrow lg:pt-24">
+      <LiveRun client:visible />
+    </div>
+    <div class="mx-auto w-full max-w-[25rem] lg:my-auto lg:mr-0">
+      <HeroArt />
+    </div>
+  </div>
+  <div class="flex flex-col gap-6 lg:col-start-1 lg:row-start-2">
     {
       points.length > 0 && (
         <ul class="m-0 flex max-w-[36rem] list-none flex-col gap-2.5 p-0 text-sm leading-relaxed">
@@ -84,8 +98,5 @@ const variants: Record<string, Variant> = {
       <Code code={install} lang="bash" frame="terminal" title="Terminal" />
     </div>
     <MacDownload build={macBuild} className="max-w-[36rem]" />
-  </div>
-  <div class="mx-auto w-full max-w-[25rem] lg:justify-self-end">
-    <HeroArt />
   </div>
 </div>

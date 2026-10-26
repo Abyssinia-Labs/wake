@@ -7,6 +7,7 @@
     "dev": "bun run sync && astro dev --force",
     "build": "bun run sync && astro build --force",
     "preview": "astro preview",
+    "test": "bun test src",
     "deploy": "bun run build && wrangler deploy"
   },
   "dependencies": {

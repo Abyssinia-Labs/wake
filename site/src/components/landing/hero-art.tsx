@@ -1,87 +1,9 @@
-// The landing hero's art: Wake at work, drawn as each theme draws it (the
-// apps' brief, "The look"), and shown only while its theme is on. The same
-// moment in all three: one run on it, an ask that needs you, one done.
-// Rendered to HTML at build; hero.css draws and moves it.
-import {
-  bubble,
-  egg,
-  heron,
-  otterAsleep,
-  type Sprite as SpriteData,
-  spritePath,
-} from "@/components/site/sprites";
-
+// The landing hero's art in Annunciator and Signal: Wake at work, drawn as
+// each theme draws it (the apps' brief, "The look"), and shown only while
+// its theme is on: one run on it, an ask that needs you, one done. Burrow's
+// hero is Wake for Mac's window itself (live-run.tsx). Rendered to HTML at
+// build; hero.css draws and moves it.
 const SAID = "Wake at work: amber-heron is on it, an ask needs you, and quiet-otter is done.";
-
-function Sprite({
-  sprite,
-  scale,
-  className,
-}: {
-  sprite: SpriteData;
-  scale: number;
-  className?: string;
-}) {
-  return (
-    <svg
-      className={className}
-      width={sprite.width * scale}
-      height={sprite.height * scale}
-      viewBox={`0 0 ${sprite.width} ${sprite.height}`}
-      shapeRendering="crispEdges"
-      aria-hidden="true"
-    >
-      <path fill="currentColor" d={spritePath(sprite)} />
-    </svg>
-  );
-}
-
-/** Burrow: Wake for Mac's runs on the small screen in the orange case. */
-function Burrow(): React.JSX.Element {
-  return (
-    <div className="hero-art for-theme for-burrow" role="img" aria-label={SAID}>
-      <div className="bw-case">
-        <div className="bw-screen">
-          <div className="bw-head">
-            <span>Wake</span>
-            <span>1 running</span>
-          </div>
-          <ul className="bw-rows">
-            <li>
-              <Sprite sprite={heron} scale={3} className="bw-awake" />
-              <span>
-                <b>amber-heron</b>
-                <small>on it · acme/api #812</small>
-              </span>
-            </li>
-            <li className="bw-needs">
-              <span className="bw-egg">
-                <Sprite sprite={egg} scale={3} />
-                <Sprite sprite={bubble} scale={2} className="bw-bubble bw-blink" />
-              </span>
-              <span>
-                <b>needs you</b>
-                <small>which branch? · acme/web</small>
-              </span>
-            </li>
-            <li>
-              <Sprite sprite={otterAsleep} scale={3} />
-              <span>
-                <b>quiet-otter</b>
-                <small>done · opened #431</small>
-              </span>
-            </li>
-          </ul>
-        </div>
-        <div className="bw-foot">
-          <span className="bw-grille" />
-          <span className="bw-key">Open</span>
-          <span className="bw-key">Pause</span>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 /** Annunciator: the caution panel, its lamps lit only where they mean something. */
 function Annunciator(): React.JSX.Element {
@@ -163,7 +85,6 @@ function Signal(): React.JSX.Element {
 export function HeroArt(): React.JSX.Element {
   return (
     <>
-      <Burrow />
       <Annunciator />
       <Signal />
     </>

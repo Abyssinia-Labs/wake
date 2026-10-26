@@ -28,6 +28,8 @@ export default defineConfig({
         "./src/styles/looks.css",
         "./src/styles/hero.css",
         "./src/styles/hero-panel.css",
+        "./src/styles/live-run.css",
+        "./src/styles/live-run-screen.css",
         "./src/styles/chrome.css",
         "./src/styles/content.css",
         "./src/styles/demo.css",

@@ -8,7 +8,7 @@ description: Where Wake keeps its config, state, log and keys.
 | Config | `~/Library/Application Support/Wake/config.json` | `~/.config/wake/config.json` |
 | Listener state (`wake status` reads it) | `…/Wake/state.json` | `~/.config/wake/state.json` |
 | Your runs, by name (`wake open`; the last 200) | `…/Wake/runs.json` | `~/.config/wake/runs.json` |
-| Worktrees Wake made (`wake prune` removes only these) | `…/Wake/worktrees.json` | `~/.config/wake/worktrees.json` |
+| Worktrees Wake made (the tidy and `wake prune` remove only these) | `…/Wake/worktrees.json` | `~/.config/wake/worktrees.json` |
 | Repositories each app has asked for | `…/Wake/asked-repos.json` | `~/.config/wake/asked-repos.json` |
 | Log | `~/Library/Logs/Wake/wake.log` | `~/.local/state/wake/wake.log` |
 | Place keys | The Keychain, service `dev.abyssinia.wake` | The Secret Service; without one, `~/.config/wake/keys.json` |

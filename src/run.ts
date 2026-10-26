@@ -9,6 +9,7 @@ import type { AgentTool, Outcome, Run, RunReport, Summons } from "./contract";
 import type { Exec } from "./exec";
 import { herdrRunning, runInHerdr } from "./herdr";
 import type { Waiting } from "./herdr-waiting";
+import { lastRunOn, readHistory } from "./history";
 import { installDependencies } from "./install";
 import { madeWorktrees, rememberWorktree } from "./made";
 import { describeModel } from "./models";
@@ -55,11 +56,21 @@ export const realDeps = (exec: Exec): RunDeps => ({
 });
 
 /** The app's own prompt, with the facts Wake adds at its foot. */
-export function composePrompt(run: Run, summons: Summons, sessionId: string | null): string {
+export function composePrompt(
+  run: Run,
+  summons: Summons,
+  sessionId: string | null,
+  followUp?: string,
+): string {
   return [
     run.prompt.trim(),
     "",
     `Summons ${summons.id}: ${summons.kind}, ${summons.target.ref} (${summons.target.url}).`,
+    ...(followUp
+      ? [
+          `This follows up your earlier run on ${summons.target.ref}, ${followUp}: you are in its session and worktree, so what you did and said there is yours to build on.`,
+        ]
+      : []),
     ...(sessionId ? [`Session ${sessionId}.`] : []),
   ].join("\n");
 }
@@ -122,7 +133,6 @@ async function runOne(
 ): Promise<Outcome> {
   // Stopped while it waited its turn on the branch: nothing starts.
   if (o.signal?.aborted) return { id: summons.id, outcome: "failed", reason: STOPPED };
-  const sessionId = o.deps.newId();
   let cwd: string;
   let defaultBranch: string | undefined;
 
@@ -161,9 +171,23 @@ async function runOne(
 
   // The listener only connects a pairing with a tool, so this is never the fallback.
   const tool = toolOf(app) ?? "claude";
-  // Claude Code takes Wake's session id; Codex and Cursor pick their own and say it.
-  const ours = tool === "claude";
-  const name = runName(sessionId);
+  // A follow-up on the same ask continues the run that answered the last one
+  // (the owner's call, 2026-10-25): its session, in its worktree, and in
+  // herdr its tab while that is open. Only when there is none to continue
+  // does a new session start, so follow-ups don't pile up as new agents.
+  const earlier = lastRunOn(await readHistory(o.paths.history), {
+    app: app.app,
+    ref: summons.target.ref,
+    tool,
+    cwd,
+    now: Date.now(),
+  });
+  const sessionId = earlier?.sessionId ?? o.deps.newId();
+  // Claude Code takes Wake's session id; Codex and Cursor pick their own and
+  // say it, except in a follow-up, whose session is known from the start.
+  const ours = tool === "claude" || earlier !== undefined;
+  const name = earlier?.name ?? runName(sessionId);
+  if (earlier) o.onEvent?.(`a follow-up: continuing ${name}'s session`);
   // Settled before it starts, so the state says where it runs from the first
   // write: `wakectl open` shows a herdr run's tab, never a second process.
   const herdr = o.config.run === "herdr" && (await o.deps.herdrUp());
@@ -180,13 +204,14 @@ async function runOne(
     {
       cwd,
       sessionId,
+      ...(earlier ? { resume: true } : {}),
       tool,
       acknowledged,
       onSession: (id) => {
         o.onStart({ sessionId: id, cwd, tool, name, herdr });
         void o.report?.({ name, tool, session: id });
       },
-      prompt: composePrompt(run, summons, ours ? sessionId : null),
+      prompt: composePrompt(run, summons, ours ? sessionId : null, earlier ? name : undefined),
       mcpServer: app.mcpServer ?? app.app,
       defaultBranch,
       ...(summons.branch ? { branch: summons.branch } : {}),

@@ -12,6 +12,8 @@ import { TOOL_NAMES } from "./tools";
 export type ClaudeRun = {
   cwd: string;
   sessionId: string;
+  /** The session is an earlier run's, continued by a follow-up on the same ask (run.ts). */
+  resume?: boolean;
   prompt: string;
   mcpServer: string;
   /** The default branch when the run has a repository; absent for a room. */
@@ -109,8 +111,7 @@ export function claudeArgs(o: ClaudeRun): string[] {
   return [
     "claude",
     "-p",
-    "--session-id",
-    o.sessionId,
+    ...(o.resume ? ["--resume", o.sessionId] : ["--session-id", o.sessionId]),
     ...(o.name ? ["--name", o.name] : []),
     "--permission-mode",
     o.permissionMode ?? "acceptEdits",

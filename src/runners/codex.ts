@@ -11,6 +11,25 @@ function isRecord(v: unknown): v is Record<string, unknown> {
 }
 
 export function codexArgs(o: ClaudeRun): string[] {
+  // A follow-up continues the thread. `exec resume` takes no --cd or
+  // --sandbox, so the run's folder is where it is spawned, and the sandbox
+  // is set as configuration.
+  if (o.resume) {
+    return [
+      "codex",
+      "exec",
+      "resume",
+      "--json",
+      "-c",
+      'sandbox_mode="workspace-write"',
+      "-c",
+      "sandbox_workspace_write.network_access=true",
+      "--skip-git-repo-check",
+      ...modelArgs("codex", o.model),
+      o.sessionId,
+      "-",
+    ];
+  }
   return [
     "codex",
     "exec",

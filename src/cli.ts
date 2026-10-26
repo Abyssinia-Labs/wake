@@ -40,7 +40,7 @@ async function main(argv: string[]): Promise<void> {
       tool: { type: "string" },
       app: { type: "string" },
       effort: { type: "string" },
-      days: { type: "string", default: "14" },
+      days: { type: "string", default: "7" },
       json: { type: "boolean", default: false },
       help: { type: "boolean", short: "h", default: false },
       version: { type: "boolean", short: "v", default: false },

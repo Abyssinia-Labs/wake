@@ -10,6 +10,13 @@ own: [the Convex component](packages/convex/CHANGELOG.md) and
 
 ### Added
 
+- **A follow-up continues the run that answered the last summons.** A question on a ticket
+  after its run finished goes to the same agent: its session, in its worktree, under its name.
+  In herdr it is asked in the tab still open; otherwise the session is resumed. A new session
+  starts only when there is none from the last 14 days.
+- **The listener tidies run worktrees.** A day after its branch is merged (squash merges too), or
+  a week after its last run once everything is pushed, a worktree Wake made goes, with its
+  branch. One with uncommitted or unpushed work, a run in it or its herdr tab open stays.
 - **Wake for GitHub: add a device to watch your runs.** On Pro, `github.wakectl.dev/devices` gives
   a code for one of your agents, and Wake on your phone, in a browser or on your Mac takes it to
   list that agent's runs as they go and how each ended. The same page forgets a device. On Free it
@@ -17,6 +24,11 @@ own: [the Convex component](packages/convex/CHANGELOG.md) and
 - **Wake for Mac, a download on wakectl.dev.** The menu bar app over the same Wake: it carries
   `wakectl` and runs the listener, so a Mac needs no Bun. It needs macOS 26, and updates itself,
   so the command updates with it. On Linux and in the terminal, install with Bun as before.
+
+### Changed
+
+- **`wakectl prune` runs the tidy now, and says what it kept.** `--days` is how long a pushed,
+  unmerged worktree waits, 7 by default rather than 14.
 
 ## 0.5.0 — 2026-10-23
 

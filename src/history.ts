@@ -63,6 +63,33 @@ export async function recordRun(path: string, run: RunRecord): Promise<void> {
   await writeJson(path, all.slice(-KEEP));
 }
 
+/** How long a finished run's session is continued by a follow-up: Claude Code keeps sessions 30 days. */
+export const FOLLOW_UP_DAYS = 14;
+
+/**
+ * The run a follow-up continues (the owner's call, 2026-10-25): the latest
+ * one of the same app, ask and tool, in the same folder, finished, with its
+ * session known, and recent enough that the tool still keeps the session.
+ */
+export function lastRunOn(
+  all: readonly RunRecord[],
+  o: { app: string; ref: string; tool: AgentTool; cwd: string; now: number },
+): RunRecord | undefined {
+  const since = o.now - FOLLOW_UP_DAYS * 24 * 60 * 60_000;
+  return [...all]
+    .reverse()
+    .find(
+      (one) =>
+        one.app === o.app &&
+        one.ref === o.ref &&
+        one.tool === o.tool &&
+        one.cwd === o.cwd &&
+        one.sessionId !== "" &&
+        one.finishedAt !== undefined &&
+        one.finishedAt >= since,
+    );
+}
+
 /** The latest run with that name, or with that session id. */
 export function findRun(all: readonly RunRecord[], wanted: string): RunRecord | undefined {
   const key = wanted.trim().toLowerCase();

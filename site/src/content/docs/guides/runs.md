@@ -36,9 +36,40 @@ its own:
 | Codex | `~/.codex/worktrees/wake/<repo>/<branch>` |
 
 A branch an earlier run already has checked out carries on in that folder,
-whichever tool made it. Worktrees are kept so you can resume a session;
-`wake prune` removes the ones untouched for 14 days, never one with
-uncommitted work.
+whichever tool made it.
+
+## Follow-ups
+
+When a ticket is summoned again after a run on it finished (a question in a
+comment, say), Wake doesn't start another agent. It continues the session
+that answered the last summons, in the same worktree and under the same
+name, and the agent is told it is following up. In herdr it asks the agent
+still open in the run's tab; with the tab closed, or headless, it resumes
+the session:
+
+| Tool | Resumes with |
+| --- | --- |
+| Claude Code | `claude -p --resume <session>` |
+| Codex | `codex exec resume <session>` |
+| Cursor | `cursor-agent -p --resume <session>` |
+
+A follow-up needs the same app, ticket and tool. A new session starts only
+when there is none to continue, or the last one finished more than 14 days
+ago.
+
+## Tidying worktrees
+
+The listener removes the run worktrees it made once they are finished
+with, two minutes after it starts and every six hours:
+
+- a day after their branch is merged, squash merges included (it asks `gh`);
+- a week after their last run, once everything in them is pushed.
+
+It never removes one with uncommitted changes or with commits on no remote,
+one a run is in, or one whose herdr tab is still open, and it never forces:
+git itself refuses a worktree with changes. The branch goes with it where
+that loses nothing. `wake prune` tidies now and says what it kept and why;
+`--days` sets how long a pushed worktree waits.
 
 ## Which model
 
@@ -98,7 +129,7 @@ worktree to `~/.codex/config.toml` first:
 wake trust codex on
 ```
 
-Each entry is marked as Wake's, and `wake prune` removes it with the
+Each entry is marked as Wake's, and the tidy removes it with the
 worktree.
 
 ## Every run has a name
@@ -125,7 +156,7 @@ codex resume <session>
 cursor-agent --resume <session>
 ```
 
-in the run's worktree, which Wake keeps until `wake prune`. The folder
+in the run's worktree, which Wake keeps until it is tidied. The folder
 stays on your machine; the app only ever learns the name. While a run is
 going, `wake status` shows its resume line as well.
 

@@ -75,9 +75,17 @@ export function nativeArgs(o: ClaudeRun, settings: string, approveMcps = true): 
 function toolArgs(o: ClaudeRun, settings: string, approveMcps: boolean): string[] {
   switch (o.tool ?? "claude") {
     case "codex":
-      return ["--sandbox", "workspace-write", "-c", "sandbox_workspace_write.network_access=true"];
+      return [
+        // A follow-up whose tab was closed continues the thread in a new one.
+        ...(o.resume ? ["resume", o.sessionId] : []),
+        "--sandbox",
+        "workspace-write",
+        "-c",
+        "sandbox_workspace_write.network_access=true",
+      ];
     case "cursor":
       return [
+        ...(o.resume ? ["--resume", o.sessionId] : []),
         "--trust",
         "--sandbox",
         "enabled",
@@ -86,8 +94,7 @@ function toolArgs(o: ClaudeRun, settings: string, approveMcps: boolean): string[
       ];
     default: {
       const args = [
-        "--session-id",
-        o.sessionId,
+        ...(o.resume ? ["--resume", o.sessionId] : ["--session-id", o.sessionId]),
         "--setting-sources",
         "user",
         "--settings",
@@ -97,6 +104,11 @@ function toolArgs(o: ClaudeRun, settings: string, approveMcps: boolean): string[
       return args;
     }
   }
+}
+
+/** Whether herdr still has the agent: its tab is open, whatever it is doing. */
+export async function agentOpen(run: Exec, name: string): Promise<boolean> {
+  return (await run(["herdr", "agent", "get", name])).code === 0;
 }
 
 async function herdr(run: Exec, args: string[]): Promise<unknown> {
@@ -192,6 +204,22 @@ export async function runInHerdr(o: HerdrRun, run: Exec): Promise<ClaudeResult> 
   const settings = join(RUNS_DIR, `${o.sessionId}.settings.json`);
   await writeFile(settings, JSON.stringify(claudeSettings(o), null, 2), { mode: 0o600 });
 
+  // A follow-up whose agent is still open in its tab goes to it there: the
+  // same session, its history on screen, and no second tab.
+  const name = agentName(o.ref, o.sessionId);
+  if (o.resume && (await agentOpen(run, name))) {
+    o.onEvent?.(`following up in its herdr tab: agent ${name}`);
+    return await promptUntilTurnEnds(run, {
+      name,
+      text: openingPrompt(o),
+      timeoutMs: o.timeoutMs,
+      settle: false,
+      ...(o.onEvent ? { onEvent: o.onEvent } : {}),
+      ...(o.signal ? { signal: o.signal } : {}),
+      ...(o.onWaiting ? { onWaiting: o.onWaiting } : {}),
+    });
+  }
+
   const workspace = await wakeWorkspace(run, o.cwd);
   const tab = await herdr(run, [
     "tab",
@@ -211,7 +239,6 @@ export async function runInHerdr(o: HerdrRun, run: Exec): Promise<ClaudeResult> 
   const pane = findString(tab, ["pane_id"]);
   if (!pane) throw new Error("herdr made a tab but did not say its pane.");
 
-  const name = agentName(o.ref, o.sessionId);
   const tool = o.tool ?? "claude";
   let approveMcps = true;
   if (tool === "cursor") {

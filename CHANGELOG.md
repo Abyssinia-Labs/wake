@@ -8,6 +8,8 @@ own: [the Convex component](packages/convex/CHANGELOG.md) and
 
 ## Unreleased
 
+## 0.6.0 — 2026-10-25
+
 ### Added
 
 - **A follow-up continues the run that answered the last summons.** A question on a ticket

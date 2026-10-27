@@ -31,9 +31,9 @@ export function faviconOf(theme: WakeTheme): string {
   return `/favicon-${theme}.svg`;
 }
 
-/** Points the page's icon at the theme's favicon. */
+/** Points the page's SVG icon at the theme's favicon; the pictures stay the owl. */
 export function showFavicon(theme: WakeTheme): void {
-  const link = document.querySelector<HTMLLinkElement>('link[rel~="icon"]');
+  const link = document.querySelector<HTMLLinkElement>('link[rel~="icon"][type="image/svg+xml"]');
   if (link) link.href = faviconOf(theme);
 }
 
@@ -49,7 +49,7 @@ export const wakeThemeScript = `(() => {
   const theme = themes.includes(kept) ? kept : ${JSON.stringify(DEFAULT_THEME)};
   document.documentElement.dataset.wakeTheme = theme;
   const icon = () => {
-    const link = document.querySelector('link[rel~="icon"]');
+    const link = document.querySelector('link[rel~="icon"][type="image/svg+xml"]');
     if (link) link.href = "/favicon-" + theme + ".svg";
   };
   icon();

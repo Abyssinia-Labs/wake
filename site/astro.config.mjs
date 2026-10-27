@@ -46,8 +46,27 @@ export default defineConfig({
         MobileMenuFooter: "./src/components/starlight/MobileMenuFooter.astro",
       },
       // The chosen theme, set before the page paints so nothing flashes, as
-      // Starlight sets light or dark (wake-theme-picker.tsx keeps it).
-      head: [{ tag: "script", content: wakeThemeScript }],
+      // Starlight sets light or dark (wake-theme-picker.tsx keeps it). Then
+      // the owl as pictures, for what can't follow an SVG's light and dark:
+      // search results, old browsers, a Home Screen. The favicons are the
+      // owl in Burrow's daylight ink ringed in its paper, so they read on a
+      // light or a dark page; the touch icon is the device (the logo's A).
+      // A browser that takes SVG keeps the theme's favicon, as the .ico
+      // names its sizes.
+      head: [
+        { tag: "script", content: wakeThemeScript },
+        { tag: "link", attrs: { rel: "icon", href: "/favicon.ico", sizes: "16x16 32x32 48x48" } },
+        ...[48, 96, 192].map((size) => ({
+          tag: "link",
+          attrs: {
+            rel: "icon",
+            type: "image/png",
+            sizes: `${size}x${size}`,
+            href: `/favicon-${size}.png`,
+          },
+        })),
+        { tag: "link", attrs: { rel: "apple-touch-icon", href: "/apple-touch-icon.png" } },
+      ],
       favicon: "/favicon.svg",
       social: [{ icon: "github", label: "GitHub", href: "https://github.com/Abyssinia-Labs/wake" }],
       editLink: { baseUrl: "https://github.com/Abyssinia-Labs/wake/edit/main/site/" },

@@ -46,12 +46,17 @@ export function Wordmark({ className }: Props): React.JSX.Element {
   );
 }
 
-/** The mark beside its name, as the header and footer show it. */
+/**
+ * The mark beside its name, as the header and footer show it. Burrow draws
+ * the name on the owl's grid, its own pixel face; Annunciator and Signal
+ * set it in their display faces (looks.css), as they set every heading.
+ */
 export function Logo({ className }: Props): React.JSX.Element {
   return (
     <span className={cn("inline-flex items-center gap-2.5", className)}>
       <Mark className="size-8" />
-      <Wordmark className="h-[21px] w-[90px]" />
+      <Wordmark className="for-theme for-burrow h-[21px] w-[90px]" />
+      <span className="wk-name for-theme for-annunciator for-signal">wakectl</span>
     </span>
   );
 }

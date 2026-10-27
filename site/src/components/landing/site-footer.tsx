@@ -34,7 +34,7 @@ const columns: { title: string; links: { label: string; href: string }[] }[] = [
 /** The landing page's footer. Docs pages end on Starlight's meta line instead. */
 export function SiteFooter(): React.JSX.Element {
   return (
-    <footer className="not-content flex flex-col gap-8 border-t pt-12 pb-8">
+    <footer className="site-footer not-content flex flex-col gap-8 border-t pt-12 pb-8">
       <div className="flex flex-wrap justify-between gap-10">
         <div className="flex basis-72 flex-col gap-3">
           <Logo className="text-foreground" />

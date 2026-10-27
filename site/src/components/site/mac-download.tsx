@@ -1,4 +1,4 @@
-import { Download } from "lucide-react";
+import { AppleMark } from "@/components/site/logos";
 import { Chip } from "@/components/site/text";
 import { buttonVariants } from "@/components/ui/button";
 import { type MacBuild, macDownload, macOS, megabytes } from "@/lib/mac";
@@ -22,7 +22,7 @@ export function MacDownload({
           href={macDownload}
           className={cn(buttonVariants({ variant: "outline" }), "text-foreground no-underline")}
         >
-          <Download />
+          <AppleMark />
           Download for Mac
         </a>
         {build && (

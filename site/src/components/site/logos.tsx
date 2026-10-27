@@ -1,8 +1,10 @@
 import type { SVGProps } from "react";
 
-// The marks of the tools Wake starts and of GitHub, each in the page's
-// ink (currentColor) rather than its own colour: each theme keeps its few
-// colours for what they mean, and has no room for four more. The paths are the ones Gatherd draws them with.
+// The marks of the tools Wake starts, of the apps that serve wake/v1 and of
+// Apple, each in the page's ink (currentColor) rather than its own colour:
+// each theme keeps its few colours for what they mean, and has no room for
+// more. The tools' paths are the ones Gatherd draws them with; Gatherd's and
+// Antescript's are their own favicons' without the tile.
 
 type Props = SVGProps<SVGSVGElement>;
 
@@ -53,6 +55,55 @@ export function GitHubMark(props: Props): React.JSX.Element {
   return (
     <svg aria-hidden="true" focusable="false" viewBox="0 0 98 96" fill="currentColor" {...props}>
       <path d="M48.854 0C21.839 0 0 22 0 49.217c0 21.756 13.993 40.172 33.405 46.69 2.427.49 3.316-1.059 3.316-2.362 0-1.141-.08-5.052-.08-9.127-13.59 2.934-16.42-5.867-16.42-5.867-2.184-5.704-5.42-7.17-5.42-7.17-4.448-3.015.324-3.015.324-3.015 4.934.326 7.523 5.052 7.523 5.052 4.367 7.496 11.404 5.378 14.235 4.074.404-3.178 1.699-5.378 3.074-6.6-10.839-1.141-22.243-5.378-22.243-24.283 0-5.378 1.94-9.778 5.014-13.2-.485-1.222-2.184-6.275.486-13.038 0 0 4.125-1.304 13.426 5.052a46.97 46.97 0 0 1 12.214-1.63c4.125 0 8.33.571 12.213 1.63 9.302-6.356 13.427-5.052 13.427-5.052 2.67 6.763.97 11.816.485 13.038 3.155 3.422 5.015 7.822 5.015 13.2 0 18.905-11.404 23.06-22.324 24.283 1.78 1.548 3.316 4.481 3.316 9.126 0 6.6-.08 11.897-.08 13.526 0 1.304.89 2.853 3.316 2.364 19.412-6.52 33.405-24.935 33.405-46.691C97.707 22 75.788 0 48.854 0z" />
+    </svg>
+  );
+}
+
+/** Gatherd's stacked bars: a crowd gathering to a point, off its green tile. */
+export function GatherdMark(props: Props): React.JSX.Element {
+  const bars = [
+    [14, 2, 4],
+    [10, 6, 12],
+    [6, 10, 20],
+    [2, 14, 28],
+    [10, 18, 12],
+    [13, 22, 6],
+    [8, 26, 16],
+  ];
+  return (
+    <svg aria-hidden="true" focusable="false" viewBox="0 0 32 32" fill="currentColor" {...props}>
+      {bars.map(([x, y, width]) => (
+        <rect key={y} x={x} y={y} width={width} height="3" rx="1.5" />
+      ))}
+    </svg>
+  );
+}
+
+/** Antescript's caret on its line, the A with its crossbar dropped, off its blue tile. */
+export function AntescriptMark(props: Props): React.JSX.Element {
+  return (
+    <svg
+      aria-hidden="true"
+      focusable="false"
+      viewBox="0 0 20 20"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.6"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      {...props}
+    >
+      <path d="M4 13.5 10 3.5l6 10" />
+      <path d="M3 17h14" />
+    </svg>
+  );
+}
+
+/** Apple's logo, for Wake for Mac's download. */
+export function AppleMark(props: Props): React.JSX.Element {
+  return (
+    <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="currentColor" {...props}>
+      <path d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.039 1.52-.065 2.09-.987 3.935-.987 1.831 0 2.35.987 3.96.948 1.637-.026 2.676-1.48 3.676-2.948 1.156-1.688 1.636-3.325 1.662-3.415-.039-.013-3.182-1.221-3.22-4.857-.026-3.04 2.48-4.494 2.597-4.559-1.429-2.09-3.623-2.324-4.39-2.376-2-.156-3.675 1.09-4.61 1.09zM15.53 3.83c.843-1.012 1.4-2.427 1.245-3.83-1.207.052-2.662.805-3.532 1.818-.78.896-1.454 2.338-1.273 3.714 1.338.104 2.715-.688 3.559-1.701" />
     </svg>
   );
 }

@@ -108,3 +108,10 @@
     text-decoration: none;
   }
 }
+
+/* The landing page ends on its own footer, with nothing under it but the
+   footer's own padding: Starlight's content panel and main pad their foot
+   for a docs page's meta line, which the landing page doesn't have. */
+:is(main, .content-panel):has(.site-footer) {
+  padding-bottom: 0;
+}

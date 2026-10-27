@@ -1,5 +1,5 @@
 import { ArrowRight } from "lucide-react";
-import { GitHubMark } from "@/components/site/logos";
+import { AntescriptMark, GatherdMark, GitHubMark } from "@/components/site/logos";
 import { Chip } from "@/components/site/text";
 
 const item = "inline-flex items-center gap-2 text-sm font-semibold text-foreground no-underline";
@@ -20,11 +20,11 @@ export function WorksWith(): React.JSX.Element {
           </span>
         </a>
         <a href="https://gatherd.dev" className={item}>
-          <span aria-hidden="true" className="size-2 rounded-sm bg-ink-a" />
+          <GatherdMark className="size-4" />
           Gatherd
         </a>
         <a href="https://antescript.app" className={item}>
-          <span aria-hidden="true" className="size-2 rounded-full bg-ink-b" />
+          <AntescriptMark className="size-4" />
           Antescript
         </a>
         <a

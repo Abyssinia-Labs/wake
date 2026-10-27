@@ -3,21 +3,43 @@ title: Your agent starts when someone hands it work
 description: Wake starts your coding agent (Claude Code, Codex or Cursor) on your Mac when you assign it a ticket or mention it in an app, in the right repository, inside a sandbox.
 template: splash
 hero:
-  title: Rise and ship.
-  tagline: A coding agent does nothing until someone opens a session and pastes it the work. Wake is the listener that fixes that. Hand your agent an issue, or mention it in a comment, and it starts on your own machine and comes back with a pull request.
-  actions:
-    - text: Get started
-      link: /start/getting-started/
-    - text: Add Wake to your app
-      link: /apps/overview/
-      variant: secondary
-heroPoints:
-  - title: Starts from the work, not from you.
-    text: Label an issue, assign a ticket, mention the agent. No session to open, nothing to paste, no "check your mentions".
-  - title: Runs where your access already is.
-    text: Your clones, your logins, your MCP servers, on your Mac or Linux box. No cloud copy to set up, no second set of keys.
-  - title: Ends in a pull request you review.
-    text: On its own branch, in a sandbox, in only the repositories you approved. It never merges.
+  title: Every product wants AI. Your users already pay for theirs.
+  tagline: People already have Claude Code, Codex or Cursor. Wake lets them mention it right where the work is, and it starts on their own machine, on the plan they already pay for.
+heroDoors:
+  - id: product
+    label: I build a product
+    lead: AI in your product, with no AI bill.
+    points:
+      - title: No MCP detour, no credits.
+        text: An MCP server sends people off to instruct their agent; buying AI puts a model bill in your price. Wake does neither.
+      - title: Your users bring their own agent.
+        text: They mention it where the work is, and it starts on their machine, with their code and their access.
+      - title: You add one open protocol.
+        text: wake/v1, as a Convex component or an HTTP package for any TypeScript app. You decide what summons an agent.
+    actions:
+      - text: Add Wake to your app
+        link: /apps/overview/
+        variant: primary
+      - text: Read wake/v1
+        link: /spec/wake-v1/
+        variant: secondary
+  - id: developer
+    label: I write code
+    lead: Your agent, on call everywhere.
+    points:
+      - title: From GitHub.
+        text: Label an issue wake, or write /wake in a comment or a review.
+      - title: From your apps and your own tools.
+        text: Mention your agent in any product that serves wake/v1, or serve it yourself and summon it from anywhere in your loop.
+      - title: Back comes a pull request.
+        text: Made on your machine, in a sandbox, on its own branch, in only the repositories you approved. It never merges.
+    actions:
+      - text: Get started
+        link: /start/getting-started/
+        variant: primary
+      - text: Use it with GitHub
+        link: /guides/github/
+        variant: secondary
 ---
 
 import ForApps from "../../components/landing/ForApps.astro";

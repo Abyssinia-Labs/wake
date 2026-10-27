@@ -9,9 +9,8 @@ export const collections = {
     schema: docsSchema({
       extend: z.object({
         // The landing hero's doors under its tagline, one for each kind of
-        // visitor (Hero.astro, hero-doors.tsx): what Wake gives them, in three
-        // lines, and where they go next. Each door's install line is a slot
-        // named after its id.
+        // visitor (Hero.astro): what Wake gives them, in three lines, and
+        // where they go next. Hero.astro keeps each door's install line.
         heroDoors: z
           .array(
             z.object({

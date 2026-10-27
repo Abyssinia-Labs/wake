@@ -1,20 +1,20 @@
 ---
-// The landing hero: what's new and the badges, the headline and the tagline,
-// then a door for each kind of visitor (hero-doors.tsx): someone who builds
-// a product gets what Wake gives their users and the server half's install
-// line, someone who writes code gets where they can summon their agent from,
-// wakectl's install line and Wake for Mac's download. Beside it, Wake at
-// work as the theme that is on draws it: in Burrow, Wake for Mac's window
-// with a run printing its steps (live-run.tsx), so what Wake does shows at
-// once; in Annunciator and Signal, their art (hero-art.tsx).
+// The landing hero: the burrow at night, the full width of the page
+// (burrow-hero.tsx draws it in whichever theme is on). In the night sky,
+// what's new, the headline and the tagline, then "who you are": a door for
+// each kind of visitor, with its lead and buttons. Under the ground, the
+// open door's points and install line. The doors are radio buttons and
+// burrow-hero.css shows the open one's parts, so they need no script, and
+// the install lines stay plain Expressive Code blocks.
 import { Code } from "@astrojs/starlight/components";
-import { HeroArt } from "@/components/landing/hero-art";
-import { HeroDoors } from "@/components/landing/hero-doors";
-import { LiveRun } from "@/components/landing/live-run";
+import { ArrowRight, Check } from "lucide-react";
+import { BurrowHero } from "@/components/landing/burrow-hero";
 import { HeroBadges } from "@/components/site/hero-badges";
 import { MacDownload } from "@/components/site/mac-download";
+import { buttonVariants } from "@/components/ui/button";
 import { latest, wakeLog } from "@/lib/changelog";
 import { macBuild } from "@/lib/mac";
+import { cn } from "@/lib/utils";
 
 // Starlight's PAGE_TITLE_ID: the skip link's target.
 const PAGE_TITLE_ID = "_top";
@@ -22,9 +22,11 @@ const PAGE_TITLE_ID = "_top";
 const { data } = Astro.locals.starlightRoute.entry;
 const { title = data.title, tagline } = data.hero ?? {};
 const doors = data.heroDoors ?? [];
-const install = "bun add -g @abyssinia-labs/wake\nwake setup";
-const serve =
-  "# on Convex\nbun add @abyssinia-labs/wake-convex\n# on anything else\nbun add @abyssinia-labs/wake-server";
+const installs: Record<string, string> = {
+  product:
+    "# on Convex\nbun add @abyssinia-labs/wake-convex\n# on anything else\nbun add @abyssinia-labs/wake-server",
+  developer: "bun add -g @abyssinia-labs/wake\nwake setup",
+};
 // The newest release on npm, and its lead headline, linking to its notes.
 const newest = latest(wakeLog);
 if (!newest) throw new Error("CHANGELOG.md has no release to show.");
@@ -35,31 +37,72 @@ const news = {
 };
 ---
 
-<div
-  class="hero not-content grid gap-x-12 gap-y-6 py-10 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:grid-rows-[auto_1fr] lg:py-16"
->
-  <div class="flex flex-col gap-6 lg:col-start-1 lg:row-start-1">
-    <HeroBadges news={news} />
-    <h1 id={PAGE_TITLE_ID} data-page-title class="wake-headline" set:html={title} />
-    {tagline && <p class="m-0 max-w-[36rem] text-lg leading-relaxed text-foreground" set:html={tagline} />}
-  </div>
-  {/* Wake at work comes right after the headline on a phone, beside it on a wide screen. */}
-  <div class="flex min-w-0 flex-col lg:col-start-2 lg:row-span-2 lg:row-start-1">
-    <div class="for-theme for-burrow lg:pt-24">
-      <LiveRun client:visible />
+<div class="hero-doors not-content">
+  <section class="burrow-hero" aria-labelledby={PAGE_TITLE_ID}>
+    <BurrowHero client:load />
+    <div class="bh-sky">
+      <div class="bh-copy" data-copy>
+        <HeroBadges news={news} />
+        <h1 id={PAGE_TITLE_ID} data-page-title class="wake-headline" set:html={title} />
+        {tagline && <p class="m-0 max-w-[40rem] text-lg leading-relaxed text-foreground" set:html={tagline} />}
+        <fieldset class="bh-who">
+          <legend class="sr-only">Who you are</legend>
+          {
+            doors.map(({ id, label }, index) => (
+              <label>
+                <input type="radio" name="hero-door" value={id} checked={index === 0} />
+                <span>{label}</span>
+              </label>
+            ))
+          }
+        </fieldset>
+        {
+          doors.map(({ id, lead, actions }) => (
+            <div data-door={id} class="flex flex-col gap-4">
+              <p class="font-display m-0 text-2xl leading-tight font-semibold text-foreground">{lead}</p>
+              <div class="flex flex-wrap items-center gap-3">
+                {actions.map(({ text, link, variant }) => (
+                  <a
+                    href={link}
+                    class={cn(
+                      buttonVariants({ variant: variant === "primary" ? "default" : "outline", size: "lg" }),
+                      // Starlight runs without preflight, so a link keeps the browser's
+                      // blue unless a class gives it ink; only the primary one has its own.
+                      variant !== "primary" && "text-foreground",
+                      "no-underline",
+                    )}
+                  >
+                    {text}
+                    {variant === "primary" && <ArrowRight />}
+                  </a>
+                ))}
+              </div>
+            </div>
+          ))
+        }
+      </div>
     </div>
-    <div class="mx-auto w-full max-w-[25rem] lg:my-auto lg:mr-0">
-      <HeroArt />
-    </div>
-  </div>
-  <div class="hero-doors flex min-w-0 flex-col gap-6 lg:col-start-1 lg:row-start-2">
-    <HeroDoors client:load doors={doors} />
-    <div data-door="product" class="max-w-[36rem]">
-      <Code code={serve} lang="bash" frame="terminal" title="Terminal" />
-    </div>
-    <div data-door="developer" class="flex max-w-[36rem] flex-col gap-6">
-      <Code code={install} lang="bash" frame="terminal" title="Terminal" />
-      <MacDownload build={macBuild} />
-    </div>
-  </div>
+    <div class="bh-ground" data-ground></div>
+  </section>
+  {
+    doors.map(({ id, points }) => (
+      <div data-door={id} class="bh-below">
+        <ul class="m-0 flex list-none flex-col gap-2.5 p-0 text-sm leading-relaxed">
+          {points.map(({ title, text }) => (
+            <li class="flex items-start gap-2.5">
+              <Check className="mt-0.5 size-4 shrink-0 text-ink-a" strokeWidth={2.5} />
+              <span>
+                <strong class="font-semibold text-foreground">{title}</strong>{" "}
+                <span class="text-muted-foreground">{text}</span>
+              </span>
+            </li>
+          ))}
+        </ul>
+        <div class="flex min-w-0 flex-col gap-6">
+          {installs[id] && <Code code={installs[id]} lang="bash" frame="terminal" title="Terminal" />}
+          {id === "developer" && <MacDownload build={macBuild} />}
+        </div>
+      </div>
+    ))
+  }
 </div>

@@ -1,7 +1,8 @@
 /*
  * The landing hero's art (hero-art.tsx) in Signal, from the apps' own
  * pieces; Annunciator's panel is in hero-panel.css, and Burrow's window in
- * live-run.css. Signal prints on the page's own paper.
+ * live-run.css. Signal prints on the page's own paper. Also the doors'
+ * install lines, in every theme.
  */
 @layer components {
   /* Signal: the shapes print on the page's own paper. */
@@ -90,4 +91,12 @@
   100% {
     color: #8a939a;
   }
+}
+
+/* Each door's install line shows while its tab is open (hero-doors.tsx);
+   before the island wakes, the first tab is open in the page as built.
+   Outside the layers, so a line's own `flex` doesn't bring it back. */
+.hero-doors:has([role="tab"][data-state="active"][data-door="developer"]) > [data-door="product"],
+.hero-doors:has([role="tab"][data-state="active"][data-door="product"]) > [data-door="developer"] {
+  display: none;
 }

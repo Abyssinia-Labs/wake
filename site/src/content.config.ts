@@ -8,8 +8,27 @@ export const collections = {
     loader: docsLoader(),
     schema: docsSchema({
       extend: z.object({
-        // The landing hero's three lines under its tagline (Hero.astro).
-        heroPoints: z.array(z.object({ title: z.string(), text: z.string() })).optional(),
+        // The landing hero's doors under its tagline, one for each kind of
+        // visitor (Hero.astro, hero-doors.tsx): what Wake gives them, in three
+        // lines, and where they go next. Each door's install line is a slot
+        // named after its id.
+        heroDoors: z
+          .array(
+            z.object({
+              id: z.string(),
+              label: z.string(),
+              lead: z.string(),
+              points: z.array(z.object({ title: z.string(), text: z.string() })),
+              actions: z.array(
+                z.object({
+                  text: z.string(),
+                  link: z.string(),
+                  variant: z.enum(["primary", "secondary"]),
+                }),
+              ),
+            }),
+          )
+          .optional(),
       }),
     }),
   }),

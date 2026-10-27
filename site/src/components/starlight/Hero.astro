@@ -1,28 +1,30 @@
 ---
-// The landing hero: what's new and the badges, the headline, the tagline and its
-// three points, the actions as shadcn buttons, the install line in a
-// terminal frame with Wake for Mac's download under it, and Wake at work as
-// the theme that is on draws it: in Burrow, Wake for Mac's window with a run
-// printing its steps (live-run.tsx), so what Wake does shows at once; in
-// Annunciator and Signal, their art (hero-art.tsx).
+// The landing hero: what's new and the badges, the headline and the tagline,
+// then a door for each kind of visitor (hero-doors.tsx): someone who builds
+// a product gets what Wake gives their users and the server half's install
+// line, someone who writes code gets where they can summon their agent from,
+// wakectl's install line and Wake for Mac's download. Beside it, Wake at
+// work as the theme that is on draws it: in Burrow, Wake for Mac's window
+// with a run printing its steps (live-run.tsx), so what Wake does shows at
+// once; in Annunciator and Signal, their art (hero-art.tsx).
 import { Code } from "@astrojs/starlight/components";
-import { ArrowRight, Check } from "lucide-react";
 import { HeroArt } from "@/components/landing/hero-art";
+import { HeroDoors } from "@/components/landing/hero-doors";
 import { LiveRun } from "@/components/landing/live-run";
 import { HeroBadges } from "@/components/site/hero-badges";
 import { MacDownload } from "@/components/site/mac-download";
-import { buttonVariants } from "@/components/ui/button";
 import { latest, wakeLog } from "@/lib/changelog";
 import { macBuild } from "@/lib/mac";
-import { cn } from "@/lib/utils";
 
 // Starlight's PAGE_TITLE_ID: the skip link's target.
 const PAGE_TITLE_ID = "_top";
 
 const { data } = Astro.locals.starlightRoute.entry;
-const { title = data.title, tagline, actions = [] } = data.hero ?? {};
-const points = data.heroPoints ?? [];
+const { title = data.title, tagline } = data.hero ?? {};
+const doors = data.heroDoors ?? [];
 const install = "bun add -g @abyssinia-labs/wake\nwake setup";
+const serve =
+  "# on Convex\nbun add @abyssinia-labs/wake-convex\n# on anything else\nbun add @abyssinia-labs/wake-server";
 // The newest release on npm, and its lead headline, linking to its notes.
 const newest = latest(wakeLog);
 if (!newest) throw new Error("CHANGELOG.md has no release to show.");
@@ -30,13 +32,6 @@ const news = {
   version: newest.release.version,
   headline: newest.headline,
   href: `/changelog/#${newest.release.anchor}`,
-};
-
-type Variant = "default" | "outline" | "ghost";
-const variants: Record<string, Variant> = {
-  primary: "default",
-  secondary: "outline",
-  minimal: "ghost",
 };
 ---
 
@@ -57,46 +52,14 @@ const variants: Record<string, Variant> = {
       <HeroArt />
     </div>
   </div>
-  <div class="flex flex-col gap-6 lg:col-start-1 lg:row-start-2">
-    {
-      points.length > 0 && (
-        <ul class="m-0 flex max-w-[36rem] list-none flex-col gap-2.5 p-0 text-sm leading-relaxed">
-          {points.map(({ title, text }) => (
-            <li class="flex items-start gap-2.5">
-              <Check className="mt-0.5 size-4 shrink-0 text-ink-a" strokeWidth={2.5} />
-              <span>
-                <strong class="font-semibold text-foreground">{title}</strong>{" "}
-                <span class="text-muted-foreground">{text}</span>
-              </span>
-            </li>
-          ))}
-        </ul>
-      )
-    }
-    {
-      actions.length > 0 && (
-        <div class="flex flex-wrap items-center gap-3">
-          {actions.map(({ link, text, variant }, index) => (
-            <a
-              href={link}
-              class={cn(
-                buttonVariants({ variant: variants[variant] ?? "outline", size: "lg" }),
-                // Starlight runs without preflight, so a link keeps the browser's
-                // blue unless a class gives it ink; only the primary one has its own.
-                variant !== "primary" && "text-foreground",
-                "no-underline",
-              )}
-            >
-              {text}
-              {index === 0 && <ArrowRight />}
-            </a>
-          ))}
-        </div>
-      )
-    }
-    <div class="max-w-[36rem]">
-      <Code code={install} lang="bash" frame="terminal" title="Terminal" />
+  <div class="hero-doors flex min-w-0 flex-col gap-6 lg:col-start-1 lg:row-start-2">
+    <HeroDoors client:load doors={doors} />
+    <div data-door="product" class="max-w-[36rem]">
+      <Code code={serve} lang="bash" frame="terminal" title="Terminal" />
     </div>
-    <MacDownload build={macBuild} className="max-w-[36rem]" />
+    <div data-door="developer" class="flex max-w-[36rem] flex-col gap-6">
+      <Code code={install} lang="bash" frame="terminal" title="Terminal" />
+      <MacDownload build={macBuild} />
+    </div>
   </div>
 </div>
